@@ -124,7 +124,8 @@ if __name__ == '__main__':
       if args.retry:
         result = status.retryProblems()
         if len(result)>0:
-          print '\n'.join(str(result))
+          print status.getPrettyStatus()
+          print result
 
     if args.publish:
       publish(args)
