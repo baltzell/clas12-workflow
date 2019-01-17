@@ -3,7 +3,7 @@
 # Check hipo file integrity
 # Aborts with non-zero status on first error.
 
-cmd=/home/clas12/packages/coatjava/coatjava-5.7.4/bin/hipo-utils
+cmd=/home/clas12/packages/coatjava/coatjava-5c.7.4/bin/hipo4utils
 
 if [ "$#" -lt 1 ]
 then
