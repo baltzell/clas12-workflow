@@ -1,0 +1,2 @@
+MAILTO="bobcat@jlab.org"
+*/10 * * * * /home/clas12/users/baltzell/clas12-workflow/cron/swif-cron.csh
