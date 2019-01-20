@@ -101,12 +101,12 @@ class SwifStatus():
   def getPrettyJsonStatus(self):
     if self.status is None:
       self.loadStatus()
-    return json.dumps(self.status,indent=2,separators=(',',': '))
+    return json.dumps(self.status,indent=2,separators=(',',': '),sort_keys=True)
 
   def getPrettyJsonDetails(self):
     if self.details is None:
       self.loadDetails()
-    return json.dumps(self.details,indent=2,separators=(',',': '))
+    return json.dumps(self.details,indent=2,separators=(',',': '),sort_keys=True)
 
   def getPrettyStatus(self):
     if self.status is None:
