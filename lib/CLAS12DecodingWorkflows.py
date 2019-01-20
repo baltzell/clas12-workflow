@@ -52,10 +52,10 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       job.setPhase(phase)
       job.setRam('9GB')
       if isSingle:
-        job.setTime('10h')
+        job.setTime('12h')
         job.setDisk('4GB')
       else:
-        job.setTime('40h')
+        job.setTime('48h')
         job.setDisk('16GB')
       job.addTag('run','%.5d'%runno)
       job.addTag('file','%.5d'%fileno)
