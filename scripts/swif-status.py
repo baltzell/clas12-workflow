@@ -96,6 +96,12 @@ if __name__ == '__main__':
       #if status.isComplete() and status.previous.isComplete():
       #  status.moveJobLogs()
 
+      if args.retry:
+        result = status.retryProblems()
+        if len(result)>0:
+          print status.getPrettyStatus()
+          print result
+
       if args.save:
 
         mkdir(args.logdir+'/status/')
@@ -120,12 +126,6 @@ if __name__ == '__main__':
           print status.getPrettyJsonDetails()
         if status.isComplete():
           print 'WORKFLOW FINISHED:  '+workflow+'\n'
-
-      if args.retry:
-        result = status.retryProblems()
-        if len(result)>0:
-          print status.getPrettyStatus()
-          print result
 
     if args.publish:
       publish(args)
