@@ -23,5 +23,5 @@ set d=`/usr/bin/dirname $d`/..
 
 setenv PYTHONPATH ${PYTHONPATH}:${d}/lib
 
-$d/scripts/swif-status.py --save --retry --publish
+$d/scripts/swif-status.py --save --retry --details --publish
 
