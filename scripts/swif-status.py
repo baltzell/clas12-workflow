@@ -11,20 +11,7 @@ def mkdir(path):
   else:
     os.makedirs(path)
 
-def getWorkflowNames():
-  workflows=[]
-  for line in subprocess.check_output([SWIF,'list']).splitlines():
-    line=line.strip()
-    if line.find('workflow_name')==0:
-      workflows.append(line.split('=')[1].strip())
-  return workflows
-
-def publish(args):
-  rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
-  subprocess.check_output(rsyncCmd)
-
 class CLAS12SwifStatus(SwifStatus):
-
   def __init__(self,workflow,args):
     SwifStatus.__init__(self,workflow)
     self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
@@ -37,8 +24,10 @@ class CLAS12SwifStatus(SwifStatus):
         self.previous.loadStatusFromString('\n'.join(statusFile.readlines()))
     except:
       pass
-
+  def isPreviousComplete(self):
+    return self.previous is not None and self.previous.isComplete()
   def saveStatus(self):
+    mkdir(args.logdir+'/status/')
     with open(self.statusFilename.replace('.json','.txt'),'w') as statusFile:
       statusFile.write(self.getPrettyStatus())
       if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+workflow+'\n')
@@ -46,17 +35,16 @@ class CLAS12SwifStatus(SwifStatus):
     with open(self.statusFilename,'w') as statusFile:
       statusFile.write(self.getPrettyJsonStatus())
       statusFile.close()
-
   def saveLog(self):
+    mkdir(args.logdir+'/logs/')
     with open(self.logFilename,'a+') as logFile:
       logFile.write('\n'+self.getPrettyJsonStatus())
       logFile.close()
-
   def saveDetails(self):
+    mkdir(args.logdir+'/details/')
     with open(self.detailsFilename,'w') as detailsFile:
       detailsFile.write(self.getPrettyJsonDetails())
       detailsFile.close()
-
   def moveJobLogs(self):
     workDir = self.getTagValue('workDir')
     if workDir is not None:
@@ -64,6 +52,45 @@ class CLAS12SwifStatus(SwifStatus):
       dest=workDir+'/farm_out/'+self.workflow
       mkdir(dest)
       subprocess.check_output(['mv','%s/%s*'%(src,workflow),dest])
+
+def getWorkflowNames():
+  workflows=[]
+  for line in subprocess.check_output([SWIF,'list']).splitlines():
+    line=line.strip()
+    if line.find('workflow_name')==0:
+      workflows.append(line.split('=')[1].strip())
+  return workflows
+
+def processWorkflow(workflow,args):
+
+  status = CLAS12SwifStatus(workflow,args)
+  status.mergeTags()
+
+  if args.joblogs and status.isComplete() and status.isPreviousComplete():
+    status.moveJobLogs()
+
+  if args.retry:
+    result = status.retryProblems()
+    if len(result)>0:
+      print status.getPrettyStatus()
+      print result
+
+  if args.save:
+    if status.isComplete():
+      if status.isPreviousComplete():
+        return
+      print 'WORKFLOW FINISHED:  '+workflow
+    status.saveStatus()
+    status.saveLog()
+    if args.details:
+      status.saveDetails()
+
+  else:
+    print status.getPrettyStatus()
+    if args.details:
+      print status.getPrettyJsonDetails()
+    if status.isComplete():
+      print 'WORKFLOW FINISHED:  '+workflow+'\n'
 
 if __name__ == '__main__':
 
@@ -90,49 +117,9 @@ if __name__ == '__main__':
     print '\n'.join(args.workflow)
 
   else:
-
     for workflow in args.workflow:
-
-      status = CLAS12SwifStatus(workflow,args)
-
-      status.mergeTags()
-
-      #if status.isComplete() and status.previous.isComplete():
-      #  status.moveJobLogs()
-
-      if args.retry:
-        result = status.retryProblems()
-        if len(result)>0:
-          print status.getPrettyStatus()
-          print result
-
-      if args.save:
-
-        mkdir(args.logdir+'/status/')
-        mkdir(args.logdir+'/logs/')
-        mkdir(args.logdir+'/details/')
-
-        if status.isComplete():
-          if status.previous is not None:
-            if status.previous.isComplete():
-              continue
-          print 'WORKFLOW FINISHED:  '+workflow
-
-        status.saveStatus()
-        status.saveLog()
-
-        if args.details:
-          status.saveDetails()
-
-      else:
-
-        print status.getPrettyStatus()
-        if args.details:
-          print status.getPrettyJsonDetails()
-        if status.isComplete():
-          print 'WORKFLOW FINISHED:  '+workflow+'\n'
-
-    if args.publish:
-      publish(args)
-
+      processWorkflow(workflow,args)
+    if args.save and args.publish:
+      rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
+      subprocess.check_output(rsyncCmd)
 
