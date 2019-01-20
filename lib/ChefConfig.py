@@ -66,7 +66,7 @@ def getConfig(args):
   cli.add_argument('--mergePatt',metavar='PATTERN',help='merged filename format'+df, type=str, default='clas_%.6d.evio.%.5d-%.5d.hipo')
   cli.add_argument('--evioRegex',metavar='REGEX',  help='evio filename regex'+df,    type=str, default='.*clas[A-Za-z]*_(\d+)\.evio\.(\d+)')
 
-  cli.add_argument('--model', help='workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)'+df, type=int, choices=[0,1,2], default=1)
+  cli.add_argument('--model', help='workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)'+df, type=int, choices=[0,1,2,3], default=1)
 
   args = cli.parse_args(args)
 

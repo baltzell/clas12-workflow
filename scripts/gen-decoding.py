@@ -20,6 +20,8 @@ elif cfg['model']==1:
   workflow = RollingDecoding(name,cfg)
 elif cfg['model']==2:
   workflow = SinglesOnlyDecoding(name,cfg)
+elif cfg['model']==3:
+  workflow = DecodingReconTest(name,cfg)
 else:
   sys.exit('ERROR:  unknown model: '+str(cfg['model']))
 

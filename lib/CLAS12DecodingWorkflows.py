@@ -20,9 +20,6 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
     self.rcdb=RcdbManager()
 
   def addJob(self,job):
-    job.addTag('coatjava',self.cfg['coatjava'])
-    job.addTag('workDir',self.cfg['workDir'])
-    job.addTag('outDir',self.cfg['outDir'])
     job.setLogDir(self.cfg['workDir']+'/logs/'+self.name)
     SwifWorkflow.addJob(self,job)
 
@@ -31,6 +28,55 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
     mkdir(self.cfg['outDir']+'/'+str(run))
     mkdir(self.cfg['workDir']+'/singles/'+str(run))
     mkdir(self.cfg['workDir']+'/merged/'+str(run))
+
+  #
+  # recon:  add jobs for running single-threaded recon
+  # - one job per file
+  # - return list of reconstructed hipo files
+  #
+  def recon(self,phase,hipoFiles):
+
+    reconned=[]
+
+    for hipoFileName in hipoFiles:
+
+      runno = RunFile(hipoFileName).runNumber
+      fileno = RunFile(hipoFileName).fileNumber
+      hipoBaseName = os.path.basename(hipoFileName)
+      reconFileName = self.cfg['workDir']+'/recon/'+str(runno)
+      reconFileName += hipoBaseName.replace('.hipo','recon.hipo')
+      mkdir(self.cfg['workDir']+'/recon/'+str(runno))
+      isSingle = hipoBaseName.count('-')<1
+
+      job=SwifJob(self.name)
+      job.setPhase(phase)
+      job.setRam('9GB')
+      if isSingle:
+        job.setTime('10h')
+        job.setDisk('4GB')
+      else:
+        job.setTime('40h')
+        job.setDisk('16GB')
+      job.addTag('run','%.5d'%runno)
+      job.addTag('file','%.5d'%fileno)
+      job.addTag('mode','recon')
+      job.addTag('coatjava',self.cfg['coatjava'])
+      job.addTag('workDir',self.cfg['workDir'])
+      job.addInput('in.hipo',hipoFileName)
+      job.addOutput('out.hipo',reconFileName)
+
+      cmd= ' setenv GEOMDBVAR may_2018_engineers ;'
+      cmd+=' setenv USESTT true ;'
+      cmd+=' setenv SOLSHIFT -1.9 ;'
+      cmd+=' %s/bin/notsouseful4 -n 200000 -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
+      cmd+=' && ls out.hipo'
+      cmd+=' && %s/bin/hipo4utils -test out.hipo'%self.cfg['coatjava']
+      cmd+=' || rm -f out.hipo && ls out.hipo'
+      job.setCmd(cmd)
+
+      self.addJob(job)
+
+    return hipoFiles
 
   #
   # decode:  add jobs for decoding evio files
@@ -55,6 +101,8 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       job.addTag('run','%.5d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','decode')
+      job.addTag('coatjava',self.cfg['coatjava'])
+      job.addTag('workDir',self.cfg['workDir'])
       job.addInput('in.evio',evioFileName)
       job.addOutput('out.hipo',hipoFileName)
 
@@ -105,6 +153,8 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         job.addTag('run','%.5d'%runno)
         job.addTag('file','%.5d-%.5d'%(fileno1,fileno2))
         job.addTag('mode','merge')
+        job.addTag('coatjava',self.cfg['coatjava'])
+        job.addTag('workDir',self.cfg['workDir'])
         job.addOutput('out.hipo',outFile)
 
         cmd = 'rm -f '+outFile+' ; '
@@ -167,6 +217,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         job.setDisk('100MB')
         job.addTag('run','%.5d'%runno)
         job.addTag('mode','move')
+        job.addTag('outDir',self.cfg['outDir'])
         cmd = '(sleep 1 ; set d=%s ; touch $d ; mv -f $d %s/%s)'
         cmds = [ cmd%(move,self.cfg['outDir'],str(runno)) for move in moves ]
         job.setCmd(' ; '.join(cmds))
@@ -202,6 +253,37 @@ class ThreePhaseDecoding(CLAS12DecodingWorkflow):
       phase += 1
       self.move(phase,mergedFiles)
       self.delete(phase,hipoFiles)
+
+#
+# DecodingReconTest
+#
+# WARNING:  Does NOT delete anything!
+#
+# 0 = decode
+# 1 = merge
+# 2 = recon
+# 4 ...
+#
+class DecodingReconTest(CLAS12DecodingWorkflow):
+
+  def __init__(self,name,cfg):
+    CLAS12DecodingWorkflow.__init__(self,name,cfg)
+
+  def generate(self):
+
+    self.jobs=[]
+    phase=0
+    for evioFiles in self.getGroups():
+
+      phase += 1
+      hipoFiles = self.decode(phase,evioFiles)
+
+      phase += 1
+      mergedFiles = self.merge(phase,hipoFiles)
+
+      phase += 1
+      self.recon(phase,hipoFiles)
+      self.recon(phase,mergedFiles)
 
 #
 # RollingDecoding
