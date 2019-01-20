@@ -43,8 +43,8 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       runno = RunFile(hipoFileName).runNumber
       fileno = RunFile(hipoFileName).fileNumber
       hipoBaseName = os.path.basename(hipoFileName)
-      reconFileName = self.cfg['workDir']+'/recon/'+str(runno)
-      reconFileName += hipoBaseName.replace('.hipo','recon.hipo')
+      reconFileName = self.cfg['workDir']+'/recon/'+str(runno)+'/'
+      reconFileName += hipoBaseName.replace('.hipo','.recon.hipo')
       mkdir(self.cfg['workDir']+'/recon/'+str(runno))
       isSingle = hipoBaseName.count('-')<1
 

@@ -51,7 +51,7 @@ def getConfig(args):
   cli.add_argument('--mssList', metavar='PATH',help='file or directory of input files'+df,type=str,default='/mss/clas12/rg-a/data')
   cli.add_argument('--workDir', metavar='PATH',help='temporary data location'+df,         type=str,default='/volatile/clas12/clas12/data/calib/decoding')
   cli.add_argument('--outDir',  metavar='PATH',help='final location of merged files'+df,  type=str,default='/volatile/clas12/clas12/data/calib/decoded')
-  cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df,       type=str,default='/home/clas12/packages/coatjava/coatjava-5c.7.4')
+  cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df,       type=str,default='/group/clas12/packages/coatjava-6.0.0')
 
   cli.add_argument('--workflow',metavar='NAME',help='workflow name prefix'+df,      type=str, default='decode')
   cli.add_argument('--project', metavar='NAME',help='scicomp batch project name'+df,type=str, default='clas12')
