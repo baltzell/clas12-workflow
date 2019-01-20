@@ -68,7 +68,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       cmd= ' setenv GEOMDBVAR may_2018_engineers ;'
       cmd+=' setenv USESTT true ;'
       cmd+=' setenv SOLSHIFT -1.9 ;'
-      cmd+=' %s/bin/notsouseful4 -n 200000 -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
+      cmd+=' %s/bin/notsouseful-util -n 200000 -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
       cmd+=' && ls out.hipo'
       cmd+=' && %s/bin/hipo4utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
