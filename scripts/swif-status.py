@@ -27,9 +27,9 @@ class CLAS12SwifStatus(SwifStatus):
 
   def __init__(self,workflow,args):
     SwifStatus.__init__(self,workflow)
-    self.logFilename    =args.logdir+'/logs/'+workflow+'.log'
-    self.statusFilename =args.logdir+'/status/'+workflow+'.txt'
-    self.detailsFilename=args.logdir+'/details/'+workflow+'.txt'
+    self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
+    self.statusFilename =args.logdir+'/status/'+workflow+'.json'
+    self.detailsFilename=args.logdir+'/details/'+workflow+'.json'
     self.previous=None
     try:
       with open(self.statusFilename,'r') as statusFile:
@@ -39,15 +39,17 @@ class CLAS12SwifStatus(SwifStatus):
       pass
 
   def saveStatus(self):
-    with open(self.statusFilename,'w') as statusFile:
+    with open(self.statusFilename.replace('.json','.txt'),'w') as statusFile:
       statusFile.write(self.getPrettyStatus())
-      if self.isComplete(): statusFile.write('\nWORKFLOW FINISHED:  '+workflow+'\n')
+      if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+workflow+'\n')
+      statusFile.close()
+    with open(self.statusFilename,'w') as statusFile:
+      statusFile.write(self.getPrettyJsonStatus())
       statusFile.close()
 
   def saveLog(self):
     with open(self.logFilename,'a+') as logFile:
       logFile.write('\n'+self.getPrettyJsonStatus())
-      if self.isComplete(): logFile.write('\nWORKFLOW FINISHED:  '+workflow+'\n')
       logFile.close()
 
   def saveDetails(self):
@@ -75,7 +77,7 @@ if __name__ == '__main__':
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
   cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
   cli.add_argument('--workflow',help='workflow name',     action='append',default=[])
-  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default='/work/clas12/baltzell/clas12-workflow')
+  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default='/home/baltzell/logs/clas12-workflow')
   cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default='/home/baltzell/public_html/clas12/wflow/clas12')
   cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
 
@@ -93,6 +95,8 @@ if __name__ == '__main__':
 
       status = CLAS12SwifStatus(workflow,args)
 
+      status.mergeTags()
+
       #if status.isComplete() and status.previous.isComplete():
       #  status.moveJobLogs()
 
@@ -109,8 +113,9 @@ if __name__ == '__main__':
         mkdir(args.logdir+'/details/')
 
         if status.isComplete():
-          if status.previous.isComplete():
-            continue
+          if status.previous is not None:
+            if status.previous.isComplete():
+              continue
           print 'WORKFLOW FINISHED:  '+workflow
 
         status.saveStatus()
