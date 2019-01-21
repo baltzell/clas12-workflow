@@ -42,21 +42,23 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
 
       runno = RunFile(hipoFileName).runNumber
       fileno = RunFile(hipoFileName).fileNumber
-      hipoBaseName = os.path.basename(hipoFileName)
-      reconFileName = self.cfg['workDir']+'/recon/'+str(runno)+'/'
-      reconFileName += hipoBaseName.replace('.hipo','.recon.hipo')
-      mkdir(self.cfg['workDir']+'/recon/'+str(runno))
-      isSingle = hipoBaseName.count('-')<1
+      reconBaseName = os.path.basename(hipoFileName).replace('.hipo','.recon.hipo')
+
+      nFiles = 1
+      subDir = 'singles'
+      if reconBaseName.count('-')>0:
+        nFiles = self.cfg['mergeSize']
+        subDir = 'merged'
+
+      outDir = '%s/recon/%s/%d'%(self.cfg['workDir'],subDir,runno)
+      reconFileName = outDir+'/'+reconBaseName
+      mkdir(outDir)
 
       job=SwifJob(self.name)
       job.setPhase(phase)
       job.setRam('9GB')
-      if isSingle:
-        job.setTime('12h')
-        job.setDisk('4GB')
-      else:
-        job.setTime('48h')
-        job.setDisk('16GB')
+      job.setTime('%dh'%(12*nFiles))
+      job.setDisk('%dGB'%(4*nFiles))
       job.addTag('run','%.5d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','recon')
@@ -68,7 +70,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       cmd= ' setenv GEOMDBVAR may_2018_engineers ;'
       cmd+=' setenv USESTT true ;'
       cmd+=' setenv SOLSHIFT -1.9 ;'
-      cmd+=' %s/bin/notsouseful-util -n 200000 -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
+      cmd+=' %s/bin/notsouseful-util -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
       cmd+=' && ls out.hipo'
       cmd+=' && %s/bin/hipo4utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
