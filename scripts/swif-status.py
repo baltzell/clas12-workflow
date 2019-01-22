@@ -1,57 +1,8 @@
 #!/usr/bin/env python
-import os
 import subprocess
 import argparse
-from SwifStatus import *
-
-def mkdir(path):
-  if os.access(path,os.F_OK):
-    if not os.access(path,os.W_OK):
-      raise IOError('Permissions error on '+path)
-  else:
-    os.makedirs(path)
-
-class CLAS12SwifStatus(SwifStatus):
-  def __init__(self,workflow,args):
-    SwifStatus.__init__(self,workflow)
-    self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
-    self.statusFilename =args.logdir+'/status/'+workflow+'.json'
-    self.detailsFilename=args.logdir+'/details/'+workflow+'.json'
-    self.previous=None
-    try:
-      with open(self.statusFilename,'r') as statusFile:
-        self.previous=SwifStatus(workflow)
-        self.previous.loadStatusFromString('\n'.join(statusFile.readlines()))
-    except:
-      pass
-  def isPreviousComplete(self):
-    return self.previous is not None and self.previous.isComplete()
-  def saveStatus(self):
-    mkdir(args.logdir+'/status/')
-    with open(self.statusFilename.replace('.json','.txt'),'w') as statusFile:
-      statusFile.write(self.getPrettyStatus())
-      if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+workflow+'\n')
-      statusFile.close()
-    with open(self.statusFilename,'w') as statusFile:
-      statusFile.write(self.getPrettyJsonStatus())
-      statusFile.close()
-  def saveLog(self):
-    mkdir(args.logdir+'/logs/')
-    with open(self.logFilename,'a+') as logFile:
-      logFile.write('\n'+self.getPrettyJsonStatus())
-      logFile.close()
-  def saveDetails(self):
-    mkdir(args.logdir+'/details/')
-    with open(self.detailsFilename,'w') as detailsFile:
-      detailsFile.write(self.getPrettyJsonDetails())
-      detailsFile.close()
-  def moveJobLogs(self):
-    workDir = self.getTagValue('workDir')
-    if workDir is not None:
-      src=os.getenv('HOME')+'/.farm_out'
-      dest=workDir+'/farm_out/'+self.workflow
-      mkdir(dest)
-      subprocess.check_output(['mv','%s/%s*'%(src,workflow),dest])
+from SwifStatus import SWIF
+from CLAS12SwifStatus import CLAS12SwifStatus
 
 def getWorkflowNames():
   workflows=[]
@@ -92,6 +43,9 @@ def processWorkflow(workflow,args):
     if status.isComplete():
       print 'WORKFLOW FINISHED:  '+workflow+'\n'
 
+  if args.clas12mon:
+    status.saveDatabase()
+
 if __name__ == '__main__':
 
   df='\n(default=%(default)s)'
@@ -107,6 +61,7 @@ if __name__ == '__main__':
   cli.add_argument('--logdir',  help='local log directory'+df, type=str,default='/home/baltzell/logs/clas12-workflow')
   cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default='/home/baltzell/public_html/clas12/wflow/clas12')
   cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
+  cli.add_argument('--clas12mon',help='write to clas12mon db',action='store_true',default=False)
 
   args = cli.parse_args()
 
