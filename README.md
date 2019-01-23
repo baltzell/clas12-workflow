@@ -4,7 +4,7 @@
 Swif workflow tools.
 
 Initially motivated by mass-decoding of CLAS12 Spring RGA data, whose requirements include:
-* Decode single EVIO files, independently
+* Decode single EVIO files, independently (to optimize tape access)
 * Merge M sequential HIPO files into 1 HIPO file
 * Write merged HIPO files to tape, in sequence (unlike the raw EVIO files)
 * Maintain a fixed and available disk space requirement
@@ -14,7 +14,7 @@ Initially motivated by mass-decoding of CLAS12 Spring RGA data, whose requiremen
 Note, Swif phase `i+1` doesn't start until phase `i` has succesfully finished.  Each phase's decoding jobs are automatically limited to a single run number.  These workflows are subclasses of a generic SwifWorkflow.
 
 ### _3-phase_:
-Requires N GB of temporary disk space.  Only every third phase reads from tape.
+Requires N GB of temporary disk space.  Only every third phase reads from tape. 
 * Phase 1
   * N jobs
   * decode N EVIO files into N HIPO files
@@ -72,7 +72,7 @@ After running/importing the resulting file in `./jobs`, you would `swif run` it 
 
 ### Monitoring / Control
 
-`./scripts/swif-status.py` wraps various swif commands.  By default just prints all current workflows' statuses, with command-line options to:
+`./scripts/swif-status.py` wraps various Swif commands.  By default just prints all current workflows' statuses, with command-line options to:
 * save the current status, accumulating log, and full job details to log files, and publish to web directory
 * automatically retry any problem jobs, and increase resource requests if necessary
 * relocate `~/.farm_out` logs at end of workflow
@@ -82,24 +82,29 @@ See `./cron/swif.cron` for an example cron job, where retry attempts will cause 
 ## Details
 
 ### Features
+* intended to be reusable in the future (see `lib/Swif*` classes)
 * automatically overrides Swif/Auger's symlinking `/cache` files to the batch node with a `dd bs=1M` copy.
 * uses JSON Swif configs
   * much faster to create workflows and provides a bit more control (e.g. job names) than `swif add-job`
-* log file stuff
-  * log files named as job name appended with job tags (for easier association)
+* log files
+  * named as job name appended with job tags (for easier association)
   * write job logs to configureable directory path (i.e. not `~/.farm_out`)
-  * move remaining `~/.farm_out` log files at end of workflow
-* intended to be reusable in the future (see SwifJob/SwifWorkflow classes)
+  * automatically move remaining `~/.farm_out` log files at end of workflow
 * CLAS12 workflows
   * file integrity checks during the jobs, based on return value of `hipo-utils -test`
   * retrieve torus/solenoid scales from RCDB during workflow generation (overridable from command line)
+  * utilize Swif's job tags (e.g. output directory, run/file numbers, coatjava version)
+  * automatically retries jobs due to system failures and adjusts job resource reqs if necessary
+  * periodically write workflow status to clas12mon, for timeline plots and easy global status
+    * https://clas12mon.jlab.org/status/decoding/
 
-### CLAS12 Lessons Learned
-* for decoding, the largest, consistent bottleneck is reading from tape silo
-* averaging around 7500 files per day, seen up to 12K/day
+### CLAS12 Decoding Lessons Learned
+* the single, largest, and consistent bottleneck is reading from tape silo
+* _Rolling_ workflow averages around 7500 files per day for RGA Spring 2018, seen up to 12K/day
 * normal failure rate due to batch system is up to 10%
   * inisignificant effect on throughput due to tape bottleneck
-  * all recoverable with a retry, or in rare cases increase job ram/time (automated via Swif and cronjob)
+  * all recoverable with a retry, or in rare cases increase job ram/time (all automated)
+    * ultimately, so far, success rate is 100% without human intervention
   * problems with nodes
     * cannot find input files (lustre or /work filesystems)
     * cannot find basic system commands (e.g. rm!)
