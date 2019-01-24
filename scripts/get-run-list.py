@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 from RunFileUtil import RunFileGroups
 from ChefUtil import RcdbManager
@@ -18,10 +19,11 @@ rcdb = RcdbManager()
 
 print 'checking rcdb ...'
 missing=[]
-for run in rfgs.getRunList(100):
+for run in rfgs.getRunList(10):
   try:
     t=rcdb.getTorusScale(run)
     s=rcdb.getSolenoidScale(run)
+    r=rcdb.getRunStartTime(run)
   except AttributeError:
     missing.append(run)
 
