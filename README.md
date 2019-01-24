@@ -101,7 +101,7 @@ See `./cron/swif.cron` for an example cron job, where retry attempts will cause 
 ### CLAS12 Decoding Lessons Learned
 * the single, largest, and consistent bottleneck is reading from tape silo
 * _Rolling_ workflow averages around 7500 files per day for RGA Spring 2018, seen up to 12K/day
-* normal failure rate due to batch system is up to 10%
+* normal failure rate due to batch system is up to 10% (instantaneous, average is much lower)
   * inisignificant effect on throughput due to tape bottleneck
   * all recoverable with a retry, or in rare cases increase job ram/time (all automated)
     * ultimately, so far, success rate is 100% without human intervention
