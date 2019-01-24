@@ -31,7 +31,8 @@ class CLAS12SwifStatus(SwifStatus):
     if self.dbauth is None:
       print 'Missing credentials in $HOME/.clas12mon.auth'
     else:
-      data={'entry':json.dumps(self.status)}
+      # clas12mon wants dict, not array of dicts, so strip off the leading/trailing square brackets:
+      data={'entry':json.dumps(self.status).lstrip('[').rstrip().rstrip(']')}
       headers={'Authorization':self.dbauth}
       requests.post(self.dburl,data=data,headers=headers)
   def isPreviousComplete(self):
