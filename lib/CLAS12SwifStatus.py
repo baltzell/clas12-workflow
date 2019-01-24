@@ -9,6 +9,7 @@ from SwifStatus import SwifStatus
 class CLAS12SwifStatus(SwifStatus):
   def __init__(self,workflow,args):
     SwifStatus.__init__(self,workflow)
+    self.args=args
     self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
     self.statusFilename =args.logdir+'/status/'+workflow+'.json'
     self.detailsFilename=args.logdir+'/details/'+workflow+'.json'
@@ -36,7 +37,7 @@ class CLAS12SwifStatus(SwifStatus):
   def isPreviousComplete(self):
     return self.previous is not None and self.previous.isComplete()
   def saveStatus(self):
-    mkdir(args.logdir+'/status/')
+    mkdir(self.args.logdir+'/status/')
     with open(self.statusFilename.replace('.json','.txt'),'w') as statusFile:
       statusFile.write(self.getPrettyStatus())
       if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+workflow+'\n')
@@ -45,12 +46,12 @@ class CLAS12SwifStatus(SwifStatus):
       statusFile.write(self.getPrettyJsonStatus())
       statusFile.close()
   def saveLog(self):
-    mkdir(args.logdir+'/logs/')
+    mkdir(self.args.logdir+'/logs/')
     with open(self.logFilename,'a+') as logFile:
       logFile.write('\n'+self.getPrettyJsonStatus())
       logFile.close()
   def saveDetails(self):
-    mkdir(args.logdir+'/details/')
+    mkdir(self.args.logdir+'/details/')
     with open(self.detailsFilename,'w') as detailsFile:
       detailsFile.write(self.getPrettyJsonDetails())
       detailsFile.close()
