@@ -41,7 +41,7 @@ class CLAS12SwifStatus(SwifStatus):
     mkdir(self.args.logdir+'/status/')
     with open(self.statusFilename.replace('.json','.txt'),'w') as statusFile:
       statusFile.write(self.getPrettyStatus())
-      if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+workflow+'\n')
+      if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+self.workflow+'\n')
       statusFile.close()
     with open(self.statusFilename,'w') as statusFile:
       statusFile.write(self.getPrettyJsonStatus())
