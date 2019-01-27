@@ -31,10 +31,19 @@ class CLAS12SwifStatus(SwifStatus):
     if self.dbauth is None:
       print 'Missing credentials in $HOME/.clas12mon.auth'
     else:
-      # clas12mon wants dict, not array of dicts, so strip off the leading/trailing square brackets:
-      data={'entry':json.dumps(self.status).lstrip('[').rstrip().rstrip(']')}
+      # pull out special tags for clas12mon:
+      task=self.removeTag('task')
+      run_group=self.removeTag('run_group')
+      # get status without any nulls:
+      status=self.getPrunedStatus()
+      # convert to json string, and strip off leading/trailing
+      # square brackets for clas12mon:
+      data={}
+      data['entry'] = json.dumps(status).lstrip('[').rstrip().rstrip(']')
+      data['run_group'] = run_group
+      data['task'] = task
       headers={'Authorization':self.dbauth}
-      requests.post(self.dburl,data=data,headers=headers)
+      return requests.post(self.dburl,data=data,headers=headers)
   def isPreviousComplete(self):
     return self.previous is not None and self.previous.isComplete()
   def saveStatus(self):

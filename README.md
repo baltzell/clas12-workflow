@@ -57,11 +57,11 @@ First, setup the environment:
 
 These examples will generate a Swif workflow and write it to files in `./jobs`, _using the default configuration_, for a single decoding workflow for run 4013 and 4014, all runs between 4000 and 4200, or for a list of runs read from a file:
 
-`./scripts/gen-decoding.py --run 4013,4014`
+`./scripts/gen-decoding.py --runGroup rga --task decode --run 4013,4014`
 
-`./scripts/gen-decoding.py --run 4000-4200`
+`./scripts/gen-decoding.py --runGroup rga --task decode --run 4000-4200`
 
-`./scripts/gen-decoding.py --runfile filename`
+`./scripts/gen-decoding.py --runGroup rga --task decode --runfile filename`
 
 After running/importing the resulting file in `./jobs`, you would `swif run` it to start the workflow.  Or, adding the option `--submit` will submit and start the workflow on-the-fly.
 

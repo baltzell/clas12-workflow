@@ -21,6 +21,8 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
 
   def addJob(self,job):
     job.setLogDir(self.cfg['workDir']+'/logs/'+self.name)
+    job.addTag('run_group',self.cfg['runGroup'])
+    job.addTag('task',self.cfg['task'])
     SwifWorkflow.addJob(self,job)
 
   def addRun(self,run):

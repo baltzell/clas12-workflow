@@ -92,16 +92,35 @@ class SwifStatus():
           tags.append({key:[]})
         if val not in tags[idx][key]:
           tags[idx][key].append(val)
-    status=self.status
-    for stat in status:
+    for stat in self.status:
       stat['tags']=tags
-    self.status=status
     self.tagsMerged=True
+
+  # return a copy of the status with all null entries removed:
+  def getPrunedStatus(self):
+    if self.status is None:
+      self.loadStatus()
+    status = list(self.status)
+    for stat in status:
+      modified = True
+      while modified:
+        modified = False
+        for key,val in stat.iteritems():
+          if val==None:
+            del stat[key]
+            modified = True
+            break
+    return status
+
+  def getPrunedJsonStatus(self):
+    if self.status is None:
+      self.loadStatus()
+    return json.dumps(self.getPrunedStatus())
 
   def getPrettyJsonStatus(self):
     if self.status is None:
       self.loadStatus()
-    return json.dumps(self.status,indent=2,separators=(',',': '),sort_keys=True)
+    return json.dumps(self.getPrunedStatus(),indent=2,separators=(',',': '),sort_keys=True)
 
   def getPrettyJsonDetails(self):
     if self.details is None:
@@ -141,10 +160,31 @@ class SwifStatus():
     if not self.tagsMerged:
       self.mergeTags()
     for status in self.status:
-      if 'tags' in status:
-        for key,val in status['tags'].iteritems():
-          if tag==key:
-            return val
+      if 'tags' not in status:
+        continue
+      for atag in status['tags']:
+        for key,val in atag.iteritems():
+          if key==tag:
+            if type(val) is list:
+              return val[0]
+            else:
+              return val
+    return None
+
+  def removeTag(self,tag):
+    if not self.tagsMerged:
+      self.mergeTags()
+    for status in self.status:
+      if 'tags' not in status:
+        continue
+      for atag in status['tags']:
+        for key,val in atag.iteritems():
+          if key==tag:
+            status['tags'].remove(atag)
+            if type(val) is list:
+              return val[0]
+            else:
+              return val
     return None
 
   def isComplete(self):
