@@ -25,14 +25,14 @@ elif cfg['model']==3:
 else:
   sys.exit('ERROR:  unknown model: '+str(cfg['model']))
 
-print 'Adding files from %s ...'%cfg['mssList']
+print 'Adding files from %s ...'%cfg['inputs']
 workflow.addRuns(cfg['runs'])
-if os.path.isdir(cfg['mssList']):
-  workflow.addDir(cfg['mssList'])
-elif os.path.isfile(cfg['mssList']):
-  workflow.addFiles(open(cfg['mssList'],'r').readlines())
+if os.path.isdir(cfg['inputs']):
+  workflow.addDir(cfg['inputs'])
+elif os.path.isfile(cfg['inputs']):
+  workflow.addFiles(open(cfg['inputs'],'r').readlines())
 else:
-  sys.exit('ERROR:  mssList must be a file (containing a list of files) or a directory:\n'+cfg['mssList'])
+  sys.exit('ERROR:  inputs must be a file (containing a list of files) or a directory:\n'+cfg['inputs'])
 
 print 'Generating workflow ...'
 workflow.generate()

@@ -51,8 +51,8 @@ cli,cfg = getConfig(sys.argv[1:])
 print 'Getting workDir groups ...'
 availableDecades = getDecades(cfg['workDir'],cfg['runs'])
 
-print 'Getting mssList groups ...'
-expectedDecades = getDecades(cfg['mssList'],cfg['runs'])
+print 'Getting inputs groups ...'
+expectedDecades = getDecades(cfg['inputs'],cfg['runs'])
 
 for run,decades in availableDecades.iteritems():
   if not run in expectedDecades:
