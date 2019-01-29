@@ -1,2 +1,2 @@
-MAILTO="bobcat@jlab.org"
-*/20 * * * * /home/clas12/users/baltzell/clas12-workflow/cron/swif-cron.csh
+#MAILTO="bobcat@jlab.org"
+*/20 * * * * /path/to/clas12-workflow/cron/swif-cron.csh

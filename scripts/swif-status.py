@@ -59,12 +59,18 @@ if __name__ == '__main__':
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
   cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
   cli.add_argument('--workflow',help='workflow name',     action='append',default=[])
-  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default='/group/clas/www/clasweb/html/clas12offline/workflow/rga')
+  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default=None)
   cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
   cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
   cli.add_argument('--clas12mon',help='write to clas12mon db',action='store_true',default=False)
 
   args = cli.parse_args()
+
+  if args.save and not args.logdir:
+    sys.exit('ERROR:  must define --logdir if using the --save option')
+
+  if args.publish and not args.webdir:
+    sys.exit('ERROR:  must define --webdir if using the --publish option')
 
   if len(args.workflow)==0:
     args.workflow=getWorkflowNames()
@@ -76,8 +82,6 @@ if __name__ == '__main__':
     for workflow in args.workflow:
       processWorkflow(workflow,args)
     if args.save and args.publish:
-      if args.webdir is None:
-        sys.exit('ERROR:  Publishing requires setting webdir.')
       rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
       subprocess.check_output(rsyncCmd)
 
