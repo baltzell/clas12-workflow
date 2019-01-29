@@ -63,7 +63,7 @@ def getConfig(args):
   cli.add_argument('--inputs', metavar='PATH',help='file or directory of input files'+df,type=str,default='/mss/clas12/rg-a/data')
   cli.add_argument('--workDir', metavar='PATH',help='temporary data location'+df,        type=str,default='/volatile/clas12/clas12/data/tmp')
   cli.add_argument('--outDir',  metavar='PATH',help='final location of merged files'+df, type=str,default='/volatile/clas12/clas12/data/tmp')
-  cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df,      type=str,default='/group/clas12/packages/coatjava-6.0.0')
+  cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df,      type=str,default='/group/clas12/packages/coatjava-6b.0.0')
 
   cli.add_argument('--phaseSize', metavar='#',help='number of files per phase'+df, type=int, default=1200)
   cli.add_argument('--mergeSize', metavar='#',help='number of files per merge'+df, type=int, default=10)
