@@ -5,6 +5,7 @@ from ChefUtil import RcdbManager
 
 runStart = int(sys.argv[1])
 runEnd = int(sys.argv[2])
+fileList = sys.argv[3]
 
 rfgs = RunFileGroups()
 
@@ -14,7 +15,7 @@ for run in range(runStart,runEnd+1):
   rfgs.addRun(run)
 
 print 'loading files ...'
-for fileName in open('/home/baltzell/clas12/rga/rga-spring-files.txt','r').readlines():
+for fileName in open(fileList,'r').readlines():
   print fileName
   rfgs.addFile(fileName)
 

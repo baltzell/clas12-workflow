@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import subprocess
 import argparse
 from SwifStatus import SWIF
@@ -58,8 +59,8 @@ if __name__ == '__main__':
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
   cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
   cli.add_argument('--workflow',help='workflow name',     action='append',default=[])
-  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default='/home/baltzell/logs/clas12-workflow')
-  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default='/home/baltzell/public_html/clas12/wflow/clas12')
+  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default='/group/clas/www/clasweb/html/clas12offline/workflow/rga')
+  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
   cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
   cli.add_argument('--clas12mon',help='write to clas12mon db',action='store_true',default=False)
 
@@ -75,6 +76,8 @@ if __name__ == '__main__':
     for workflow in args.workflow:
       processWorkflow(workflow,args)
     if args.save and args.publish:
+      if args.webdir is None:
+        sys.exit('ERROR:  Publishing requires setting webdir.')
       rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
       subprocess.check_output(rsyncCmd)
 
