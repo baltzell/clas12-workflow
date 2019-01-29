@@ -102,7 +102,7 @@ def getConfig(args):
   cfg['solenoid']    = args.solenoid
   cfg['runGroup']    = args.runGroup
   cfg['task']        = args.task
-  cfg['workflow']    = args.task
+  cfg['workflow']    = args.workflow
   return cli,cfg
 
 if __name__ == '__main__':
