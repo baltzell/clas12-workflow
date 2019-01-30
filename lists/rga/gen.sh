@@ -9,7 +9,7 @@ do
   echo \
   ./scripts/gen-decoding.py --runGroup rga \
   --workflow rga-decode$flow --runFile ./lists/rga/groups-50-golden/runfile_g$flow.txt \
-  --phaseSize 2600 --mergeSize 10 \
+  --phaseSize 1300 --mergeSize 10 \
   --inputs $inp --outDir $out --workDir $wrk
 done
 
