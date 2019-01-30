@@ -55,7 +55,7 @@ def getConfig(args):
   cli.add_argument('--runGroup',metavar='NAME',help='run group name for clas12mon', type=str, choices=RUNGROUPS, required=True)
   cli.add_argument('--task',    metavar='NAME',help='task name for clas12mon'+df,   type=str, choices=TASKS, default='decode')
 
-  cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
+#  cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
   cli.add_argument('--run',    metavar='RUN(s)',help='run numbers (e.g. 4013 or 4013,4015 or 4000-4999)', action='append', default=[], type=str)
   cli.add_argument('--runfile',metavar='PATH',help='file of run numbers', action='append', default=[], type=str)
@@ -79,6 +79,8 @@ def getConfig(args):
   cli.add_argument('--model', help='workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)'+df, type=int, choices=[0,1,2,3], default=1)
 
   args = cli.parse_args(args)
+
+  args.submit = False
 
   runs = getRunList(args)
 

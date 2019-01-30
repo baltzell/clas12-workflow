@@ -63,7 +63,7 @@ These examples will generate a Swif workflow and write it to files in `./jobs`, 
 
 `./scripts/gen-decoding.py --runGroup rga --workflow decodeC --runfile filename`
 
-After running/importing the resulting file in `./jobs`, you would `swif run` it to start the workflow.  Or, adding the option `--submit` will submit and start the workflow on-the-fly.
+After running/importing the resulting file in `./jobs`, you would `swif run` it to start the workflow.
 
 * You'll need to modify the default configuration
   * all necessary settings are available from the command line, run it with the `-h` option to see
