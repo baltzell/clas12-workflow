@@ -8,7 +8,7 @@ for flow in `seq 9`
 do
   echo \
   ./scripts/gen-decoding.py --runGroup rga \
-  --workflow rga-decode$flow --runFile ./lists/rga/groups-50-golden/runfile_g$flow.txt \
+  --workflow rga-decode$flow --runfile ./lists/rga/groups-50-golden/runfile_g$flow.txt \
   --phaseSize 1300 --mergeSize 10 \
   --inputs $inp --outDir $out --workDir $wrk
 done
