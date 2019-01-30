@@ -10,9 +10,13 @@ class CLAS12SwifStatus(SwifStatus):
   def __init__(self,workflow,args):
     SwifStatus.__init__(self,workflow)
     self.args=args
-    self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
-    self.statusFilename =args.logdir+'/status/'+workflow+'.json'
-    self.detailsFilename=args.logdir+'/details/'+workflow+'.json'
+    self.logFilename    =None
+    self.statusFilename =None
+    self.detailsFilename=None
+    if self.args.logdir is not None:
+      self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
+      self.statusFilename =args.logdir+'/status/'+workflow+'.json'
+      self.detailsFilename=args.logdir+'/details/'+workflow+'.json'
     self.dburl='https://clas12mon.jlab.org/api/SwifEntries'
     self.dbauth=None
     self.previous=None
