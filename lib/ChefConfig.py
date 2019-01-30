@@ -38,8 +38,9 @@ def getRunList(args):
       print '\nERROR:  File is not readable:  '+fileName+'\n'
       return None
     for line in open(fileName,'r').readlines():
+      run=line.strip().split()[0]
       try:
-        runs.append(int(line))
+        runs.append(int(run))
       except:
         print '\nERROR: Run numbers must be integers:  %s (%s)\n'%(fileName,line)
         return None
