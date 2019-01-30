@@ -27,9 +27,9 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
 
   def addRun(self,run):
     SwifWorkflow.addRun(self,run)
-    mkdir(self.cfg['outDir']+'/'+str(run))
-    mkdir(self.cfg['workDir']+'/singles/'+str(run))
-    mkdir(self.cfg['workDir']+'/merged/'+str(run))
+    mkdir('%s/%.6d'%(self.cfg['outDir'],run))
+    mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
+    mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
   #
   # recon:  add jobs for running single-threaded recon
@@ -52,7 +52,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         nFiles = self.cfg['mergeSize']
         subDir = 'merged'
 
-      outDir = '%s/recon/%s/%d'%(self.cfg['workDir'],subDir,runno)
+      outDir = '%s/recon/%s/%.6d'%(self.cfg['workDir'],subDir,runno)
       reconFileName = outDir+'/'+reconBaseName
       mkdir(outDir)
 
@@ -61,7 +61,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       job.setRam('9GB')
       job.setTime('%dh'%(12*nFiles))
       job.setDisk('%dGB'%(4*nFiles))
-      job.addTag('run','%.5d'%runno)
+      job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','recon')
       job.addTag('coatjava',self.cfg['coatjava'])
@@ -96,13 +96,13 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
       runno = RunFile(evioFileName).runNumber
       fileno = RunFile(evioFileName).fileNumber
       hipoBaseName = os.path.basename(evioFileName)+'.hipo'
-      hipoFileName = self.cfg['workDir']+'/singles/'+str(runno)+'/'+hipoBaseName
+      hipoFileName = '%s/singles/%.6d/%s'%(self.cfg['workDir'],runno,hipoBaseName)
 
       hipoFiles.append(hipoFileName)
 
       job=SwifJob(self.name)
       job.setPhase(phase)
-      job.addTag('run','%.5d'%runno)
+      job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','decode')
       job.addTag('coatjava',self.cfg['coatjava'])
@@ -144,8 +144,8 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         runno = RunFile(inputs[0]).runNumber
         fileno1 = RunFile(inputs[0]).fileNumber
         fileno2 = RunFile(inputs[len(inputs)-1]).fileNumber
-        outFile=self.cfg['workDir']+'/merged/'+str(runno)+'/'+\
-            self.cfg['mergePattern']%(runno,fileno1,fileno2)
+        outDir='%s/merged/%.6d/'%(self.cfg['workDir'],runno)
+        outFile=outDir+self.cfg['mergePattern']%(runno,fileno1,fileno2)
         merged.append(outFile)
 
         job=SwifJob(self.name)
@@ -154,7 +154,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         job.setRam('9GB')
         job.setTime(getMergeTimeReq(self.cfg['mergeSize']))
         job.setDisk(getMergeDiskReq(self.cfg['mergeSize']))
-        job.addTag('run','%.5d'%runno)
+        job.addTag('run','%.6d'%runno)
         job.addTag('file','%.5d-%.5d'%(fileno1,fileno2))
         job.addTag('mode','merge')
         job.addTag('coatjava',self.cfg['coatjava'])
@@ -193,7 +193,7 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         job.setRam('1GB')
         job.setTime('%ds'%(60+3*len(deletes)))
         job.setDisk('100MB')
-        job.addTag('run','%.5d'%runno)
+        job.addTag('run','%.6d'%runno)
         f1=RunFile(deletes[0]).fileNumber
         f2=RunFile(deletes[len(deletes)-1]).fileNumber
         job.addTag('file','%.5d-%.5d'%(f1,f2))
@@ -219,11 +219,11 @@ class CLAS12DecodingWorkflow(SwifWorkflow):
         job.setRam('1GB')
         job.setTime('%ds'%(60+3*len(moves)))
         job.setDisk('100MB')
-        job.addTag('run','%.5d'%runno)
+        job.addTag('run','%.6d'%runno)
         job.addTag('mode','move')
         job.addTag('outDir',self.cfg['outDir'])
-        cmd = '(sleep 1 ; set d=%s ; touch $d ; mv -f $d %s/%s)'
-        cmds = [ cmd%(move,self.cfg['outDir'],str(runno)) for move in moves ]
+        cmd = '(sleep 1 ; set d=%s ; touch $d ; mv -f $d %s/%.6d)'
+        cmds = [ cmd%(move,self.cfg['outDir'],runno) for move in moves ]
         job.setCmd(' ; '.join(cmds))
         self.addJob(job)
 
@@ -369,7 +369,7 @@ if __name__ == '__main__':
   workflow = RollingDecoding('test',cfg)
   workflow.setPhaseSize(1000)
   workflow.addRun(4013)
-  workflow.addFiles(open('/home/baltzell/clas12/rga-spring.list','r').readlines())
+  workflow.addFiles(open('/home/baltzell/clas12/rga/rga-spring-files.txt','r').readlines())
   workflow.generate()
   print workflow.getShell()
   print workflow.getJson()
