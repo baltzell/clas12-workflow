@@ -1,7 +1,7 @@
 # clas12-workflow
 
 ## Overview
-Swif workflow tools.
+Wrapper tools for [JLab's Swif](https://scicomp.jlab.org/docs/swif).
 
 Initially motivated by mass-decoding of CLAS12 Spring RGA data, whose requirements include:
 * Decode single EVIO files, independently (to optimize tape access)
@@ -105,7 +105,8 @@ See `./cron/swif.cron` for an example cron job, where retry attempts will cause 
   * inisignificant effect on throughput due to tape bottleneck
   * all recoverable with a retry, or in rare cases increase job ram/time (all automated)
     * ultimately, so far, success rate is 100% without human intervention
-  * problems with nodes
+  * common problems with nodes
+    * no space available on local filesystem 
     * cannot find input files (lustre or /work filesystems)
     * cannot find basic system commands (e.g. rm!)
   * flurry of corrupt hipo files
