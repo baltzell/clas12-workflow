@@ -14,7 +14,7 @@ Initially motivated by mass-decoding of CLAS12 Spring RGA data, whose requiremen
 Note, Swif phase `i+1` doesn't start until phase `i` has succesfully finished.  Each phase's decoding jobs are automatically limited to a single run number.  These workflows are subclasses of a generic SwifWorkflow.
 
 ### _3-phase_:
-Requires N GB of temporary disk space.  Only every third phase reads from tape. 
+Requires N TB of temporary disk space.  Only every third phase reads from tape. 
 * Phase 1
   * N jobs
   * decode N EVIO files into N HIPO files
@@ -28,7 +28,7 @@ Requires N GB of temporary disk space.  Only every third phase reads from tape.
 * Repeat phases 1+2+3 until all requested runs/files are exhausted ...
 
 ### _Rolling_:
-Requires 3N GB of temporary disk space.  Every phase reads from tape.
+Requires 3N TB of temporary disk space.  Every phase reads from tape.
 * Phase 0
   * N jobs
   * decode N EVIO files
