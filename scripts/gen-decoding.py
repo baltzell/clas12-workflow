@@ -3,7 +3,7 @@ import sys
 import os
 import subprocess
 from ChefConfig import getConfig
-from CLAS12DecodingWorkflows import *
+from CLAS12Workflows import *
 
 cli,cfg = getConfig(sys.argv[1:])
 
