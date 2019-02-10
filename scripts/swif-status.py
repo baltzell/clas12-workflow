@@ -16,10 +16,10 @@ def getWorkflowNames():
 def processWorkflow(workflow,args):
 
   status = CLAS12SwifStatus(workflow,args)
-  status.mergeTags()
 
-  if args.joblogs and status.isComplete() and status.isPreviousComplete():
-    status.moveJobLogs()
+#  if args.joblogs:
+#    if status.isComplete() and status.isPreviousComplete():
+#      status.moveJobLogs()
 
   if args.retry:
     result = status.retryProblems()
@@ -53,12 +53,12 @@ if __name__ == '__main__':
 
   cli = argparse.ArgumentParser()
   cli.add_argument('--list',    help='list workflows',    action='store_true',default=False)
-  cli.add_argument('--save',    help='save to logs',      action='store_true',default=False)
   cli.add_argument('--retry',   help='retry problem jobs',action='store_true',default=False)
+  cli.add_argument('--save',    help='save to logs',      action='store_true',default=False)
   cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
-  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
-  cli.add_argument('--workflow',help='workflow name',     action='append',default=[])
+#  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
+  cli.add_argument('--workflow',help='workflow name (else all workflows)', action='append',default=[])
   cli.add_argument('--logdir',  help='local log directory'+df, type=str,default=None)
   cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
   cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')

@@ -31,23 +31,6 @@ class CLAS12SwifStatus(SwifStatus):
         self.dbauth=authFile.read().strip()
     except:
       pass
-  def saveDatabase(self):
-    if self.dbauth is None:
-      print 'Missing credentials in $HOME/.clas12mon.auth'
-    else:
-      # pull out special tags for clas12mon:
-      task=self.removeTag('task')
-      run_group=self.removeTag('run_group')
-      # get status without any nulls:
-      status=self.getPrunedStatus()
-      # convert to json string, and strip off leading/trailing
-      # square brackets for clas12mon:
-      data={}
-      data['entry'] = json.dumps(status).lstrip('[').rstrip().rstrip(']')
-      data['run_group'] = run_group
-      data['task'] = task
-      headers={'Authorization':self.dbauth}
-      return requests.post(self.dburl,data=data,headers=headers)
   def isPreviousComplete(self):
     return self.previous is not None and self.previous.isComplete()
   def saveStatus(self):
@@ -69,6 +52,26 @@ class CLAS12SwifStatus(SwifStatus):
     with open(self.detailsFilename,'w') as detailsFile:
       detailsFile.write(self.getPrettyJsonDetails())
       detailsFile.close()
+  def saveDatabase(self):
+    # pull all job tags for clas12mon:
+    if not self.tagsMerged:
+      self.mergeTags()
+    if self.dbauth is None:
+      print 'Missing credentials in $HOME/.clas12mon.auth'
+    else:
+      # pull out special tags for clas12mon:
+      task=self.removeTag('task')
+      run_group=self.removeTag('run_group')
+      # get status without any nulls:
+      status=self.getPrunedStatus()
+      # convert to json string, and strip off leading/trailing
+      # square brackets for clas12mon:
+      data={}
+      data['entry'] = json.dumps(status).lstrip('[').rstrip().rstrip(']')
+      data['run_group'] = run_group
+      data['task'] = task
+      headers={'Authorization':self.dbauth}
+      return requests.post(self.dburl,data=data,headers=headers)
   def moveJobLogs(self):
     workDir = self.getTagValue('workDir')
     if workDir is not None:
