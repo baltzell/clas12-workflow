@@ -4,11 +4,11 @@ import argparse
 
 RUNGROUPS=['rga','rgb','rgk','test']
 TASKS=['decode','recon']
-
 PROJECT='clas12'
 TRACK='reconstruction'
+
+SINGLEPATT='clas_%.6d.evio.%.5d.hipo'
 MERGEPATT='clas_%.6d.evio.%.5d-%.5d.hipo'
-EVIOREGEX='.*clas[A-Za-z]*_(\d+)\.evio\.(\d+)'
 
 def getRunList(args):
   runs=[]
@@ -75,7 +75,6 @@ def getConfig(args):
 #  cli.add_argument('--project', metavar='NAME',help='scicomp batch project name'+df, type=str, default=PROJECT)
 #  cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name'+df,   type=str, default=TRACK)
 #  cli.add_argument('--mergePatt',metavar='PATTERN',help='merged filename format'+df, type=str, default=MERGEPATT)
-#  cli.add_argument('--evioRegex',metavar='REGEX',  help='evio filename regex'+df,    type=str, default=EVIOREGEX)
 
   cli.add_argument('--model', help='workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)'+df, type=int, choices=[0,1,2,3], default=1)
 
@@ -98,14 +97,14 @@ def getConfig(args):
   cfg['track']       = TRACK
   cfg['phaseSize']   = args.phaseSize
   cfg['mergeSize']   = args.mergeSize
-  cfg['mergePattern']= MERGEPATT
-  cfg['evioRegex']   = EVIOREGEX
   cfg['model']       = args.model
   cfg['torus']       = args.torus
   cfg['solenoid']    = args.solenoid
   cfg['runGroup']    = args.runGroup
   cfg['task']        = args.task
   cfg['workflow']    = args.workflow
+  cfg['mergePattern']  = MERGEPATT
+  cfg['singlePattern'] = SINGLEPATT
   return cli,cfg
 
 if __name__ == '__main__':

@@ -95,9 +95,10 @@ class CLAS12Workflow(SwifWorkflow):
 
       runno = RunFile(evioFileName).runNumber
       fileno = RunFile(evioFileName).fileNumber
-      hipoBaseName = os.path.basename(evioFileName)+'.hipo'
-      hipoFileName = '%s/singles/%.6d/%s'%(self.cfg['workDir'],runno,hipoBaseName)
 
+      outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],runno)
+      hipoBaseName = self.cfg['singlePattern']%(runno,fileno)
+      hipoFileName = outDir + hipoBaseName
       hipoFiles.append(hipoFileName)
 
       job=SwifJob(self.name)
