@@ -2,8 +2,17 @@ import os
 import re
 import collections
 
-__FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
+__FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)$'
 __DEBUG=False
+
+def setFileRegex(regex):
+  global __FILEREGEX
+  print '\nChanging file regex to '+regex+' ... checking for compilation ...'
+  re.compile(regex)
+  __FILEREGEX = regex
+
+def getFileRegex():
+  return __FILEREGEX
 
 def getRunFileNumber(fileName):
   mm = re.match(__FILEREGEX,fileName)
@@ -154,4 +163,6 @@ class RunFileGroups:
     for key,val in self.rfgs.iteritems():
       print key,
       val.show()
+  def getFileCount(self):
+    return len(self.getFlatList())
 

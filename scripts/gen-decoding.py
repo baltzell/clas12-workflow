@@ -7,11 +7,6 @@ from CLAS12Workflows import *
 
 cli,cfg = getConfig(sys.argv[1:])
 
-if len(cfg['runs'])<=0:
-  print '\nERROR:  Must define run numbers.\n'
-  cli.print_usage()
-  sys.exit()
-
 name='%s_R%dx%d_x%d'%(cfg['workflow'],cfg['runs'][0],len(cfg['runs']),cfg['phaseSize'])
 
 if cfg['model']==0:
@@ -33,6 +28,9 @@ elif os.path.isfile(cfg['inputs']):
   workflow.addFiles([x.split()[0] for x in open(cfg['inputs'],'r').readlines()])
 else:
   sys.exit('ERROR:  inputs must be a file (containing a list of files) or a directory:\n'+cfg['inputs'])
+
+if workflow.getFileCount()<1:
+  sys.exit('ERROR:  found no applicable input files.')
 
 print 'Generating workflow ...'
 workflow.generate()

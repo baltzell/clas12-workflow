@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+from RunFileUtil import setFileRegex,getFileRegex
 
 RUNGROUPS=['rga','rgb','rgk','test']
 TASKS=['decode','recon']
@@ -33,7 +34,7 @@ def getRunList(args):
         except:
           print '\nERROR: Run numbers must be integers:  '+run+'\n'
           return None
-  for fileName in args.runfile:
+  for fileName in args.runFile:
     if not os.access(fileName,os.R_OK):
       print '\nERROR:  File is not readable:  '+fileName+'\n'
       return None
@@ -54,16 +55,17 @@ def getConfig(args):
 
   cli.add_argument('--workflow',metavar='NAME',help='workflow name',  type=str, required=True)
   cli.add_argument('--runGroup',metavar='NAME',help='run group name for clas12mon', type=str, choices=RUNGROUPS, required=True)
-  cli.add_argument('--task',    metavar='NAME',help='task name for clas12mon'+df,   type=str, choices=TASKS, default='decode')
 
-#  cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
+  cli.add_argument('--inputs', metavar='PATH',help='file or directory of input files'+df,type=str,required=True)
+
+  cli.add_argument('--workDir', metavar='PATH',help='temporary data location'+df,        type=str,required=True)
+  cli.add_argument('--outDir',  metavar='PATH',help='final data location'+df,            type=str,required=True)
 
   cli.add_argument('--run',    metavar='RUN(s)',help='run numbers (e.g. 4013 or 4013,4015 or 4000-4999)', action='append', default=[], type=str)
-  cli.add_argument('--runfile',metavar='PATH',help='file of run numbers', action='append', default=[], type=str)
+  cli.add_argument('--runFile',metavar='PATH',help='file of run numbers', action='append', default=[], type=str)
 
-  cli.add_argument('--inputs', metavar='PATH',help='file or directory of input files'+df,type=str,default='/mss/clas12/rg-a/data')
-  cli.add_argument('--workDir', metavar='PATH',help='temporary data location'+df,        type=str,default='/volatile/clas12/clas12/data/tmp')
-  cli.add_argument('--outDir',  metavar='PATH',help='final location of merged files'+df, type=str,default='/volatile/clas12/clas12/data/tmp')
+  cli.add_argument('--task',    metavar='NAME',help='task name for clas12mon'+df,   type=str, choices=TASKS, default='decode')
+
   cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df,      type=str,default='/group/clas12/packages/coatjava-6b.0.0')
 
   cli.add_argument('--phaseSize', metavar='#',help='number of files per phase'+df, type=int, default=1200)
@@ -72,19 +74,32 @@ def getConfig(args):
   cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale'+df,type=float, default=None)
   cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale'+df,type=float, default=None)
 
-#  cli.add_argument('--project', metavar='NAME',help='scicomp batch project name'+df, type=str, default=PROJECT)
-#  cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name'+df,   type=str, default=TRACK)
-#  cli.add_argument('--mergePatt',metavar='PATTERN',help='merged filename format'+df, type=str, default=MERGEPATT)
+  cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format'+df, type=str, default=getFileRegex())
 
   cli.add_argument('--model', help='workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)'+df, type=int, choices=[0,1,2,3], default=1)
+
+#  cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
+#  cli.add_argument('--project', metavar='NAME',help='scicomp batch project name'+df, type=str, default=PROJECT)
+#  cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name'+df,   type=str, default=TRACK)
 
   args = cli.parse_args(args)
 
   args.submit = False
 
+  if args.model != 2:
+    if args.phaseSize % args.mergeSize != 0:
+      cli.error('\n--phaseSize must be a multiple of --mergeSize for merging workflows.')
+
+  if args.fileRegex is not None and args.fileRegex != getFileRegex():
+    if args.model==2:
+      setFileRegex(args.fileRegex)
+    else:
+      cli.error('--fileRegex is only allowed with SinglesOnly (--model 2)')
+
   runs = getRunList(args)
 
-  if runs is None: sys.exit()
+  if runs is None or len(runs)<1:
+    cli.error('\nFound no runs.  See --run or --runfile.')
 
   cfg={}
   cfg['dryRun']      = not args.submit
@@ -105,6 +120,7 @@ def getConfig(args):
   cfg['workflow']    = args.workflow
   cfg['mergePattern']  = MERGEPATT
   cfg['singlePattern'] = SINGLEPATT
+
   return cli,cfg
 
 if __name__ == '__main__':
