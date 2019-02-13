@@ -107,9 +107,12 @@ class RunFileGroup():
 
 class RunFileGroups:
   def __init__(self):
+    self.combineRuns=False
     self.groupSize=0
     # maintain user's run insertion order:
     self.rfgs=collections.OrderedDict()
+  def setCombineRuns(self,val):
+    self.combineRuns=val
   def addRun(self,run):
     if not type(run) is int:
       raise ValueError('run must be an int: '+str(run))
@@ -134,15 +137,23 @@ class RunFileGroups:
         self.addFile(dirpath+'/'+filename)
   def getGroups(self):
     groups=[]
+    phaseList=[]
     for run,rfg in self.rfgs.iteritems():
-      phaseList=[]
+      # make a new group unless we're allowed to combine runs:
+      if not self.combineRuns:
+        if len(phaseList)>0:
+          groups.append(phaseList)
+        phaseList=[]
+      # loop over the files in this run:
       for rf in rfg.runFileList:
         phaseList.append(rf.fileName)
+        # make a new group if we're over the size limit:
         if self.groupSize>0 and len(phaseList)>=self.groupSize:
           groups.append(phaseList)
           phaseList=[]
-      if len(phaseList)>0:
-        groups.append(phaseList)
+    # make a new group for any leftovers:
+    if len(phaseList)>0:
+      groups.append(phaseList)
     return groups
   def getFlatList(self):
     flatList=[]

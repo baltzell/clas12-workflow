@@ -15,6 +15,7 @@ class CLAS12Workflow(SwifWorkflow):
     mkdir(self.cfg['workDir']+'/singles')
     mkdir(self.cfg['workDir']+'/merged')
     mkdir(self.cfg['workDir']+'/logs/'+self.name)
+    self.setCombineRuns(self.cfg['multiRun'])
     for run in self.cfg['runs']:
       self.addRun(run)
     self.rcdb=RcdbManager()
