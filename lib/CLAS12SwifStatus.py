@@ -7,22 +7,22 @@ from ChefUtil import mkdir
 from SwifStatus import SwifStatus
 
 class CLAS12SwifStatus(SwifStatus):
-  def __init__(self,workflow,args):
-    SwifStatus.__init__(self,workflow)
+  def __init__(self,name,args):
+    SwifStatus.__init__(self,name)
     self.args=args
     self.logFilename    =None
     self.statusFilename =None
     self.detailsFilename=None
     if self.args.logdir is not None:
-      self.logFilename    =args.logdir+'/logs/'+workflow+'.json'
-      self.statusFilename =args.logdir+'/status/'+workflow+'.json'
-      self.detailsFilename=args.logdir+'/details/'+workflow+'.json'
+      self.logFilename    =args.logdir+'/logs/'+name+'.json'
+      self.statusFilename =args.logdir+'/status/'+name+'.json'
+      self.detailsFilename=args.logdir+'/details/'+name+'.json'
     self.dburl='https://clas12mon.jlab.org/api/SwifEntries'
     self.dbauth=None
     self.previous=None
     try:
       with open(self.statusFilename,'r') as statusFile:
-        self.previous=SwifStatus(workflow)
+        self.previous=SwifStatus(name)
         self.previous.loadStatusFromString('\n'.join(statusFile.readlines()))
     except:
       pass
@@ -37,7 +37,7 @@ class CLAS12SwifStatus(SwifStatus):
     mkdir(self.args.logdir+'/status/')
     with open(self.statusFilename.replace('.json','.txt'),'w') as statusFile:
       statusFile.write(self.getPrettyStatus())
-      if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+self.workflow+'\n')
+      if self.isComplete(): statusFile.write('\n\nWORKFLOW FINISHED:  '+self.name+'\n')
       statusFile.close()
     with open(self.statusFilename,'w') as statusFile:
       statusFile.write(self.getPrettyJsonStatus())
@@ -76,7 +76,7 @@ class CLAS12SwifStatus(SwifStatus):
     workDir = self.getTagValue('workDir')
     if workDir is not None:
       src=os.getenv('HOME')+'/.farm_out'
-      dest=workDir+'/farm_out/'+self.workflow
+      dest=workDir+'/farm_out/'+self.name
       mkdir(dest)
       subprocess.check_output(['mv','%s/%s*'%(src,workflow),dest])
 

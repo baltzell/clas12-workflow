@@ -47,8 +47,8 @@ SWIFJSONKEYS=[
 
 class SwifStatus():
 
-  def __init__(self,workflow):
-    self.workflow=workflow
+  def __init__(self,name):
+    self.name=name
     self.status=None
     self.details=None
     self.tagsMerged=False
@@ -61,11 +61,11 @@ class SwifStatus():
     self.user=user
 
   def loadStatus(self):
-    cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.workflow]
+    cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
     self.status=json.loads(subprocess.check_output(cmd))
 
   def loadDetails(self):
-    cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.workflow]
+    cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
     self.details=json.loads(subprocess.check_output(cmd))
 
   # pull user-defined swif tags from all jobs into the global status
@@ -200,7 +200,7 @@ class SwifStatus():
     problems=self.getProblems()
     ret.extend(self.modifyJobReqs(problems))
     for problem in problems:
-      retryCmd=[SWIF,'retry-jobs','-workflow',self.workflow,'-problems',problem]
+      retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
       ret.append(retryCmd)
       ret.append(subprocess.check_output(retryCmd))
     return ret
@@ -208,14 +208,14 @@ class SwifStatus():
   def modifyJobReqs(self,problems):
     ret=[]
     if 'AUGER-TIMEOUT' in problems:
-      modifyCmd=[SWIF,'modify-jobs','-workflow',self.workflow]
+      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-time','add','60m'])
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
       ret.append(modifyCmd)
       ret.append(subprocess.check_output(modifyCmd))
     if 'AUGER-OVER_RLIMIT' in problems:
-      modifyCmd=[SWIF,'modify-jobs','-workflow',self.workflow]
+      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-ram','add','1gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
