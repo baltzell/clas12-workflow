@@ -55,15 +55,14 @@ def getConfig(args):
 
   cli.add_argument('--workflow',metavar='NAME',help='workflow suffix (automatically prefixed with runGroup and task)',  type=str, required=True)
   cli.add_argument('--runGroup',metavar='NAME',help='run group name', type=str, choices=RUNGROUPS, required=True)
+  cli.add_argument('--task',    metavar='NAME',help='task name'+df,   type=str, choices=TASKS, default='decode')
 
-  cli.add_argument('--inputs', metavar='PATH',help='file or directory of input files',type=str,required=True)
+  cli.add_argument('--inputs', metavar='PATH',help='name of file containing a list of input files, or a directory to be searched recursively for input files (repeatable)',action='append',type=str,required=True)
   cli.add_argument('--workDir',metavar='PATH',help='temporary data location',         type=str,required=True)
   cli.add_argument('--outDir', metavar='PATH',help='final data location',             type=str,required=True)
 
-  cli.add_argument('--run',    metavar='RUN(s)',help='run numbers (e.g. 4013 or 4013,4015 or 4000-4999)', action='append', default=[], type=str)
-  cli.add_argument('--runFile',metavar='PATH',help='file of run numbers', action='append', default=[], type=str)
-
-  cli.add_argument('--task',    metavar='NAME',help='task name'+df,   type=str, choices=TASKS, default='decode')
+  cli.add_argument('--run',    metavar='RUN(s)',help='run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999) (repeatable)', action='append', default=[], type=str)
+  cli.add_argument('--runFile',metavar='PATH',help='file containing a list of run numbers (repeatable)', action='append', default=[], type=str)
 
   cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df, type=str,default='/group/clas12/packages/coatjava-6b.0.0')
 

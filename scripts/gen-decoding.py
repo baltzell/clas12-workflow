@@ -21,14 +21,15 @@ elif cfg['model']==3:
 else:
   sys.exit('ERROR:  unknown model: '+str(cfg['model']))
 
-print 'Adding files from %s ...'%cfg['inputs']
-workflow.addRuns(cfg['runs'])
-if os.path.isdir(cfg['inputs']):
-  workflow.addDir(cfg['inputs'])
-elif os.path.isfile(cfg['inputs']):
-  workflow.addFiles([x.split()[0] for x in open(cfg['inputs'],'r').readlines()])
-else:
-  sys.exit('ERROR:  inputs must be a file (containing a list of files) or a directory:\n'+cfg['inputs'])
+for anInput in cfg['inputs']:
+  print 'Adding files from %s ...'%anInput
+  workflow.addRuns(cfg['runs'])
+  if os.path.isdir(anInput):
+    workflow.addDir(anInput)
+  elif os.path.isfile(anInput):
+    workflow.addFiles([x.split()[0] for x in open(anInput,'r').readlines()])
+  else:
+    sys.exit('ERROR:  --inputs must be a file (containing a list of files) or a directory:\n'+anInput)
 
 if workflow.getFileCount()<1:
   sys.exit('ERROR:  found no applicable input files.')

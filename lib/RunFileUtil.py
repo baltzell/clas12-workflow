@@ -2,7 +2,7 @@ import os
 import re
 import collections
 
-__FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)$'
+__FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
 __DEBUG=False
 
 def setFileRegex(regex):
