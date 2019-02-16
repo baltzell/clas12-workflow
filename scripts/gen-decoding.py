@@ -7,7 +7,8 @@ from CLAS12Workflows import *
 
 cli,cfg = getConfig(sys.argv[1:])
 
-name='%s_R%dx%d_x%d'%(cfg['workflow'],cfg['runs'][0],len(cfg['runs']),cfg['phaseSize'])
+namePrefix='%s-%s-%s'%(cfg['runGroup'],cfg['task'],cfg['workflow'])
+name='%s_R%dx%d_x%d'%(namePrefix,cfg['runs'][0],len(cfg['runs']),cfg['phaseSize'])
 
 if cfg['model']==0:
   workflow = ThreePhaseDecoding(name,cfg)

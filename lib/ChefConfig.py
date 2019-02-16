@@ -3,7 +3,7 @@ import sys
 import argparse
 from RunFileUtil import setFileRegex,getFileRegex
 
-RUNGROUPS=['rga','rgb','rgk','test']
+RUNGROUPS=['rga','rgb','rgk','rgm','rgl','rgd','rge','test']
 TASKS=['decode','recon']
 PROJECT='clas12'
 TRACK='reconstruction'
@@ -51,9 +51,9 @@ def getConfig(args):
 
   df='\n(default=%(default)s)'
 
-  cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF decoding+merging workflow.')
+  cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.')
 
-  cli.add_argument('--workflow',metavar='NAME',help='workflow name',  type=str, required=True)
+  cli.add_argument('--workflow',metavar='NAME',help='workflow suffix (automatically prefixed with runGroup and task)',  type=str, required=True)
   cli.add_argument('--runGroup',metavar='NAME',help='run group name', type=str, choices=RUNGROUPS, required=True)
 
   cli.add_argument('--inputs', metavar='PATH',help='file or directory of input files',type=str,required=True)
