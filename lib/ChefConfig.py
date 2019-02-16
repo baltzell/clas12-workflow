@@ -36,7 +36,7 @@ def getRunList(args):
           print '\nERROR: Run numbers must be integers:  '+run+'\n'
           return None
   for fileName in args.runFile:
-    print 'Adding runs from '+run+' ...'
+    print 'Adding runs from '+fileName+' ...'
     if not os.access(fileName,os.R_OK):
       print '\nERROR:  File is not readable:  '+fileName+'\n'
       return None
