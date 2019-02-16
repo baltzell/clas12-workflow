@@ -37,8 +37,10 @@ if workflow.getFileCount()<1:
 print 'Generating workflow ...'
 workflow.generate()
 
-print 'Writing workflow to ./jobs ...'
+print 'Created %d jobs based on %d runs with %d total files.'%(len(workflow.jobs),len(workflow.getRunList(0)),workflow.getFileCount())
+
 jobFilePrefix='./jobs/'+name
+print 'Writing workflow to '+jobFilePrefix+'.json ...'
 with open(jobFilePrefix+'.json','w') as out:
   out.write(workflow.getJson())
 with open(jobFilePrefix+'.sh','w') as out:

@@ -14,6 +14,7 @@ MERGEPATT='clas_%.6d.evio.%.5d-%.5d.hipo'
 def getRunList(args):
   runs=[]
   for run in args.run:
+    print 'Adding runs '+run+' ...'
     for run in run.split(','):
       if run.find('-')<0:
         try:
@@ -35,6 +36,7 @@ def getRunList(args):
           print '\nERROR: Run numbers must be integers:  '+run+'\n'
           return None
   for fileName in args.runFile:
+    print 'Adding runs from '+run+' ...'
     if not os.access(fileName,os.R_OK):
       print '\nERROR:  File is not readable:  '+fileName+'\n'
       return None
