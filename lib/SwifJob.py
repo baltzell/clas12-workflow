@@ -43,7 +43,7 @@ class SwifJob:
     self.time=time
 
   def setCmd(self,cmd):
-    self.cmd=cmd
+    self.cmd='unalias -a ; '+cmd
 
   def setShell(self,shell):
     self.shell=shell
