@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import glob,re
+import glob,re,sys,argparse
 
 # linux only
 
@@ -18,47 +18,27 @@ class NumaConfig:
       mm=re.match('.*/node([0-9]+)$',nodeDir)
       if mm is None: continue
       node=int(mm.group(1))
-      #if node in self._nodeMap.keys(): continue
       # we found a node, now look for its cpus:
       for cpuDir in glob.glob(nodeDir+'/cpu*'):
         mm=re.match('.*/cpu([0-9]+)$',cpuDir)
         if mm is None: continue
-        cpu=int(mm.group(1))
-        # we found a cpu, add the node to the map if necessary:
         if node not in self._nodeMap:
-          self._nodeMap[node]=[]
-        #if cpu in self._nodeMap[node]: continue
-        # we found a new cpu for this node, insert it in order:
-        inserted=False
-        for ii in range(len(self._nodeMap[node])):
-          if cpu < self._nodeMap[node][ii]:
-            self._nodeMap[node].insert(ii,cpu)
-        if not inserted:
-          self._nodeMap[node].append(cpu)
+          self._nodeMap[node]=0x0
+        self._nodeMap[node] |= 1<<int(mm.group(1))
 
   # return cpu mask for a node:
   def mask(self,node):
-    mask=0x0
-    for cpu in self._nodeMap[node]:
-      mask |= (1<<cpu)
-    return mask
+    return self._nodeMap[node]
 
   # return list of nodes:
   def nodes(self):
     return sorted(self._nodeMap.keys())
 
-  # return list of all cpus on a node:
-  def cpus(self,node):
-    cpus=[]
-    for cg in self.cpuGroups(node):
-      cpus.extend(cg)
-    return cpus
-
   # return lists of consecutive cpus on a node:
   def cpuGroups(self,node):
     groups=[]
     for ii in range(self._maxCpus):
-      if ii in self._nodeMap[node]:
+      if self._nodeMap[node] & (1<<ii):
         if len(groups)>0:
           lenPrevious = len(groups[len(groups)-1])
           previous = groups[len(groups)-1][lenPrevious-1]
@@ -69,6 +49,13 @@ class NumaConfig:
         else:
           groups.append([ii])
     return groups
+
+  # return list of all cpus on a node:
+  def cpus(self,node):
+    cpus=[]
+    for cg in self.cpuGroups(node):
+      cpus.extend(cg)
+    return cpus
 
   # return pretty cli argument for `taskset -c` command:
   def tasksetArg(self,node):
@@ -82,11 +69,26 @@ class NumaConfig:
         groups.append(str(group[0])+'-'+str(group[len(group)-1]))
     return ','.join(groups)
 
+
 if __name__ == '__main__':
+
+  cli=argparse.ArgumentParser(description='NUMA Node Configuration Reader')
+  cli.add_argument('-n',help='print number of nodes',action='store_true')
+  cli.add_argument('-t',metavar='#',help='print taskset -t arg for given node', type=int, default=-1)
+  args = cli.parse_args(sys.argv[1:])
+
   nc=NumaConfig()
-  for node in nc.nodes():
-    print node,'%3d'%len(nc.cpus(node)),nc.tasksetArg(node)
-    print '%22s'%('0x%x'%nc.mask(node)),
-    for cpu in nc.cpus(node): print '%.2d'%cpu,
-    print
+
+  if args.t>=0:
+    print nc.tasksetArg(args.t)
+
+  elif args.n==True:
+    print len(nc.nodes())
+
+  else:
+    for node in nc.nodes():
+      print node,'%3d'%len(nc.cpus(node)),nc.tasksetArg(node)
+      print '%22s'%('0x%x'%nc.mask(node)),
+      for cpu in nc.cpus(node): print '%.2d'%cpu,
+      print
 
