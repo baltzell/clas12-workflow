@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 from RunFileUtil import RunFileGroups
-from ChefUtil import RcdbManager
+from RcdbManager import RcdbManager
 
 runStart = int(sys.argv[1])
 runEnd = int(sys.argv[2])

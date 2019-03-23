@@ -1,5 +1,4 @@
 import os
-import rcdb
 
 def mkdir(path):
   if os.access(path,os.F_OK):
@@ -7,30 +6,6 @@ def mkdir(path):
       raise IOError('Permissions error on '+path)
   else:
     os.makedirs(path)
-
-class RcdbManager():
-  def __init__(self):
-    self.data={}
-  def loadRun(self,run):
-    data={}
-    db=rcdb.RCDBProvider('mysql://rcdb@clasdb.jlab.org/rcdb')
-    data['solenoid_scale']=db.get_condition(run,'solenoid_scale').value
-    data['torus_scale']   =db.get_condition(run,'torus_scale').value
-    data['run_start_time']=db.get_condition(run,'run_start_time').value
-    db.disconnect()
-    self.data[run]=data
-  def getSolenoidScale(self,run):
-    if run not in self.data:
-      self.loadRun(run)
-    return self.data[run]['solenoid_scale']
-  def getTorusScale(self,run):
-    if run not in self.data:
-      self.loadRun(run)
-    return self.data[run]['torus_scale']
-  def getRunStartTime(self,run):
-    if run not in self.data:
-      self.loadRun(run)
-    return self.data[run]['run_start_time']
 
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'

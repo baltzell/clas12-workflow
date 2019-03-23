@@ -1,6 +1,7 @@
 import os
 from SwifWorkflow import SwifWorkflow
 from SwifJob import SwifJob
+from RcdbManager import RcdbManager
 from RunFileUtil import RunFile
 from ChefUtil import *
 
