@@ -84,7 +84,7 @@ class RunFileGroup():
     elif self.runNumber != rf.runNumber:
       raise ValueError('multiple run nubmers ',rf.runNumber)
     elif rf in self.runFileList:
-      raise ValueError('duplicate: ',rf)
+      raise ValueError('duplicate: ',str(rf))
     else:
       inserted=False
       for ii in range(len(self.runFileList)):
