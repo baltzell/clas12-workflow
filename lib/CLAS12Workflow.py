@@ -57,7 +57,7 @@ class CLAS12Workflow(SwifWorkflow):
 
       job=SwifJob(self.name)
       job.setPhase(phase)
-      job.setRam('9GB')
+      job.setRam('4000MB')
       job.setTime('%dh'%(12*nFiles))
       job.setDisk('%dGB'%(4*nFiles))
       job.addTag('run','%.6d'%runno)
