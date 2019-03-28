@@ -12,7 +12,7 @@ class SwifJob:
     self.project='clas12'
     self.track='reconstruction'
     self.cores=1
-    self.time='1h'
+    self.time='2h'
     self.disk='3GB'
     self.ram='3500MB'
     self.shell='/bin/tcsh'
