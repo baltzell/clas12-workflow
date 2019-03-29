@@ -84,7 +84,7 @@ class RunFileGroup():
     elif self.runNumber != rf.runNumber:
       raise ValueError('multiple run nubmers ',rf.runNumber)
     elif rf in self.runFileList:
-      raise ValueError('duplicate: ',rf)
+      raise ValueError('duplicate: ',str(rf))
     else:
       inserted=False
       for ii in range(len(self.runFileList)):
@@ -113,6 +113,8 @@ class RunFileGroups:
     self.rfgs=collections.OrderedDict()
   def setCombineRuns(self,val):
     self.combineRuns=val
+  def hasRun(self,run):
+    return run in self.rfgs
   def addRun(self,run):
     if not type(run) is int:
       raise ValueError('run must be an int: '+str(run))
@@ -161,10 +163,10 @@ class RunFileGroups:
       for rf in rfg.runFileList:
         flatList.append(rf.fileName)
     return flatList
-  def getRunList(self,minFileCount):
+  def getRunList(self,minFileCount=-1):
     runs=[]
     for run,rfg in self.rfgs.iteritems():
-      if rfg.size()<minFileCount: continue
+      if minFileCount>0 and rfg.size()<minFileCount: continue
       runs.append(run)
     return runs
   def showGroups(self):

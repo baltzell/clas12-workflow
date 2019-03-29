@@ -12,9 +12,9 @@ class SwifJob:
     self.project='clas12'
     self.track='reconstruction'
     self.cores=1
-    self.time='1h'
+    self.time='2h'
     self.disk='3GB'
-    self.ram='7GB'
+    self.ram='3500MB'
     self.shell='/bin/tcsh'
     self.tags=collections.OrderedDict()
     self.inputs=[]
@@ -96,7 +96,7 @@ class SwifJob:
 
   def getShell(self):
 
-    job=('swif add-job -create -workflow '+self.workflow+' '
+    job=('swif add-job -create -workflow '+self.workflow+' -slurm '
       '-project '+self.project+' -track '+self.track+' '
       '-time '+self.time+' -cores '+str(self.cores)+' '
       '-disk '+self.disk+' -ram '+self.ram+' -shell '+self.shell)
@@ -120,14 +120,14 @@ class SwifJob:
     if   size.find('GB')>0: scale=int(1e9)
     elif size.find('MB')>0: scale=int(1e6)
     elif size.find('KB')>0: scale=int(1e3)
-    return scale * int(size.rstrip('GMKB'))
+    return int(scale * int(size.rstrip('GMKB')))
 
   def getSeconds(self,time):
     scale=1
     if   time.find('h')>0:  scale=60*60
     elif time.find('m')>0:  scale=60
     elif time.find('s')>0:  scale=1
-    return scale * int(time.rstrip('secondminutehour'))
+    return int(scale * int(time.rstrip('secondminutehour')))
 
   def getJson(self):
     jsonData = collections.OrderedDict()

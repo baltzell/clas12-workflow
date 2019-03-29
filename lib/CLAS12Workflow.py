@@ -58,14 +58,14 @@ class CLAS12Workflow(SwifWorkflow):
 
       job=SwifJob(self.name)
       job.setPhase(phase)
-      job.setRam('9GB')
+      job.setRam('4000MB')
       job.setTime('%dh'%(12*nFiles))
       job.setDisk('%dGB'%(4*nFiles))
       job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','recon')
       job.addTag('coatjava',self.cfg['coatjava'])
-      job.addTag('workDir',self.cfg['workDir'])
+      job.addTag('outDir',outDir)
       job.addInput('in.hipo',hipoFileName)
       job.addOutput('out.hipo',reconFileName)
 
@@ -107,7 +107,7 @@ class CLAS12Workflow(SwifWorkflow):
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','decode')
       job.addTag('coatjava',self.cfg['coatjava'])
-      job.addTag('workDir',self.cfg['workDir'])
+      job.addTag('outDir',outDir)
       job.addInput('in.evio',evioFileName)
       job.addOutput('out.hipo',hipoFileName)
 
@@ -159,7 +159,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.addTag('file','%.5d-%.5d'%(fileno1,fileno2))
         job.addTag('mode','merge')
         job.addTag('coatjava',self.cfg['coatjava'])
-        job.addTag('workDir',self.cfg['workDir'])
+        job.addTag('outDir',outDir)
         job.addOutput('out.hipo',outFile)
 
         cmd = 'rm -f '+outFile+' ; '
