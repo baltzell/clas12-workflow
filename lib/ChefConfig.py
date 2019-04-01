@@ -60,11 +60,12 @@ def getConfig(args):
   cli.add_argument('--task',    metavar='NAME',help='task name'+df,   type=str, choices=TASKS, default='decode')
 
   cli.add_argument('--inputs', metavar='PATH',help='name of file containing a list of input files, or a directory to be searched recursively for input files (repeatable)',action='append',type=str,required=True)
-  cli.add_argument('--workDir',metavar='PATH',help='temporary data location',         type=str,required=True)
-  cli.add_argument('--outDir', metavar='PATH',help='final data location',             type=str,required=True)
 
   cli.add_argument('--run',    metavar='RUN(s)',help='run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999) (repeatable)', action='append', default=[], type=str)
   cli.add_argument('--runFile',metavar='PATH',help='file containing a list of run numbers (repeatable)', action='append', default=[], type=str)
+
+  cli.add_argument('--outDir', metavar='PATH',help='final data location',             type=str,required=True)
+  cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
 
   cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location'+df, type=str,default='/group/clas12/packages/coatjava-6b.0.0')
 
@@ -88,9 +89,14 @@ def getConfig(args):
 
   args.submit = False
 
-  if args.model != 2:
+  if args.model == 2:
+    if args.workDir is not None:
+      cli.error('--workDir option is only valid for non-merging workflows.')
+  else:
     if args.phaseSize % args.mergeSize != 0:
       cli.error('\n--phaseSize must be a multiple of --mergeSize for merging workflows.')
+    if args.workDir is None:
+      cli.error('\n--workDir is required for merging workflows.')
 
   if args.fileRegex is not None and args.fileRegex != getFileRegex():
     if args.model==2:

@@ -9,27 +9,26 @@ class CLAS12Workflow(SwifWorkflow):
 
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
+    self.rcdb=RcdbManager()
     self.cfg=cfg
     self.setPhaseSize(self.cfg['phaseSize'])
-    mkdir(self.cfg['outDir'])
-    mkdir(self.cfg['workDir'])
-    mkdir(self.cfg['workDir']+'/singles')
-    mkdir(self.cfg['workDir']+'/merged')
-    mkdir(self.cfg['workDir']+'/logs/'+self.name)
     self.setCombineRuns(self.cfg['multiRun'])
+    self.logDir='%s/logs/%s'%(self.cfg['outDir'],self.name)
     for run in self.cfg['runs']:
-      self.addRun(run)
-    self.rcdb=RcdbManager()
+      SwifWorkflow.addRun(self,run)
+    self._mkdirs()
+
+  def _mkdirs(self):
+    mkdir(self.logDir)
+    for run in self.getRunList():
+      mkdir('%s/%.6d'%(self.cfg['outDir'],run))
+      if self.cfg['workDir'] is not None:
+        mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
+        mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
   def addJob(self,job):
-    job.setLogDir(self.cfg['workDir']+'/logs/'+self.name)
+    job.setLogDir(self.logDir)
     SwifWorkflow.addJob(self,job)
-
-  def addRun(self,run):
-    SwifWorkflow.addRun(self,run)
-    mkdir('%s/%.6d'%(self.cfg['outDir'],run))
-    mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
-    mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
   #
   # recon:  add jobs for running single-threaded recon
@@ -52,7 +51,11 @@ class CLAS12Workflow(SwifWorkflow):
         nFiles = self.cfg['mergeSize']
         subDir = 'merged'
 
-      outDir = '%s/recon/%s/%.6d'%(self.cfg['workDir'],subDir,runno)
+      if nFiles>1:
+        outDir = '%s/recon/%s/%.6d'%(self.cfg['workDir'],subDir,runno)
+      else:
+        outDir = '%s/recon/%.6d/'%(self.cfg['outDir'],runno)
+
       reconFileName = outDir+'/'+reconBaseName
       mkdir(outDir)
 
@@ -96,7 +99,11 @@ class CLAS12Workflow(SwifWorkflow):
       runno = RunFile(evioFileName).runNumber
       fileno = RunFile(evioFileName).fileNumber
 
-      outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],runno)
+      if self.cfg['workDir'] is None:
+        outDir = '%s/%.6d/'%(self.cfg['outDir'],runno)
+      else:
+        outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],runno)
+
       hipoBaseName = self.cfg['singlePattern']%(runno,fileno)
       hipoFileName = outDir + hipoBaseName
       hipoFiles.append(hipoFileName)
