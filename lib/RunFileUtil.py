@@ -29,6 +29,45 @@ def getRunFileNumber(fileName):
     fileno=fileno[1:]
   return {'run':int(runno),'file':int(fileno)}
 
+def getRunList(cfg):
+  runs=[]
+  for run in cfg['run']:
+    run = str(run)
+    print 'Adding run(s) '+run+' ...'
+    for run in run.split(','):
+      if run.find('-')<0:
+        try:
+          runs.append(int(run))
+        except:
+          print '\nERROR: Run numbers must be integers:  '+run+'\n'
+          return None
+      else:
+        if run.count('-') != 1:
+          print '\nERROR:  Invalid run range: '+run+'\n'
+          return None
+        try:
+          start,end=run.split('-')
+          start=int(start)
+          end=int(end)
+          for run in range(start,end+1):
+            runs.append(run)
+        except:
+          print '\nERROR: Run numbers must be integers:  '+run+'\n'
+          return None
+  for fileName in cfg['runFile']:
+    print 'Adding runs from '+fileName+' ...'
+    if not os.access(fileName,os.R_OK):
+      print '\nERROR:  File is not readable:  '+fileName+'\n'
+      return None
+    for line in open(fileName,'r').readlines():
+      run=line.strip().split()[0]
+      try:
+        runs.append(int(run))
+      except:
+        print '\nERROR: Run numbers must be integers:  %s (%s)\n'%(fileName,line)
+        return None
+  return runs
+
 class RunFile:
   def __init__(self,fileName):
     self.fileName=None
@@ -178,4 +217,5 @@ class RunFileGroups:
       val.show()
   def getFileCount(self):
     return len(self.getFlatList())
+
 
