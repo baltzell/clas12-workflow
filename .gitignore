@@ -8,6 +8,7 @@ tmp
 *-BAK
 *.BAK
 *.swp
+*.swo
 
 # C extensions
 *.so
@@ -75,6 +76,9 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# IntelliJ
+.idea
 
 # pyenv
 .python-version
