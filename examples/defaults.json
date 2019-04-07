@@ -1,0 +1,15 @@
+{
+  "coatjava": "/group/clas12/packages/coatjava-6b.0.0",
+  "fileRegex": ".*clas[_A-Za-z]*_(\\d+)\\.evio\\.(\\d+)",
+  "inputs": [],
+  "mergePattern": "clas_%.6d.evio.%.5d-%.5d.hipo",
+  "mergeSize": 10,
+  "model": 1,
+  "multiRun": false,
+  "phaseSize": 2000,
+  "project": "clas12",
+  "singlePattern": "clas_%.6d.evio.%.5d.hipo",
+  "submit": false,
+  "task": "decode",
+  "track": "reconstruction"
+}
