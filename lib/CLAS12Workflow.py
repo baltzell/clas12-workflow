@@ -1,6 +1,6 @@
 import os
-from SwifWorkflow import SwifWorkflow
 from SwifJob import SwifJob
+from SwifWorkflow import SwifWorkflow
 from RcdbManager import RcdbManager
 from RunFileUtil import RunFile
 from ChefUtil import *
@@ -14,8 +14,13 @@ class CLAS12Workflow(SwifWorkflow):
     self.setPhaseSize(self.cfg['phaseSize'])
     self.setCombineRuns(self.cfg['multiRun'])
     self.logDir='%s/logs/%s'%(self.cfg['outDir'],self.name)
-    for run in self.cfg['runs']:
-      SwifWorkflow.addRun(self,run)
+    self.addRuns(self.cfg['runs'])
+    for inp in self.cfg['inputs']:
+      print 'Adding files from %s ...'%inp
+      if os.path.isdir(inp):
+        self.addDir(inp)
+      elif os.path.isfile(inp):
+        self.addFiles([x.split()[0] for x in open(inp,'r').readlines()])
     self._mkdirs()
 
   def _mkdirs(self):

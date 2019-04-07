@@ -1,8 +1,10 @@
 import os
 import sys
 import json
+import copy
 import argparse
 import traceback
+from CLAS12Workflows import *
 from RunFileUtil import setFileRegex
 from RunFileUtil import getFileRegex
 from RunFileUtil import getRunList
@@ -11,14 +13,39 @@ RUNGROUPS=['rga','rgb','rgk','rgm','rgl','rgd','rge','test']
 TRACKS=['reconstruction','debug']
 TASKS=['decode','recon']
 MODELS=[0,1,2,3]
+CFG={
+    'project'       : 'clas12',
+    'track'         : 'reconstruction',
+    'task'          : 'decode',
+    'runGroup'      : None,
+    'coatjava'      : '/group/clas12/packages/coatjava-6b.0.0',
+    'tag'           : None,
+    'inputs'        : [],
+    'workDir'       : None,
+    'outDir'        : None,
+    'phaseSize'     : 2000,
+    'mergeSize'     : 10,
+    'model'         : 1,
+    'torus'         : None,
+    'solenoid'      : None,
+    'multiRun'      : False,
+    'mergePattern'  : 'clas_%.6d.evio.%.5d-%.5d.hipo',
+    'singlePattern' : 'clas_%.6d.evio.%.5d.hipo',
+    'fileRegex'     : getFileRegex(),
+    'submit'        : False
+}
 
 class ChefConfig:
 
   def __init__(self,args):
 
-    self._setDefaults()
+    self._workflow=None
+
+    self.cfg=copy.deepcopy(CFG)
 
     self._setCli()
+
+    self.args = self.cli.parse_args(args)
 
     if self.args.defaults:
       sys.exit(str(self))
@@ -30,52 +57,47 @@ class ChefConfig:
 
     self._checkConfig()
 
-    self.cfg['runs'] = getRunList(vars(self.args))
-    if self.cfg['runs'] is None or len(self.cfg['runs'])==0:
-      self.cli.error('\nFound no runs.')
-
     if self.args.show:
       sys.exit(str(self))
 
-  def _setDefaults(self):
-    self.cfg={}
-    self.cfg['project']       = 'clas12'
-    self.cfg['track']         = 'reconstruction'
-    self.cfg['task']          = 'decode'
-    self.cfg['runGroup']      = None
-    self.cfg['coatjava']      = '/group/clas12/packages/coatjava-6b.0.0'
-    self.cfg['workflow']      = None
-    self.cfg['inputs']        = []
-    self.cfg['workDir']       = None
-    self.cfg['outDir']        = None
-    self.cfg['phaseSize']     = 2000
-    self.cfg['mergeSize']     = 10
-    self.cfg['model']         = 1
-    self.cfg['torus']         = None
-    self.cfg['solenoid']      = None
-    self.cfg['multiRun']      = False
-    self.cfg['mergePattern']  = 'clas_%.6d.evio.%.5d-%.5d.hipo'
-    self.cfg['singlePattern'] = 'clas_%.6d.evio.%.5d.hipo'
-    self.cfg['fileRegex']     = getFileRegex()
-    self.cfg['submit']        = False
+  def get(self,key):
+    return self.cfg[key]
+
+  def getWorkflow(self):
+    if self._workflow is None:
+      name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['task'],self.cfg['tag'])
+      name+='_R%dx%d'%(self.cfg['runs'][0],len(self.cfg['runs']))
+      if self.cfg['model']!=2:
+        name+='_x%d'%(self.cfg['phaseSize'])
+      if self.cfg['model']==0:
+        self._workflow = ThreePhaseDecoding(name,self.cfg)
+      elif self.cfg['model']==1:
+        self._workflow = RollingDecoding(name,self.cfg)
+      elif self.cfg['model']==2:
+        self._workflow = SinglesOnlyDecoding(name,self.cfg)
+      elif cfg['model']==3:
+        self._workflow = DecodingReconTest(name,self.cfg)
+      else:
+        sys.exit('This should never happen #1.')
+    if self._workflow.getFileCount()<1:
+      sys.exit('FATAL ERROR:  found no applicable input files.  Check "inputs" and "run/runFile".')
+    return self._workflow
 
   def _setCli(self):
 
-    self.cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.')
+    self.cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',epilog='* = required option, from command-line or config file')
 
-    self.cli.add_argument('-d', '--defaults',help='print default config and exit', action='store_true', default=False)
-    self.cli.add_argument('-s', '--show',    help='print config and exit', action='store_true', default=False)
-    self.cli.add_argument('--config',metavar='PATH',help='load config file (contents superceded by command line arguments)', type=str,default=None)
+    self.cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task',  type=str, default=None)
+    self.cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=RUNGROUPS, default=None)
+    self.cli.add_argument('--task',    metavar='NAME',help='* task name', type=str, choices=TASKS, default=None)
+    self.cli.add_argument('--model', help='* workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=MODELS,default=None)
 
-    self.cli.add_argument('--workflow',metavar='NAME',help='workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task',  type=str, default=None)
-    self.cli.add_argument('--runGroup',metavar='NAME',help='run group name', type=str, choices=RUNGROUPS, default=None)
-    self.cli.add_argument('--task',    metavar='NAME',help='task name', type=str, choices=TASKS, default=None)
 
-    self.cli.add_argument('--inputs', metavar='PATH',help='name of file containing a list of input files, or a directory to be searched recursively for input files (repeatable)',action='append',type=str,default=[])
-    self.cli.add_argument('--run',    metavar='RUN(s)',help='run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999) (repeatable, not allowed in config file)', action='append', default=[], type=str)
-    self.cli.add_argument('--runFile',metavar='PATH',help='file containing a list of run numbers (repeatable, not allowed in config file)', action='append', default=[], type=str)
+    self.cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files (repeatable)',action='append',type=str,default=[])
+    self.cli.add_argument('--run',    metavar='RUN(s)',help='** run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999) (repeatable, not allowed in config file)', action='append', default=[], type=str)
+    self.cli.add_argument('--runFile',metavar='PATH',help='** file containing a list of run numbers (repeatable, not allowed in config file)', action='append', default=[], type=str)
 
-    self.cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None)
+    self.cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
     self.cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
 
     self.cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
@@ -88,14 +110,16 @@ class ChefConfig:
 
     self.cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format (for matching run and file numbers)', type=str, default=None)
 
-    self.cli.add_argument('--model', help='workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=MODELS,default=None)
-
     self.cli.add_argument('--multiRun', help='allow multiple runs per phase (non-merging workflow only)', action='store_true', default=None)
+
+    self.cli.add_argument('--config',metavar='PATH',help='load config file (contents superceded by command line arguments)', type=str,default=None)
+    self.cli.add_argument('--defaults',help='print default config and exit', action='store_true', default=False)
+    self.cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
 
     #  self.cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
     #  self.cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name',   type=str, default=None)
 
-    self.args = self.cli.parse_args(args)
+    self.cli.add_argument('--version',action='version',version='0.1')
 
   def _readConfigFile(self,filename):
 
@@ -132,11 +156,23 @@ class ChefConfig:
 
   def _checkConfig(self):
 
+    if self.cfg['runGroup'] is None:
+      self.cli.error('"runGroup" must be defined.')
+    if self.cfg['runGroup'] not in RUNGROUPS:
+      self.cli.error('Invalid "runGroup":  '+str(self.cfg['runGroup'])+' is not in '+str(RUNGROUPS))
+
+    if self.cfg['tag'] is None:
+      self.cli.error('"tag" must be defined.')
+
     if len(self.args.run)==0 and len(self.args.runFile)==0:
       self.cli.error('At least one of --run or --runFile must be specified on the command line.')
 
     if len(self.cfg['inputs'])==0:
       self.cli.error('"inputs" must be defined.')
+
+    for x in self.cfg['inputs']:
+      if not os.path.isdir(x) and not os.path.isfile(x):
+        self.cli.error('"inputs" must be a directories or files containing a list of files, and '+x+' is neither.')
 
     if self.cfg['outDir'] is None:
       self.cli.error('"outDir" must be defined.')
@@ -146,6 +182,7 @@ class ChefConfig:
 
       if self.cfg['workDir'] is not None:
         print 'WARNING:  ignoring "workDir" for non-merging workflow.'
+        self.cfg['workDir']=None
 
       if self.cfg['fileRegex'] != getFileRegex():
         setFileRegex(self.cfg['fileRegex'])
@@ -165,7 +202,11 @@ class ChefConfig:
       if self.cfg['multiRun']:
         self.cli.error('"multiRun" is not allowed in merging workflows.')
 
-    return self.cfg
+    # parse run list:
+    self.cfg['runs'] = getRunList(vars(self.args))
+    if self.cfg['runs'] is None or len(self.cfg['runs'])==0:
+      self.cli.error('\nFound no runs.')
+
 
   def __str__(self):
     return json.dumps(self.cfg,indent=2,separators=(',',': '),sort_keys=True)

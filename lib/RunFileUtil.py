@@ -73,6 +73,8 @@ class RunFile:
     self.fileName=None
     self.runNumber=None
     self.fileNumber=None
+    if isinstance(fileName,unicode):
+      fileName=str(fileName)
     if not type(fileName) is str:
       raise ValueError('fileName must be a string: '+str(fileName))
     fileName=fileName.strip()
