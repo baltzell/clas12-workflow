@@ -1,5 +1,6 @@
 import os
 import re
+import glob
 import collections
 
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
@@ -28,45 +29,6 @@ def getRunFileNumber(fileName):
   while fileno.find('0')==0 and not fileno=='0':
     fileno=fileno[1:]
   return {'run':int(runno),'file':int(fileno)}
-
-def getRunList(cfg):
-  runs=[]
-  for run in cfg['run']:
-    run = str(run)
-    print 'Adding run(s) '+run+' ...'
-    for run in run.split(','):
-      if run.find('-')<0:
-        try:
-          runs.append(int(run))
-        except:
-          print '\nERROR: Run numbers must be integers:  '+run+'\n'
-          return None
-      else:
-        if run.count('-') != 1:
-          print '\nERROR:  Invalid run range: '+run+'\n'
-          return None
-        try:
-          start,end=run.split('-')
-          start=int(start)
-          end=int(end)
-          for run in range(start,end+1):
-            runs.append(run)
-        except:
-          print '\nERROR: Run numbers must be integers:  '+run+'\n'
-          return None
-  for fileName in cfg['runFile']:
-    print 'Adding runs from '+fileName+' ...'
-    if not os.access(fileName,os.R_OK):
-      print '\nERROR:  File is not readable:  '+fileName+'\n'
-      return None
-    for line in open(fileName,'r').readlines():
-      run=line.strip().split()[0]
-      try:
-        runs.append(int(run))
-      except:
-        print '\nERROR: Run numbers must be integers:  %s (%s)\n'%(fileName,line)
-        return None
-  return runs
 
 class RunFile:
   def __init__(self,fileName):
@@ -147,37 +109,68 @@ class RunFileGroup():
     for rf in self.runFileList: rf.show()
 
 class RunFileGroups:
+
   def __init__(self):
     self.combineRuns=False
     self.groupSize=0
     # maintain user's run insertion order:
     self.rfgs=collections.OrderedDict()
+
   def setCombineRuns(self,val):
     self.combineRuns=val
+
   def hasRun(self,run):
     return run in self.rfgs
+
   def addRun(self,run):
     if not type(run) is int:
       raise ValueError('run must be an int: '+str(run))
     self.rfgs[run]=RunFileGroup()
+
   def addRuns(self,runs):
     for run in runs:
       self.addRun(run)
+
   def setGroupSize(self,groupSize):
     self.groupSize=int(groupSize)
+
   def addFile(self,fileName):
     rf=RunFile(fileName)
-    # require run# to be registered:
+    # ignore if run# is not registered:
     if rf is None or not rf.runNumber in self.rfgs:
       return
     self.rfgs[rf.runNumber].addFile(fileName)
-  def addFiles(self,fileNames):
-    for fileName in fileNames:
-      self.addFile(fileName)
+
   def addDir(self,dirName):
+    print 'Adding directory '+dirName+' ...'
     for dirpath,dirnames,filenames in os.walk(dirName):
       for filename in filenames:
         self.addFile(dirpath+'/'+filename)
+
+  def findFiles(self,data):
+
+    # recurse if it's a list:
+    if isinstance(data,list):
+      for datum in data:
+        self.findFiles(datum)
+
+    # walk if it's a directory:
+    elif os.path.isdir(data):
+      self.addDir(data)
+
+    # file containing a file list if it's a file:
+    elif os.path.isfile(data):
+      self.addFile([x.split()[0] for x in open(data,'r').readlines()])
+
+    # else assume it's a glob:
+    else:
+      print 'Assuming '+data+' is a glob.'
+      for xx in glob.glob(data):
+        if os.path.isdir(xx):
+          self.addDir(xx)
+        elif os.path.isfile(xx):
+          self.addFile(xx)
+
   def getGroups(self):
     groups=[]
     phaseList=[]
@@ -198,25 +191,30 @@ class RunFileGroups:
     if len(phaseList)>0:
       groups.append(phaseList)
     return groups
+
   def getFlatList(self):
     flatList=[]
     for run,rfg in self.rfgs.iteritems():
       for rf in rfg.runFileList:
         flatList.append(rf.fileName)
     return flatList
+
   def getRunList(self,minFileCount=-1):
     runs=[]
     for run,rfg in self.rfgs.iteritems():
       if minFileCount>0 and rfg.size()<minFileCount: continue
       runs.append(run)
     return runs
+
   def showGroups(self):
     for group in self.getGroups():
       print group
+
   def showFlatList(self):
     for key,val in self.rfgs.iteritems():
       print key,
       val.show()
+
   def getFileCount(self):
     return len(self.getFlatList())
 

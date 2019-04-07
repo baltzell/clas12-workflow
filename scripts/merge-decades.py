@@ -3,14 +3,15 @@ import sys
 import os
 import time
 import subprocess
-from RunFileUtil import RunFile,RunFileGroup
-from ChefConfig import getConfig
-from ChefUtil import getFileList,mkdir
+
+import ChefUtil
+import ChefConfig
+import RunFile
 
 def getDecades(fileOrDir,runs):
   groups={}
-  for filename in getFileList(fileOrDir):
-    rf=RunFile(filename)
+  for filename in ChefUtil.getFileList(fileOrDir):
+    rf=RunFileUtil.RunFile(filename)
     if rf is None: continue
     if rf.runNumber is None: continue
     if len(runs)>0 and rf.runNumber not in runs: continue
@@ -21,7 +22,7 @@ def getDecades(fileOrDir,runs):
     if not runno in groups:
       groups[runno]={}
     if not decade in groups[runno]:
-      groups[runno][decade]=RunFileGroup()
+      groups[runno][decade]=RunFileUtil.RunFileGroup()
     if rf in groups[runno][decade].runFileList:
       sys.exit('ERROR.  Duplicate.')
     groups[runno][decade].addFile(filename)
@@ -30,7 +31,7 @@ def getDecades(fileOrDir,runs):
   return groups
 
 def merge(decade,cfg):
-  if not isinstance(decade,RunFileGroup):
+  if not isinstance(decade,RunFileUtil.RunFileGroup):
     raise TypeError('Must be a RunFileGroup')
   run=decade.runNumber
   f1 = decade.runFileList[0].fileNumber
@@ -46,7 +47,8 @@ def merge(decade,cfg):
     file.flush()
     file.close()
 
-cli,cfg = getConfig(sys.argv[1:])
+cc = ChefConfig(sys.argv[1:])
+cfg = cc.cfg
 
 print 'Getting workDir groups ...'
 availableDecades = getDecades(cfg['workDir'],cfg['runs'])
@@ -59,8 +61,8 @@ for run,decades in availableDecades.iteritems():
     continue
 #    sys.exit('RUN?  '+str(run))
 
-  mkdir(cfg['outDir']+'/'+str(run))
-  mkdir(cfg['workDir']+'/logs')
+  ChefUtil.mkdir(cfg['outDir']+'/'+str(run))
+  ChefUtil.mkdir(cfg['workDir']+'/logs')
 
   for decade in sorted(decades.keys()):
     if not decade in expectedDecades[run]:

@@ -3,7 +3,7 @@ from SwifJob import SwifJob
 from SwifWorkflow import SwifWorkflow
 from RcdbManager import RcdbManager
 from RunFileUtil import RunFile
-from ChefUtil import *
+import ChefUtil
 
 class CLAS12Workflow(SwifWorkflow):
 
@@ -15,21 +15,16 @@ class CLAS12Workflow(SwifWorkflow):
     self.setCombineRuns(self.cfg['multiRun'])
     self.logDir='%s/logs/%s'%(self.cfg['outDir'],self.name)
     self.addRuns(self.cfg['runs'])
-    for inp in self.cfg['inputs']:
-      print 'Adding files from %s ...'%inp
-      if os.path.isdir(inp):
-        self.addDir(inp)
-      elif os.path.isfile(inp):
-        self.addFiles([x.split()[0] for x in open(inp,'r').readlines()])
+    self.findFiles(self.cfg['inputs'])
     self._mkdirs()
 
   def _mkdirs(self):
-    mkdir(self.logDir)
+    ChefUtil.mkdir(self.logDir)
     for run in self.getRunList():
-      mkdir('%s/%.6d'%(self.cfg['outDir'],run))
+      ChefUtil.mkdir('%s/%.6d'%(self.cfg['outDir'],run))
       if self.cfg['workDir'] is not None:
-        mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
-        mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
+        ChefUtil.mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
+        ChefUtil.mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
   def addJob(self,job):
     job.setLogDir(self.logDir)
@@ -62,7 +57,7 @@ class CLAS12Workflow(SwifWorkflow):
         outDir = '%s/recon/%.6d/'%(self.cfg['outDir'],runno)
 
       reconFileName = outDir+'/'+reconBaseName
-      mkdir(outDir)
+      ChefUtil.mkdir(outDir)
 
       job=SwifJob(self.name)
       job.setPhase(phase)
@@ -165,8 +160,8 @@ class CLAS12Workflow(SwifWorkflow):
         job.setPhase(phase)
 # Note this RAM request is for PBS, on SLURM will be much lower
         job.setRam('9GB')
-        job.setTime(getMergeTimeReq(self.cfg['mergeSize']))
-        job.setDisk(getMergeDiskReq(self.cfg['mergeSize']))
+        job.setTime(ChefUtil.getMergeTimeReq(self.cfg['mergeSize']))
+        job.setDisk(ChefUtil.getMergeDiskReq(self.cfg['mergeSize']))
         job.addTag('run','%.6d'%runno)
         job.addTag('file','%.5d-%.5d'%(fileno1,fileno2))
         job.addTag('mode','merge')
