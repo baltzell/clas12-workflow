@@ -26,7 +26,7 @@ CFG={
     'outDir'        : None,
     'phaseSize'     : 2000,
     'mergeSize'     : 10,
-    'model'         : 1,
+    'model'         : 2,
     'torus'         : None,
     'solenoid'      : None,
     'multiRun'      : False,
