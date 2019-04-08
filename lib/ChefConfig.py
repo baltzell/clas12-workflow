@@ -9,10 +9,13 @@ import ChefUtil
 import RunFileUtil
 import CLAS12Workflows
 
-RUNGROUPS=['rga','rgb','rgk','rgm','rgl','rgd','rge','test']
-TRACKS=['reconstruction','debug']
-TASKS=['decode','recon']
-MODELS=[0,1,2,3]
+CHOICES={
+    'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
+    'track'   : ['reconstruction','debug'],
+    'task'    : ['decode','recon'],
+    'model'   : [0,1,2,3]
+}
+
 CFG={
     'project'       : 'clas12',
     'track'         : 'reconstruction',
@@ -42,9 +45,9 @@ class ChefConfig:
 
     self._workflow=None
 
-    self.cfg=copy.deepcopy(CFG)
+    self.cfg = copy.deepcopy(CFG)
 
-    self._setCli()
+    self.cli = self.getCli()
 
     self.args = self.cli.parse_args(args)
 
@@ -52,9 +55,9 @@ class ChefConfig:
       sys.exit(str(self))
 
     if self.args.config is not None:
-      self._readConfigFile(self.args.config)
+      self._loadConfigFile(self.args.config)
 
-    self._parseCliArgs()
+    self._loadCliArgs()
 
     self._checkConfig()
 
@@ -84,47 +87,49 @@ class ChefConfig:
       sys.exit('FATAL ERROR:  found no applicable input files.  Check "inputs" and "run".')
     return self._workflow
 
-  def _setCli(self):
+  def getCli(self):
 
-    self.cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
+    cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
         epilog='* = required option, from command-line or config file')
 
-    self.cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=RUNGROUPS, default=None)
-    self.cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
-    self.cli.add_argument('--task',    metavar='NAME',help='* task name', type=str, choices=TASKS, default=None)
-    self.cli.add_argument('--model', help='* workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=MODELS,default=None)
+    cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=CHOICES['runGroup'], default=None)
+    cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
+    cli.add_argument('--task',    metavar='NAME',help='* task name', type=str, choices=CHOICES['task'], default=None)
+    cli.add_argument('--model', help='* workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=CHOICES['model'],default=None)
 
-    self.cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
-    self.cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
+    cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
+    cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
 
-    self.cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
-    self.cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
+    cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
+    cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
 
-    self.cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
+    cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
 
-    self.cli.add_argument('--phaseSize', metavar='#',help='number of files per phase', type=int, default=None)
-    self.cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
+    cli.add_argument('--phaseSize', metavar='#',help='number of files per phase', type=int, default=None)
+    cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
 
-    self.cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
-    self.cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
+    cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
+    cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
 
-    self.cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format (for matching run and file numbers)', type=str, default=None)
+    cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format (for matching run and file numbers)', type=str, default=None)
 
-    self.cli.add_argument('--multiRun', help='allow multiple runs per phase (non-merging workflow only)', action='store_true', default=None)
+    cli.add_argument('--multiRun', help='allow multiple runs per phase (non-merging workflow only)', action='store_true', default=None)
 
-    self.cli.add_argument('--config',metavar='PATH',help='load config file (contents superceded by command line arguments)', type=str,default=None)
-    self.cli.add_argument('--defaults',help='print default config and exit', action='store_true', default=False)
-    self.cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
+    cli.add_argument('--config',metavar='PATH',help='load config file (contents superceded by command line arguments)', type=str,default=None)
+    cli.add_argument('--defaults',help='print default config and exit', action='store_true', default=False)
+    cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
 
-    #  self.cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
-    #  self.cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name',   type=str, default=None)
+    #  cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
+    #  cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name',   type=str, default=None)
 
-    self.cli.add_argument('--version',action='version',version='0.1')
+    cli.add_argument('--version',action='version',version='0.1')
 
-  def _readConfigFile(self,filename):
+    return cli
+
+  def _loadConfigFile(self,filename):
 
     if not os.access(filename,os.R_OK):
-      sys.exit('Config file is not readable:  '+filename)
+      sys.exit('FATAL ERROR:  Config file is not readable:  '+filename)
 
     try:
       cfg = json.load(open(filename,'r'))
@@ -135,17 +140,11 @@ class ChefConfig:
     for key,val in cfg.iteritems():
       if key not in self.cfg:
         sys.exit('FATAL ERROR:  Config file contains invalid key:  '+key)
-      if key == 'model' and val not in MODELS:
-        sys.exit('Config file contans invalid model:  '+val)
-      if key == 'task' and val not in TASKS:
-        sys.exit('Config file contains invalid task:  '+val)
-      if key == 'runGroup' and val not in RUNGROUPS:
-        sys.exit('Config file contains invalid runGroup:  '+val)
-      if key == 'track' and val not in TRACKS:
-        sys.exit('Config file contains invalid track:  '+val)
+      if key in CHOICES and val not in CHOICES[key]:
+        sys.exit('FATAL ERROR:  Config file\'s "%s" must be one of %s'%(key,str(CHOICES[key])))
       self.cfg[key]=val
 
-  def _parseCliArgs(self):
+  def _loadCliArgs(self):
     for key,val in vars(self.args).iteritems():
       if key in self.cfg:
         if val is None:
@@ -158,8 +157,6 @@ class ChefConfig:
 
     if self.cfg['runGroup'] is None:
       self.cli.error('"runGroup" must be defined.')
-    if self.cfg['runGroup'] not in RUNGROUPS:
-      self.cli.error('Invalid "runGroup":  '+str(self.cfg['runGroup'])+' is not in '+str(RUNGROUPS))
 
     if self.cfg['tag'] is None:
       self.cli.error('"tag" must be specified.')

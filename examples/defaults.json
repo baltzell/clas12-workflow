@@ -1,4 +1,5 @@
 {
+  "runGroup": "doggy",
   "coatjava": "/group/clas12/packages/coatjava-6b.0.0",
   "fileRegex": ".*clas[_A-Za-z]*_(\\d+)\\.evio\\.(\\d+)",
   "inputs": [],
