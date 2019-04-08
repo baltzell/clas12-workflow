@@ -55,20 +55,19 @@ First, setup the environment:
 
 `source ./env.csh`
 
-These examples will generate a Swif workflow and write it to files in `./jobs`, _using the default configuration_, for a single decoding workflow for run 4013 and 4014, all runs between 4000 and 4200, or for a list of runs read from a file:
+See `./scripts/gen-decoding.py -h` for usage options, and the `./examples` directory.  This example would generate a Swif workflow and write it to files in `./jobs`, for a single decoding workflow for run 4013 and 4014:
 
-`./scripts/gen-decoding.py --runGroup rga --workflow decodeA --runs 4013,4014`
+`./scripts/gen-decoding.py --runGroup rga --tag v0 --runs 4013,4014 --inputs /mss/clas12/rg-a/data --outDir /volatile/clas12/rg-a/test`
 
-`./scripts/gen-decoding.py --runGroup rga --workflow decodeB --runs 4000-4200`
-
-`./scripts/gen-decoding.py --runGroup rga --workflow decodeC --runs filename`
+You could alternatively specify `--runs 4000-4200` or `--runs filename` to do all runs between 4000 and 4200 or read the runs from a file.  Note, the output directories will be made automatically, so you must have write permissions.
 
 After importing the resulting file in `./jobs` (via `swif import -slurm -file filename`, currently the default is PBS without the -slurm option), you would `swif run` it to start the workflow.
 
-* You'll need to modify the default configuration
-  * all necessary settings are available from the command line, run it with the `-h` option to see
-* N (`phaseSize`) should be significantly larger than M (`mergeSize`) to allow Swif to optimize tape access
-* N should be evenly divisible by M, else you'll always get one smaller merge file per phase and irregular merged file numberings
+* All necessary settings are available from the command line, run it with the `-h` option to see.
+* You can also use a configuration file, overridden by additional command line options.
+* For merging workflows (the default is non-merging):
+  * N (`phaseSize`) should be significantly larger than M (`mergeSize`) to allow Swif to optimize tape access
+  * N should be evenly divisible by M, else you'll always get one smaller merge file per phase and irregular merged file numberings
 
 ### Monitoring / Control
 
