@@ -11,7 +11,7 @@ print 'Generating workflow ...'
 workflow.generate()
 
 print 'Created %d jobs based on %d runs with %d total files.'%\
-    (len(workflow.jobs),len(workflow.getRunList(0)),workflow.getFileCount())
+    (len(workflow.jobs),len(workflow.getRunList(1)),workflow.getFileCount())
 
 jobFilePrefix='./jobs/'+workflow.name
 
