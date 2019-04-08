@@ -21,6 +21,7 @@ CFG={
     'coatjava'      : '/group/clas12/packages/coatjava-6b.0.0',
     'tag'           : None,
     'inputs'        : [],
+    'runs'          : [],
     'workDir'       : None,
     'outDir'        : None,
     'phaseSize'     : 2000,
@@ -80,21 +81,21 @@ class ChefConfig:
       else:
         sys.exit('This should never happen #1.')
     if self._workflow.getFileCount()<1:
-      sys.exit('FATAL ERROR:  found no applicable input files.  Check "inputs" and "run/runFile".')
+      sys.exit('FATAL ERROR:  found no applicable input files.  Check "inputs" and "run".')
     return self._workflow
 
   def _setCli(self):
 
-    self.cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',epilog='* = required option, from command-line or config file')
+    self.cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
+        epilog='* = required option, from command-line or config file')
 
-    self.cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
     self.cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=RUNGROUPS, default=None)
+    self.cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
     self.cli.add_argument('--task',    metavar='NAME',help='* task name', type=str, choices=TASKS, default=None)
     self.cli.add_argument('--model', help='* workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=MODELS,default=None)
 
     self.cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
-    self.cli.add_argument('--run',    metavar='RUN(s)',help='** run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999).  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
-    self.cli.add_argument('--runFile',metavar='PATH',help='** file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
+    self.cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
 
     self.cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
     self.cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
@@ -161,16 +162,16 @@ class ChefConfig:
       self.cli.error('Invalid "runGroup":  '+str(self.cfg['runGroup'])+' is not in '+str(RUNGROUPS))
 
     if self.cfg['tag'] is None:
-      self.cli.error('"tag" must be defined.')
+      self.cli.error('"tag" must be specified.')
 
-    if len(self.args.run)==0 and len(self.args.runFile)==0:
-      self.cli.error('At least one of --run or --runFile must be specified on the command line.')
+    if len(self.args.runs)==0:
+      self.cli.error('"runs" must be specified via --runs.')
 
     if len(self.cfg['inputs'])==0:
-      self.cli.error('"inputs" must be defined.')
+      self.cli.error('"inputs" must be specified.')
 
     if self.cfg['outDir'] is None:
-      self.cli.error('"outDir" must be defined.')
+      self.cli.error('"outDir" must be specified.')
 
     # non-merging workflows:
     if self.cfg['model']==2:
@@ -198,9 +199,9 @@ class ChefConfig:
         self.cli.error('"multiRun" is not allowed in merging workflows.')
 
     # parse run list:
-    self.cfg['runs'] = ChefUtil.getRunList(vars(self.args))
+    self.cfg['runs'] = ChefUtil.getRunList(self.args.runs)
     if self.cfg['runs'] is None or len(self.cfg['runs'])==0:
-      self.cli.error('\nFound no runs.')
+      self.cli.error('\nFound no runs.  Check --inputs and --runs.')
 
 
   def __str__(self):

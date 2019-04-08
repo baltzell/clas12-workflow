@@ -57,11 +57,11 @@ First, setup the environment:
 
 These examples will generate a Swif workflow and write it to files in `./jobs`, _using the default configuration_, for a single decoding workflow for run 4013 and 4014, all runs between 4000 and 4200, or for a list of runs read from a file:
 
-`./scripts/gen-decoding.py --runGroup rga --workflow decodeA --run 4013,4014`
+`./scripts/gen-decoding.py --runGroup rga --workflow decodeA --runs 4013,4014`
 
-`./scripts/gen-decoding.py --runGroup rga --workflow decodeB --run 4000-4200`
+`./scripts/gen-decoding.py --runGroup rga --workflow decodeB --runs 4000-4200`
 
-`./scripts/gen-decoding.py --runGroup rga --workflow decodeC --runfile filename`
+`./scripts/gen-decoding.py --runGroup rga --workflow decodeC --runs filename`
 
 After importing the resulting file in `./jobs` (via `swif import -slurm -file filename`, currently the default is PBS without the -slurm option), you would `swif run` it to start the workflow.
 
