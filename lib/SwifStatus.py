@@ -223,11 +223,32 @@ class SwifStatus():
       ret.append(subprocess.check_output(modifyCmd))
     return ret
 
-if __name__ == '__main__':
-  s=SwifStatus('decode9_R4146x14_x2500')
-  s.setUser('clas12')
-  s.mergeTags()
-  print s.getPrettyStatus()
-  print s.getPrettyJsonStatus()
+  def getPersistentProblems(self):
+    problemJobs=[]
+    if self.details is None:
+      self.loadDetails()
+    for job in self.details['jobs']:
+      job = json.loads(json.dumps(job))
+      if 'attempts' not in job:
+        continue
+      nproblems = 0
+      # go in reverse order on attempts, since we're
+      # looking for jobs that still have problems
+      for attempt in job['attempts'][::-1]:
+        if 'problem' in attempt:
+          nproblems += 1
+        else:
+          break
+      if nproblems > 0:
+        problemJobs.append(job)
+    return problemJobs
 
+if __name__ == '__main__':
+  s=SwifStatus('rga-decode8_R3191x65_x1300')
+  s.setUser('clas12')
+#  s.mergeTags()
+#  print s.getPrettyStatus()
+#  print s.getPrettyJsonStatus()
+  for job in s.getPersistentProblems():
+    print json.dumps(job,indent=2,separators=(',',': '),sort_keys=True)
 
