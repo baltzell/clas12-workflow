@@ -3,7 +3,7 @@ import subprocess
 import requests
 import json
 
-from ChefConfig import RUNGROUPS,TASKS
+from ChefConfig import CHOICES
 from ChefUtil import mkdir
 from SwifStatus import SwifStatus
 
@@ -69,7 +69,7 @@ class CLAS12SwifStatus(SwifStatus):
       tags=self.name.split('-')
       run_group=tags[0]
       task=tags[1]
-      if runGroup not in RUNGROUPS or task not in TASKS:
+      if runGroup not in CHOICES['runGroup'] or task not in CHOICES['task']:
         print 'Invalid workflow name for clas12mon:  '+self.name
         return
       status=self.getPrunedStatus()
