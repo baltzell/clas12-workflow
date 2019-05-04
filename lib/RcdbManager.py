@@ -1,4 +1,4 @@
-import rcdb,sys,traceback
+import sys,traceback
 
 class RcdbEntry():
 
@@ -25,8 +25,13 @@ class RcdbManager():
   _uri='mysql://rcdb@clasdb.jlab.org/rcdb'
 
   def __init__(self):
+    self.rcdb=False
     self.data={}
-
+    try:
+      import rcdb
+      self.rcdb=True
+    except:
+      print 'WARNING:  Failure to load RCDB python module from PYTHONPATH.'
   def _loadRun(self,run):
     entry = RcdbEntry(run)
     try:
@@ -41,11 +46,12 @@ class RcdbManager():
     except:
       print traceback.format_exc()
       db.disconnect()
-      sys.exit('***\n*** ERROR:  Could not retrieve RCDB constants for run '+str(run)+'\n***')
+      sys.exit('***\n*** ERROR:  Could not find RCDB constants for run '+str(run)+'\n***')
     db.disconnect()
     self.data[run] = entry
 
   def getEntry(self,run):
+    assert(self.rcdb),'Trying to use nonexistent RCBD module.'
     if run not in self.data:
       self._loadRun(run)
     return self.data[run]
