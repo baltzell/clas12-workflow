@@ -75,9 +75,9 @@ class CLAS12Workflow(SwifWorkflow):
       cmd= ' setenv GEOMDBVAR may_2018_engineers ;'
       cmd+=' setenv USESTT true ;'
       cmd+=' setenv SOLSHIFT -1.9 ;'
-      cmd+=' %s/bin/notsouseful-util -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
+      cmd+=' %s/bin/recon-util -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
       cmd+=' && ls out.hipo'
-      cmd+=' && %s/bin/hipo4utils -test out.hipo'%self.cfg['coatjava']
+      cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
       job.setCmd(cmd)
 
@@ -124,9 +124,9 @@ class CLAS12Workflow(SwifWorkflow):
       if t is None: t = self.rcdb.getTorusScale(runno)
       decoderOpts = '-c 2 -s %.4f -t %.4f'%(s,t)
 
-      cmd='%s/bin/decoder4 %s -o out.hipo in.evio'%(self.cfg['coatjava'],decoderOpts)
+      cmd='%s/bin/decoder %s -o out.hipo in.evio'%(self.cfg['coatjava'],decoderOpts)
       cmd+=' && ls out.hipo'
-      cmd+=' && %s/bin/hipo4utils -test out.hipo'%self.cfg['coatjava']
+      cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
       job.setCmd(cmd)
 
@@ -170,12 +170,12 @@ class CLAS12Workflow(SwifWorkflow):
         job.addOutput('out.hipo',outFile)
 
         cmd = 'rm -f '+outFile+' ; '
-        cmd += '%s/bin/hipo4utils -merge -o out.hipo'%self.cfg['coatjava']
+        cmd += '%s/bin/hipo-utils -merge -o out.hipo'%self.cfg['coatjava']
         for ii in range(len(inputs)):
           job.addInput('in%.4d.hipo'%ii,inputs[ii])
           cmd += ' in%.4d.hipo'%ii
         cmd+=' && ls out.hipo'
-        cmd+=' && %s/bin/hipo4utils -test out.hipo'%self.cfg['coatjava']
+        cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
         cmd+=' || rm -f out.hipo && ls out.hipo'
         job.setCmd(cmd)
 

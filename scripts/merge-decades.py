@@ -39,7 +39,7 @@ def merge(decade,cfg):
   outDir = cfg['outDir']+'/'+str(run)
   outputFile = outDir+'/'+cfg['mergePattern']%(run,f1,f2)
   logFile = cfg['workDir']+'/logs/merge/'+cfg['mergePattern']%(run,f1,f2)+'.log'
-  cmd=[cfg['coatjava']+'/bin/hipo4utils','-merge','-o',outputFile]
+  cmd=[cfg['coatjava']+'/bin/hipo-utils','-merge','-o',outputFile]
   cmd.extend([rf.fileName for rf in decade.runFileList])
   with open(logFile,'w') as file:
     foobar=subprocess.check_output(cmd,stderr=subprocess.STDOUT)
