@@ -15,7 +15,7 @@ class RcdbEntry():
     return None
 
   def __str__(self):
-    ret = str(run)
+    ret = str(self.run)
     for key,val in self.data.iteritems():
       ret += ' '+key+'='+str(val)
     return ret
@@ -34,6 +34,7 @@ class RcdbManager():
       print 'WARNING:  Failure to load RCDB python module from PYTHONPATH.'
   def _loadRun(self,run):
     entry = RcdbEntry(run)
+    import rcdb
     try:
       db=rcdb.RCDBProvider(self._uri)
     except:
