@@ -6,7 +6,7 @@ class RcdbEntry():
     self.run = run
     self.data={}
 
-  def add(self,key,val):
+  def _add(self,key,val):
     self.data[key] = val
 
   def get(self,key):
@@ -32,6 +32,7 @@ class RcdbManager():
       self.rcdb=True
     except:
       print 'WARNING:  Failure to load RCDB python module from PYTHONPATH.'
+      self.rcdb=False
   def _loadRun(self,run):
     entry = RcdbEntry(run)
     import rcdb
@@ -41,9 +42,9 @@ class RcdbManager():
       print traceback.format_exc()
       sys.exit('***\n*** ERROR:  Could not connect to '+self._uri+'\n***')
     try:
-      entry.add('solenoid_scale',db.get_condition(run,'solenoid_scale').value)
-      entry.add('torus_scale'   ,db.get_condition(run,'torus_scale').value)
-      entry.add('run_start_time',db.get_condition(run,'run_start_time').value)
+      entry._add('solenoid_scale',db.get_condition(run,'solenoid_scale').value)
+      entry._add('torus_scale'   ,db.get_condition(run,'torus_scale').value)
+      entry._add('run_start_time',db.get_condition(run,'run_start_time').value)
     except:
       print traceback.format_exc()
       db.disconnect()
@@ -52,7 +53,7 @@ class RcdbManager():
     self.data[run] = entry
 
   def getEntry(self,run):
-    assert(self.rcdb),'Trying to use nonexistent RCBD module.'
+    assert(self.rcdb),'***\n*** ERROR:  Trying to use nonexistent RCBD module.\n***'
     if run not in self.data:
       self._loadRun(run)
     return self.data[run]
