@@ -21,6 +21,9 @@ def processWorkflow(workflow,args):
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
 
+  if args.problems:
+    status.showPersistentProblems():
+
   if args.retry:
     result = status.retryProblems()
     if len(result)>0:
@@ -57,6 +60,7 @@ if __name__ == '__main__':
   cli.add_argument('--save',    help='save to logs',      action='store_true',default=False)
 #  cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
+  cli.add_argument('--problems',help='show problem jobs', action='store_true',default=False)
 #  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
   cli.add_argument('--workflow',help='workflow name (else all workflows)', action='append',default=[])
   cli.add_argument('--logdir',  help='local log directory'+df, type=str,default=None)

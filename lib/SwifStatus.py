@@ -243,12 +243,15 @@ class SwifStatus():
         problemJobs.append(job)
     return problemJobs
 
+  def showPersistentProblems(self):
+    for job in self.getPersistentProblems():
+      print json.dumps(job,indent=2,separators=(',',': '),sort_keys=True)
+
 if __name__ == '__main__':
-  s=SwifStatus('rga-decode8_R3191x65_x1300')
+  s=SwifStatus('rga-decode9_R3135x178_x1300')
   s.setUser('clas12')
 #  s.mergeTags()
 #  print s.getPrettyStatus()
 #  print s.getPrettyJsonStatus()
-  for job in s.getPersistentProblems():
-    print json.dumps(job,indent=2,separators=(',',': '),sort_keys=True)
+  s.showPersistentProblems();
 
