@@ -1,5 +1,7 @@
 import sys,traceback
 
+_RCDBKEYS=['solenoid_scale','torus_scale','run_start_time']
+
 class RcdbEntry():
 
   def __init__(self,run):
@@ -15,9 +17,12 @@ class RcdbEntry():
     return None
 
   def __str__(self):
-    ret = str(self.run)
+    comma=''
+    ret = str(self.run)+' = {'
     for key,val in self.data.iteritems():
-      ret += ' '+key+'='+str(val)
+      ret += comma+' '+key+':'+str(val)
+      comma=' ,'
+    ret += ' } '
     return ret
 
 class RcdbManager():
@@ -42,9 +47,8 @@ class RcdbManager():
       print traceback.format_exc()
       sys.exit('***\n*** ERROR:  Could not connect to '+self._uri+'\n***')
     try:
-      entry._add('solenoid_scale',db.get_condition(run,'solenoid_scale').value)
-      entry._add('torus_scale'   ,db.get_condition(run,'torus_scale').value)
-      entry._add('run_start_time',db.get_condition(run,'run_start_time').value)
+      for key in _RCDBKEYS:
+        entry._add(key,db.get_condition(run,key).value)
     except:
       print traceback.format_exc()
       db.disconnect()
