@@ -22,7 +22,7 @@ def processWorkflow(workflow,args):
 #      status.moveJobLogs()
 
   if args.problems:
-    status.showPersistentProblems():
+    status.showPersistentProblems()
 
   if args.retry:
     result = status.retryProblems()
