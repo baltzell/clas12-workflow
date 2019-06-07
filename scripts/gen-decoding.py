@@ -20,8 +20,8 @@ print 'Writing workflow to '+jobFilePrefix+'.json ...'
 with open(jobFilePrefix+'.json','w') as out:
   out.write(workflow.getJson())
 
-with open(jobFilePrefix+'.sh','w') as out:
-  out.write(workflow.getShell())
+#with open(jobFilePrefix+'.sh','w') as out:
+#  out.write(workflow.getShell())
 
 if cc.get('submit'):
   print 'Submitting %s.json with %d jobs ...'%(jobFilePrefix,len(workflow.jobs))
