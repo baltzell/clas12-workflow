@@ -75,7 +75,14 @@ class SwifJob:
     return cmd
 
   def getJobName(self):
-    return '%s-%.5d'%(self.workflow,self.number)
+    name='%s-%.5d'%(self.workflow,self.number)
+    if len(name)>50:
+      print ''
+      print 'ERROR:  Maximum (JLab batch) job name length is 50 characters.'
+      print 'This is too long:  '+name
+      print ''
+      sys.exit()
+    return name
 
   def getLogPrefix(self):
     prefix='%s/%s_p%d'%(self.logDir,self.getJobName(),self.phase)
