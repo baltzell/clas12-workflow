@@ -13,9 +13,11 @@ class CLAS12Workflow(SwifWorkflow):
     self.cfg=cfg
     self.setPhaseSize(self.cfg['phaseSize'])
     self.setCombineRuns(self.cfg['multiRun'])
-    self.logDir='%s/logs/%s'%(self.cfg['outDir'],self.name)
     self.addRuns(self.cfg['runs'])
     self.findFiles(self.cfg['inputs'])
+    self.logDir=None
+    if self.cfg['logDir'] is not None:
+      self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
     self._mkdirs()
 
   def _mkdirs(self):

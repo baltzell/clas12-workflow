@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import copy
+import getpass
 import argparse
 import traceback
 
@@ -27,6 +28,7 @@ CFG={
     'runs'          : [],
     'workDir'       : None,
     'outDir'        : None,
+    'logDir'        : '/farm_out/'+getpass.getuser(),
     'phaseSize'     : 2000,
     'mergeSize'     : 10,
     'model'         : 2,
@@ -102,6 +104,7 @@ class ChefConfig:
 
     cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
+    cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
 
@@ -169,6 +172,13 @@ class ChefConfig:
 
     if self.cfg['outDir'] is None:
       self.cli.error('"outDir" must be specified.')
+
+    for xx in ['outDir','workDir','logDir']:
+      if self.cfg[xx] is not None:
+        if self.cfg[xx]=='None' or self.cfg[xx]=='NULL' or self.cfg[xx]=='null':
+          self.cfg[xx]=None
+        elif not self.cfg[xx].startswith('/'):
+          self.cli.error('"'+xx+'" must be an absolute path, not '+self.cfg[xx])
 
     # non-merging workflows:
     if self.cfg['model']==2:

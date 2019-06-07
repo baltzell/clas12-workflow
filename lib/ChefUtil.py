@@ -1,11 +1,12 @@
 import os
 
 def mkdir(path):
-  if os.access(path,os.F_OK):
-    if not os.access(path,os.W_OK):
-      raise IOError('Permissions error on '+path)
-  else:
-    os.makedirs(path)
+  if path is not None:
+    if os.access(path,os.F_OK):
+      if not os.access(path,os.W_OK):
+        raise IOError('Permissions error on '+path)
+    else:
+      os.makedirs(path)
 
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'
