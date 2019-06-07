@@ -44,8 +44,6 @@ def processWorkflow(workflow,args):
     print status.getPrettyStatus()
     if args.details:
       print status.getPrettyJsonDetails()
-    if status.isComplete():
-      print 'WORKFLOW FINISHED:  '+workflow+'\n'
 
   if args.clas12mon:
     status.saveDatabase()
