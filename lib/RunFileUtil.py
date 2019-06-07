@@ -160,7 +160,8 @@ class RunFileGroups:
 
     # file containing a file list if it's a file:
     elif os.path.isfile(data):
-      self.addFile([x.split()[0] for x in open(data,'r').readlines()])
+      for x in open(data,'r').readlines():
+        self.addFile(x.split()[0])
 
     # else assume it's a glob:
     else:
