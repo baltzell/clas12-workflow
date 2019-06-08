@@ -73,8 +73,6 @@ class ChefConfig:
     if self._workflow is None:
       name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['task'],self.cfg['tag'])
       name+='_R%dx%d'%(self.cfg['runs'][0],len(self.cfg['runs']))
-      if self.cfg['model']!=2:
-        name+='_x%d'%(self.cfg['phaseSize'])
       if self.cfg['model']==0:
         self._workflow = CLAS12Workflows.ThreePhaseDecoding(name,self.cfg)
       elif self.cfg['model']==1:
