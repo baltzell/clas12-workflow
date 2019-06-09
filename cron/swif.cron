@@ -1,3 +1,3 @@
 #MAILTO="bobcat@jlab.org"
-*30 * * * * /usr/bin/flock -n /path/to/.clas12workflow-cron.lock /path/to/clas12-workflow/cron/swif-cron.csh || echo "ERROR:  Previous clas12-workflow cronjob still running"
+*/30 * * * * /usr/bin/flock -n /path/to/.clas12workflow-cron.lock /path/to/clas12-workflow/cron/swif-cron.csh || echo "ERROR:  Previous clas12-workflow cronjob still running"
 
