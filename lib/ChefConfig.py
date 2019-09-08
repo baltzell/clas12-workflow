@@ -86,7 +86,7 @@ class ChefConfig:
         self._workflow = CLAS12Workflows.RollingDecoding(name,self.cfg)
       elif self.cfg['model']==Models.SinglesDecoding:
         self._workflow = CLAS12Workflows.SinglesOnlyDecoding(name,self.cfg)
-      elif cfg['model']==Models.DecodeAndReconTest:
+      elif self.cfg['model']==Models.DecodeAndReconTest:
         self._workflow = CLAS12Workflows.DecodingReconTest(name,self.cfg)
       else:
         sys.exit('This should never happen #1.')
