@@ -1,12 +1,15 @@
-import os
+import os,sys
 
 def mkdir(path):
   if path is not None:
     if os.access(path,os.F_OK):
       if not os.access(path,os.W_OK):
-        raise IOError('Permissions error on '+path)
+        sys.exit('\nERROR:  You do not have write permissions on '+path)
     else:
-      os.makedirs(path)
+      try:
+        os.makedirs(path)
+      except:
+        sys.exit('\nERROR:  Cannot make directory: '+path)
 
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'
