@@ -10,11 +10,18 @@ import ChefUtil
 import RunFileUtil
 import CLAS12Workflows
 
+class Models:
+  ThreePhaseDecoding=0
+  RollingDecoding=1
+  SinglesDecoding=2
+  DecodeAndReconTest=3
+  Choices=[0,1,2,3]
+
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
     'track'   : ['reconstruction','debug'],
     'task'    : ['decode','recon'],
-    'model'   : [0,1,2,3]
+    'model'   : Models.Choices
 }
 
 CFG={
@@ -73,13 +80,13 @@ class ChefConfig:
     if self._workflow is None:
       name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['task'],self.cfg['tag'])
       name+='_R%dx%d'%(self.cfg['runs'][0],len(self.cfg['runs']))
-      if self.cfg['model']==0:
+      if self.cfg['model']==Models.ThreePhaseDecoding:
         self._workflow = CLAS12Workflows.ThreePhaseDecoding(name,self.cfg)
-      elif self.cfg['model']==1:
+      elif self.cfg['model']==Models.RollingDecoding:
         self._workflow = CLAS12Workflows.RollingDecoding(name,self.cfg)
-      elif self.cfg['model']==2:
+      elif self.cfg['model']==Models.SinglesDecoding:
         self._workflow = CLAS12Workflows.SinglesOnlyDecoding(name,self.cfg)
-      elif cfg['model']==3:
+      elif cfg['model']==Models.DecodeAndReconTest:
         self._workflow = CLAS12Workflows.DecodingReconTest(name,self.cfg)
       else:
         sys.exit('This should never happen #1.')
@@ -179,7 +186,7 @@ class ChefConfig:
           self.cli.error('"'+xx+'" must be an absolute path, not '+self.cfg[xx])
 
     # non-merging workflows:
-    if self.cfg['model']==2:
+    if self.cfg['model']==Models.SinglesDecoding:
 
       if self.cfg['workDir'] is not None:
         print 'WARNING:  ignoring "workDir" for non-merging workflow.'
