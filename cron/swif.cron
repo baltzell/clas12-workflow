@@ -1,3 +1,8 @@
-#MAILTO="bobcat@jlab.org"
+# NOTE:  This is a template.  To make it operational:
+# 1) replace the email address example with your personal one
+# 2) change the path to the lock file to be in the home directory of the account that will be running this cronjob
+# 3) change the path to swif-cron.csh to the one in your clas12-workflow build
+# 
+MAILTO="bobcat@jlab.org"
 */30 * * * * /usr/bin/flock -n /path/to/.clas12workflow-cron.lock /path/to/clas12-workflow/cron/swif-cron.csh || echo "ERROR:  Previous clas12-workflow cronjob still running"
 
