@@ -39,7 +39,7 @@ class CLAS12Workflow(SwifWorkflow):
   #
   def recon(self,phase,hipoFiles):
 
-    reconned=[]
+    reconnedFiles=[]
 
     for hipoFileName in hipoFiles:
 
@@ -59,6 +59,8 @@ class CLAS12Workflow(SwifWorkflow):
         outDir = '%s/recon/%.6d/'%(self.cfg['outDir'],runno)
 
       reconFileName = outDir+'/'+reconBaseName
+      reconnedFiles.append(reconFileName)
+
       ChefUtil.mkdir(outDir)
 
       job=SwifJob(self.name)
@@ -85,7 +87,7 @@ class CLAS12Workflow(SwifWorkflow):
 
       self.addJob(job)
 
-    return hipoFiles
+    return reconnedFiles
 
   #
   # decode:  add jobs for decoding evio files
