@@ -2,8 +2,7 @@
 
 # Check hipo file integrity
 # Aborts with non-zero status on first error.
-
-cmd=/group/clas12/packages/coatjava-6.0.0/bin/hipo-utils
+# Requires hipo-utils is in $PATH
 
 if [ "$#" -lt 1 ]
 then
@@ -13,7 +12,7 @@ fi
 
 for file in $@
 do
-    $cmd -test $file
+    hipo-utils -test $file
     if [ ! "$?" -eq 0 ]
     then
       echo Corrupt: $file

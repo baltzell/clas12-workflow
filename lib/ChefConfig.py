@@ -29,7 +29,7 @@ CFG={
     'track'         : 'reconstruction',
     'task'          : 'decode',
     'runGroup'      : None,
-    'coatjava'      : '/group/clas12/packages/coatjava-6b.0.0',
+    'coatjava'      : '/group/clas12/packages/coatjava/6.3.1',
     'tag'           : None,
     'inputs'        : [],
     'runs'          : [],

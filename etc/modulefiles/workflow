@@ -1,0 +1,13 @@
+#%Module1.0
+proc ModulesHelp { } {
+    puts stderr "This module sets up environment for clas12-workflow"
+}
+module-whatis   "clas12-workflow dev"
+
+set d /group/clas12/packages/clas12-workflow/dev
+
+prereq rcdb
+
+prepend-path PYTHONPATH $d/lib
+prepend-path PATH $d/scripts
+
