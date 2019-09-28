@@ -21,10 +21,17 @@ class ClaraStats:
     self.title=None
     self.errors={}
     self.slurmerrors={}
+    self.flavors={}
+    self.flavorlist=JobSpecs._FLAVORS
     for x in ClaraErrors._BITS:
       self.errors[x]=0
     for x in SlurmErrors._BITS:
       self.slurmerrors[x]=0
+    for x in JobSpecs._FLAVORS:
+      self.flavors[x]={'success':0,'fail':0,'total':0}
+
+  def setFlavors(self,flavors):
+    self.flavorlist=flavors
 
   # Set a list of histograms to all have the same maximum
   def setMaxima(self,histos):
@@ -35,7 +42,27 @@ class ClaraStats:
     for h in histos:
       h.SetMaximum(maximum*1.1)
 
+  def __str__(self):
+    ret=''
+    for f in JobSpecs._FLAVORS:
+      ret+=f+' '
+      if self.flavors[f]['total']>0:
+        ret+='%.2f%%'%(100*float(self.flavors[f]['fail'])/(self.flavors[f]['fail']+self.flavors[f]['success']))
+      else:
+        ret+='N/A'
+      ret+='\n'
+    return ret
+
   def fill(self,jl,val):
+    if not jl.flavor in self.flavorlist:
+      return
+    if jl.flavor in JobSpecs._FLAVORS:
+      self.flavors[jl.flavor]['total']+=1
+      if jl.isComplete():
+      #if jl.slurmerrors.bits==0:
+        self.flavors[jl.flavor]['success']+=1
+      else:
+        self.flavors[jl.flavor]['fail']+=1
     for x in ClaraErrors._BITS:
       if jl.errors.getBit(x):
         self.errors[x]+=1

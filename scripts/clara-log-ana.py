@@ -18,6 +18,7 @@ cli.add_argument('-o',metavar='rootfile',help='output ROOT file name',type=str,d
 cli.add_argument('-n',metavar='#',help='maximum number of log files',type=int,default=0)
 cli.add_argument('-m',metavar='string',help='required match in filenames',type=str,default=[],action='append')
 cli.add_argument('-t',metavar='title',help='title for plot',type=str,default=None)
+cli.add_argument('-f',metavar='flavor',help='choose specific flavors',type=str,default=[],action='append')
 cli.add_argument('p',metavar='path',nargs='*')
 args=cli.parse_args(sys.argv[1:])
 
@@ -40,6 +41,8 @@ for path in args.p:
 
 cs=ClaraStats()
 cs.title=args.t
+if len(args.f)>0:
+  cs.setFlavors(args.f)
 
 # analyze the logfiles:
 for logfile in logfiles:
@@ -48,6 +51,7 @@ for logfile in logfiles:
   # update the plot:
   if args.i and clog.isComplete() and cs.successes%10==0:
     cs.draw()
+    print cs
   # printout unknown errors:
   if clog.errors.getBit('UDF'):
     print 'UDF:  ',logfile,str(clog.lastline)

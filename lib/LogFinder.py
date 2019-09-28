@@ -1,4 +1,4 @@
-import pwd,os
+import pwd,os,subprocess
 
 class LogFinder:
 
@@ -27,17 +27,17 @@ class LogFinder:
         return x[1]
     return None
 
-  def cacheFarmoutLogs(self,user):
-      print 'Generating /farm_out file cache at '+cachefile+' ...'
-      with open(cachefile,'w') as f:
-        subprocess.call(['find','/farm_out/'+user],stdout=f)
-      print 'Generated /farm_out cache.'
+  def cacheFarmoutLogs(self,user,cachefile):
+    print 'Generating /farm_out file cache at '+cachefile+' ...'
+    with open(cachefile,'w') as f:
+      subprocess.call(['find','/farm_out/'+user],stdout=f)
+    print 'Generated /farm_out cache.'
 
   def loadFarmoutLogs(self,user):
     self.files[user]={}
     cachefile='%s/claralogana_farmout_%s.txt'%(os.environ['HOME'],user)
     if not os.path.isfile(cachefile):
-      self.cacheFarmoutLogs(user)
+      self.cacheFarmoutLogs(user,cachefile)
     print 'Loading farmout logs from '+cachefile+' ...'
     with open(cachefile,'r') as f:
       while True:
