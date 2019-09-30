@@ -51,7 +51,7 @@ for logfile in logfiles:
   # update the plot:
   if args.i and clog.isComplete() and cs.successes%10==0:
     cs.draw()
-    print cs
+    #print cs
   # printout unknown errors:
   if clog.errors.getBit('UDF'):
     print 'UDF:  ',logfile,str(clog.lastline)

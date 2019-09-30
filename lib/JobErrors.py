@@ -1,4 +1,20 @@
-import re
+import re,os
+
+def readlines_reverse(filename):
+  with open(filename) as qfile:
+    qfile.seek(0, os.SEEK_END)
+    position = qfile.tell()
+    line = ''
+    while position >= 0:
+      qfile.seek(position)
+      next_char = qfile.read(1)
+      if next_char == "\n":
+         yield line[::-1]
+         line = ''
+      else:
+         line += next_char
+      position -= 1
+  yield line[::-1]
 
 class Errors:
   _BITS=[]
@@ -27,22 +43,43 @@ class SlurmErrors(Errors):
   def __init__(self):
     Errors.__init__(self)
   def parse(self,filename):
-    with open(filename,'r') as f:
-      while True:
-        line=f.readline()
-        if not line:
-          break
-        if line.find('CANCELLED')>=0:
-          if line.find('DUE TO TIME LIMIT')>=0:
-            self.setBit('TIME')
-          elif line.find('DUE TO NODE FAILURE')>=0:
-            self.setBit('NODE')
-          elif line.find('DUE TO PREEMPTION')>=0:
-            self.setBit('PREE')
-          elif line.find('MEMORY')>=0:
-            self.setBit('MEM')
-          else:
-            self.setBit('USER')
+    n=0
+    maxlines=22
+    cancelled=False
+    for line in readlines_reverse(filename):
+      if line.find('CANCELLED')>=0:
+        cancelled=True
+        if line.find('DUE TO TIME LIMIT')>=0:
+          self.setBit('TIME')
+        elif line.find('DUE TO NODE FAILURE')>=0:
+          self.setBit('NODE')
+        elif line.find('DUE TO PREEMPTION')>=0:
+          self.setBit('PREE')
+      elif cancelled:
+        if line.find('Exceeded job memory limit')>=0:
+          self.setBit('MEM')
+      if n>maxlines:
+        break
+      n+=1
+    if cancelled and self.bits==0:
+      self.setBit('USER')
+
+#    with open(filename,'r') as f:
+#      while True:
+#        line=f.readline()
+#        if not line:
+#          break
+#        if line.find('CANCELLED')>=0:
+#          if line.find('DUE TO TIME LIMIT')>=0:
+#            self.setBit('TIME')
+#          elif line.find('DUE TO NODE FAILURE')>=0:
+#            self.setBit('NODE')
+#          elif line.find('DUE TO PREEMPTION')>=0:
+#            self.setBit('PREE')
+#          elif line.find('MEMORY')>=0:
+#            self.setBit('MEM')
+#          else:
+#            self.setBit('USER')
 
 class ClaraErrors(Errors):
   _BITS=[

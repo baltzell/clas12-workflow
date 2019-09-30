@@ -10,6 +10,7 @@ _FILLS  =[0,  3003, 3004, 3005]
 class ClaraStats:
 
   def __init__(self):
+    # importing ROOT is slow, wait until necessary
     self.ROOT=__import__('ROOT')
     self.template=self.ROOT.TH1F('h',';Average Event Time per Core (ms);Jobs',100,0,2500)
     self.template.GetYaxis().SetTickLength(0)
@@ -69,11 +70,12 @@ class ClaraStats:
     for x in SlurmErrors._BITS:
       if jl.slurmerrors.getBit(x):
         self.slurmerrors[x]+=1
+    if jl.threads is not None and jl.flavor is not None:
+      if self.ntuple is None:
+        self.ntuple=self.ROOT.TNtuple("claraStats","","threads:files:events:etime1:etime2:flavor:filesize:s_errors:c_errors:c_walltime")
+      self.ntuple.Fill(jl.threads,jl.nfiles,jl.events,jl.t1,jl.t2,JobSpecs._FLAVORS.index(jl.flavor),jl.filesize,jl.errors.bits,jl.slurmerrors.bits,0)
     if not jl.isComplete():
       return
-    if self.ntuple is None:
-      self.ntuple=self.ROOT.TNtuple("claraStats","","nt:nf:ne:t1:t2:fl:fs")
-    self.ntuple.Fill(jl.threads,jl.nfiles,jl.events,jl.t1,jl.t2,JobSpecs._FLAVORS.index(jl.flavor),jl.filesize)
     if not jl.flavor in self.histos:
       self.histos[jl.flavor]={}
     if not jl.threads in self.histos[jl.flavor]:
@@ -107,6 +109,35 @@ class ClaraStats:
     if self.canvas is None:
       t=self.title
       if t is None: t='none'
+      # copied from ~/.rootlogon.C, to be cleaned up:
+      self.ROOT.gStyle.SetCanvasColor(0)
+      self.ROOT.gStyle.SetPadColor(0)
+      self.ROOT.gStyle.SetTitleFillColor(0)
+      self.ROOT.gStyle.SetTitleBorderSize(0)
+      self.ROOT.gStyle.SetFrameBorderMode(0)
+      self.ROOT.gStyle.SetPaintTextFormat(".0f")
+      self.ROOT.gStyle.SetLegendBorderSize(1)
+      self.ROOT.gStyle.SetLegendFillColor(self.ROOT.kWhite)
+      self.ROOT.gStyle.SetTitleFontSize(0.04)
+      self.ROOT.gStyle.SetPadTopMargin(0.05)
+      self.ROOT.gStyle.SetPadLeftMargin(0.11)
+      self.ROOT.gStyle.SetPadBottomMargin(0.12)
+      self.ROOT.gStyle.SetTitleXSize(0.05)
+      self.ROOT.gStyle.SetTitleYSize(0.05)
+      self.ROOT.gStyle.SetTextFont(42)
+      self.ROOT.gStyle.SetStatFont(42)
+      self.ROOT.gStyle.SetLabelFont(42,"x")
+      self.ROOT.gStyle.SetLabelFont(42,"y")
+      self.ROOT.gStyle.SetLabelFont(42,"z")
+      self.ROOT.gStyle.SetTitleFont(42,"x")
+      self.ROOT.gStyle.SetTitleFont(42,"y")
+      self.ROOT.gStyle.SetTitleFont(42,"z")
+      self.ROOT.gStyle.SetHistLineWidth(2)
+      self.ROOT.gStyle.SetGridColor(15)
+      self.ROOT.gStyle.SetPadGridX(1)
+      self.ROOT.gStyle.SetPadGridY(1)
+      self.ROOT.gStyle.SetHistMinimumZero(self.ROOT.kTRUE)
+      self.ROOT.gROOT.ForceStyle()
       self.canvas=self.ROOT.TCanvas('c',t,700,500)
       self.canvas.GetPad(0).SetRightMargin(0.18)
     if self.text is None:
