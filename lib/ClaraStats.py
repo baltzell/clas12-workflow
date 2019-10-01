@@ -95,7 +95,8 @@ class ClaraStats:
   def save(self,filename):
     f=self.ROOT.TFile(filename,'RECREATE')
     f.cd()
-    self.ntuple.Write()
+    if self.ntuple is not None:
+      self.ntuple.Write()
     for x in self.histos.values():
       for y in x.values():
         y.Write()

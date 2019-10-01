@@ -39,6 +39,9 @@ for path in args.p:
           if matchAllTags(f,args.m):
             logfiles.append(d+'/'+f)
 
+if len(logfiles)==0:
+  sys.exit('ERROR:  Found no valid log files.  Check path.')
+
 cs=ClaraStats()
 cs.title=args.t
 if len(args.f)>0:
