@@ -4,19 +4,14 @@ import os,sys,argparse
 
 from ClaraLog import ClaraLog
 from ClaraStats import ClaraStats
-
-# whether string contains all tags:
-def matchAllTags(string,tags):
-  for x in tags:
-    if string.find(x)<0:
-      return False
-  return True
+import Matcher
 
 cli=argparse.ArgumentParser(description='Collect job statistics from CLARA logs.')
 cli.add_argument('-i',help='draw histos interactively',default=False,action='store_true')
 cli.add_argument('-o',metavar='rootfile',help='output ROOT file name',type=str,default=None)
 cli.add_argument('-n',metavar='#',help='maximum number of log files',type=int,default=0)
-cli.add_argument('-m',metavar='string',help='required match in filenames',type=str,default=[],action='append')
+cli.add_argument('-m',metavar='string',help='match all in filenames',type=str,default=[],action='append')
+cli.add_argument('-M',metavar='string',help='match any in filenames',type=str,default=[''],action='append')
 cli.add_argument('-t',metavar='title',help='title for plot',type=str,default=None)
 cli.add_argument('-f',metavar='flavor',help='choose specific flavors',type=str,default=[],action='append')
 cli.add_argument('p',metavar='path',nargs='*')
@@ -30,13 +25,13 @@ for path in args.p:
       basename=path
       if path.find('/')>=0:
         basename=path.split('/').pop()
-      if matchAllTags(basename,args.m):
+      if Matcher.matchAll(basename,args.m) and Matcher.matchAny(basename,args.M):
         logfiles.append(path)
   elif os.path.isdir(path):
     for d,x,files in os.walk(path):
       for f in files:
         if f.endswith('orch.log') or f.endswith('.out'):
-          if matchAllTags(f,args.m):
+          if Matcher.matchAll(f,args.m) and Matcher.matchAny(f,args.M):
             logfiles.append(d+'/'+f)
 
 if len(logfiles)==0:
