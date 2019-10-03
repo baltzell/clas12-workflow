@@ -1,5 +1,7 @@
 import pwd,os,subprocess
 
+RECACHE=False
+
 class LogFinder:
 
   def __init__(self):
@@ -28,6 +30,7 @@ class LogFinder:
     return None
 
   def cacheFarmoutLogs(self,user,cachefile):
+    os.remove(cachefile)
     print 'Generating /farm_out file cache at '+cachefile+' ...'
     with open(cachefile,'w') as f:
       subprocess.call(['find','/farm_out/'+user],stdout=f)
@@ -36,7 +39,7 @@ class LogFinder:
   def loadFarmoutLogs(self,user):
     self.files[user]={}
     cachefile='%s/claralogana_farmout_%s.txt'%(os.environ['HOME'],user)
-    if not os.path.isfile(cachefile):
+    if not os.path.isfile(cachefile) or RECACHE:
       self.cacheFarmoutLogs(user,cachefile)
     print 'Loading farmout logs from '+cachefile+' ...'
     with open(cachefile,'r') as f:

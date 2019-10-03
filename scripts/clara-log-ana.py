@@ -5,9 +5,11 @@ import os,sys,argparse
 from ClaraLog import ClaraLog
 from ClaraStats import ClaraStats
 import Matcher
+import LogFinder
 
 cli=argparse.ArgumentParser(description='Collect job statistics from CLARA logs.')
 cli.add_argument('-i',help='draw histos interactively',default=False,action='store_true')
+cli.add_argument('-r',help='reload the log caches',default=False,action='store_true')
 cli.add_argument('-o',metavar='rootfile',help='output ROOT file name',type=str,default=None)
 cli.add_argument('-n',metavar='#',help='maximum number of log files',type=int,default=0)
 cli.add_argument('-m',metavar='string',help='match all in filenames',type=str,default=[],action='append')
@@ -16,6 +18,9 @@ cli.add_argument('-t',metavar='title',help='title for plot',type=str,default=Non
 cli.add_argument('-f',metavar='flavor',help='choose specific flavors',type=str,default=[],action='append')
 cli.add_argument('p',metavar='path',nargs='*')
 args=cli.parse_args(sys.argv[1:])
+
+if args.r:
+  LogFinder.RECACHE=True
 
 # generate list of logfiles:
 logfiles=[]
