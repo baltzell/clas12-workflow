@@ -2,6 +2,7 @@
 if ( -e /group/clas12/packages/setup.csh ) then
     source /group/clas12/packages/setup.csh
     module load rcdb
+    module load root
 else
     echo WARNING:  Cannot find RCDB installation.
 endif
