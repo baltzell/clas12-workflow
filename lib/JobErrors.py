@@ -39,14 +39,17 @@ class SlurmErrors(Errors):
       'NODE',
       'PREE',
       'MEM',
-      'USER']
+      'USER',
+      'ALIVE']
   def __init__(self):
     Errors.__init__(self)
   def parse(self,filename):
     n=0
-    maxlines=22
+    maxlines=5
     cancelled=False
     for line in readlines_reverse(filename):
+      if n==0 and line.find('waiting pid =')==0:
+        self.setBit('ALIVE')
       if line.find('CANCELLED')>=0:
         cancelled=True
         if line.find('DUE TO TIME LIMIT')>=0:
@@ -63,23 +66,6 @@ class SlurmErrors(Errors):
       n+=1
     if cancelled and self.bits==0:
       self.setBit('USER')
-
-#    with open(filename,'r') as f:
-#      while True:
-#        line=f.readline()
-#        if not line:
-#          break
-#        if line.find('CANCELLED')>=0:
-#          if line.find('DUE TO TIME LIMIT')>=0:
-#            self.setBit('TIME')
-#          elif line.find('DUE TO NODE FAILURE')>=0:
-#            self.setBit('NODE')
-#          elif line.find('DUE TO PREEMPTION')>=0:
-#            self.setBit('PREE')
-#          elif line.find('MEMORY')>=0:
-#            self.setBit('MEM')
-#          else:
-#            self.setBit('USER')
 
 class ClaraErrors(Errors):
   _BITS=[
@@ -129,3 +115,4 @@ class ClaraErrors(Errors):
       self.setBit('TRUNC')
     else:
       self.setBit('UDF')
+

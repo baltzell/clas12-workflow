@@ -54,7 +54,7 @@ for logfile in logfiles:
   # update the plot:
   if args.i and clog.isComplete() and cs.successes%10==0:
     cs.draw()
-    #print cs
+    print cs
   # printout unknown errors:
   if clog.errors.getBit('UDF'):
     print 'UDF:  ',logfile,str(clog.lastline)
@@ -64,9 +64,11 @@ for logfile in logfiles:
   if args.n>0 and s.successes>args.n:
     break
 
+print cs
+
 if args.o is not None:
   cs.save(args.o)
-if args.i is not None:
+if args.i:
   cs.draw()
   print 'Done.  Press any key to close.'
   raw_input()

@@ -15,6 +15,7 @@ class ClaraStats:
     self.template=self.ROOT.TH1F('h',';Average Event Time per Core (ms);Jobs',100,0,2500)
     self.template.GetYaxis().SetTickLength(0)
     self.histos={}
+    self.incomplete=0
     self.successes=0
     self.ntuple=None
     self.canvas=None
@@ -45,6 +46,13 @@ class ClaraStats:
 
   def __str__(self):
     ret=''
+    ret+='\nClara Fail:\n'
+    for b in ClaraErrors._BITS:
+      ret+='  %7s : %10d : %4.1f%%\n'%(b,self.errors[b],100*float(self.errors[b])/(self.incomplete+self.successes))
+    ret+='\nSlurm Fail:\n'
+    for b in SlurmErrors._BITS:
+      ret+='  %7s : %10d : %4.1f%%\n'%(b,self.slurmerrors[b],100*float(self.slurmerrors[b])/(self.incomplete+self.successes))
+    ret+='\nFlavor Fail:\n'
     for f in JobSpecs._FLAVORS:
       ret+=f+' '
       if self.flavors[f]['total']>0:
@@ -74,23 +82,24 @@ class ClaraStats:
       if self.ntuple is None:
         self.ntuple=self.ROOT.TNtuple("claraStats","","threads:files:events:etime1:etime2:flavor:filesize:s_errors:c_errors:c_walltime")
       self.ntuple.Fill(jl.threads,jl.nfiles,jl.events,jl.t1,jl.t2,JobSpecs._FLAVORS.index(jl.flavor),jl.filesize,jl.errors.bits,jl.slurmerrors.bits,0)
-    if not jl.isComplete():
-      return
-    if not jl.flavor in self.histos:
-      self.histos[jl.flavor]={}
-    if not jl.threads in self.histos[jl.flavor]:
-      name='%sx%s'%(jl.flavor,jl.threads)
-      color=_COLORS[JobSpecs._FLAVORS.index(jl.flavor)]
-      fill=_FILLS[_THREADS.index(jl.threads)]
-      self.histos[jl.flavor][jl.threads]=self.template.Clone(name)
-      self.histos[jl.flavor][jl.threads].SetTitle(name)
-      self.histos[jl.flavor][jl.threads].SetLineColor(color)
-      #self.histos[flavor][threads].SetLineStyle(style)
-      if fill>0:
-        self.histos[jl.flavor][jl.threads].SetFillStyle(fill)
-        self.histos[jl.flavor][jl.threads].SetFillColor(color)
-    self.histos[jl.flavor][jl.threads].Fill(val)
-    self.successes+=1
+    if jl.isComplete():
+      if not jl.flavor in self.histos:
+        self.histos[jl.flavor]={}
+      if not jl.threads in self.histos[jl.flavor]:
+        name='%sx%s'%(jl.flavor,jl.threads)
+        color=_COLORS[JobSpecs._FLAVORS.index(jl.flavor)]
+        fill=_FILLS[_THREADS.index(jl.threads)]
+        self.histos[jl.flavor][jl.threads]=self.template.Clone(name)
+        self.histos[jl.flavor][jl.threads].SetTitle(name)
+        self.histos[jl.flavor][jl.threads].SetLineColor(color)
+        #self.histos[flavor][threads].SetLineStyle(style)
+        if fill>0:
+          self.histos[jl.flavor][jl.threads].SetFillStyle(fill)
+          self.histos[jl.flavor][jl.threads].SetFillColor(color)
+      self.histos[jl.flavor][jl.threads].Fill(val)
+      self.successes+=1
+    else:
+      self.incomplete+=1
 
   def save(self,filename):
     f=self.ROOT.TFile(filename,'RECREATE')
@@ -158,7 +167,8 @@ class ClaraStats:
       toterrors+=self.errors[x]
     for x in self.slurmerrors.keys():
       totslurmerrors+=self.slurmerrors[x]
-    tot=self.successes+toterrors
+    tot=self.successes+self.incomplete
+    #tot=self.successes+toterrors
     self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%%'%('TOT',float(toterrors)/tot*100))
     for i,x in enumerate(ClaraErrors._BITS):
       self.text.DrawTextNDC(0.83,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.errors[x])/tot*100))

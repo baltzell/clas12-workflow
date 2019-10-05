@@ -40,7 +40,6 @@ class ClaraLog(JobSpecs):
           self.parse(line)
     if not self.isComplete():
       self.errors.parse(self.lastline)
-    #if self.errors.getBit('TRUNC'):
     self.attachFarmout()
 
   # Extract the hostname from a /farm_out logfile
