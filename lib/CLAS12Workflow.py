@@ -126,6 +126,8 @@ class CLAS12Workflow(SwifWorkflow):
       t = self.cfg['torus']
       if s is None: s = self.rcdb.getSolenoidScale(runno)
       if t is None: t = self.rcdb.getTorusScale(runno)
+      if s is None: sys.exit('[CLAS12Workflow] ERROR:  Unknown solenoid scale for '+str(runno))
+      if t is None: sys.exit('[CLAS12Workflow] ERROR:  Unknown torus scale for '+str(runno))
       decoderOpts = '-c 2 -s %.4f -t %.4f'%(s,t)
 
       cmd='%s/bin/decoder %s -o out.hipo in.evio'%(self.cfg['coatjava'],decoderOpts)
