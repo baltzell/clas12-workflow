@@ -81,6 +81,7 @@ class ClaraErrors(Errors):
       'DIR',
       'CONT',
       'UDF',
+      'DB',
       'HUGE']
   def __init__(self):
     Errors.__init__(self)

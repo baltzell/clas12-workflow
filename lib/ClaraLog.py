@@ -5,7 +5,7 @@ from JobErrors import ClaraErrors
 from LogFinder import LogFinder
 
 _MAXSIZEMB=10
-_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE']
+_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception']
 
 class ClaraLog(JobSpecs):
 
@@ -38,8 +38,8 @@ class ClaraLog(JobSpecs):
           if line.strip()!='':
             self.lastline=line.strip()
           self.parse(line)
-    if not self.isComplete():
-      self.errors.parse(self.lastline)
+      if not self.isComplete():
+        self.errors.parse(self.lastline)
     self.attachFarmout()
 
   # Extract the hostname from a /farm_out logfile
@@ -120,4 +120,6 @@ class ClaraLog(JobSpecs):
           self.t1=float(cols[14])
         else:
           print self.filename,self.threads,x
+    elif x.find('com.mysql.jdbc')>=0 and x.find('Too many connections')>0:
+      self.errors.setBit('DB')
 
