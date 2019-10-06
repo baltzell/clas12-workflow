@@ -236,8 +236,8 @@ class CLAS12Workflow(SwifWorkflow):
         job.addTag('run','%.6d'%runno)
         job.addTag('mode','move')
         job.addTag('outDir',self.cfg['outDir'])
-        cmd = '(sleep 1 ; set d=%s ; touch -c $d ; mv -f $d %s/%.6d)'
-        cmds = [ cmd%(move,self.cfg['outDir'],runno) for move in moves ]
+        cmd = '(sleep 0.5 ; set d=%s ; touch -c $d ; rsync $d %s/%.6d/ ; rsync $d %s/%.6d/)'
+        cmds = [ cmd%(move,self.cfg['outDir'],runno,self.cfg['outDir'],runno) for move in moves ]
         job.setCmd(' ; '.join(cmds)+' ; true')
         self.addJob(job)
 
