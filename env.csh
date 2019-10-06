@@ -1,4 +1,5 @@
 
+# load dependencies:
 if ( -e /group/clas12/packages/setup.csh ) then
     source /group/clas12/packages/setup.csh
     module load rcdb
@@ -6,10 +7,6 @@ if ( -e /group/clas12/packages/setup.csh ) then
 else
     echo WARNING:  Cannot find RCDB installation.
 endif
-
-# NAB:  copied this from old /group/clas12/environment.csh ... pdo we need this?
-#Changes python version to 2.7 in order to keep python scripts working. May affect user environment.
-setenv PATH /apps/python/2.7.12/bin:$PATH
 
 # put clas12-workflow/lib in PYTHONPATH:
 set sourced=($_)

@@ -76,9 +76,9 @@ class CLAS12Workflow(SwifWorkflow):
       job.addInput('in.hipo',hipoFileName)
       job.addOutput('out.hipo',reconFileName)
 
-      cmd= ' setenv GEOMDBVAR may_2018_engineers ;'
-      cmd+=' setenv USESTT true ;'
-      cmd+=' setenv SOLSHIFT -1.9 ;'
+      cmd= ' export GEOMDBVAR=may_2018_engineers ;'
+      cmd+=' export USESTT=true ;'
+      cmd+=' export SOLSHIFT=-1.9 ;'
       cmd+=' %s/bin/recon-util -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
       cmd+=' && ls out.hipo'
       cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
@@ -236,7 +236,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.addTag('run','%.6d'%runno)
         job.addTag('mode','move')
         job.addTag('outDir',self.cfg['outDir'])
-        cmd = '(sleep 0.5 ; set d=%s ; touch -c $d ; rsync $d %s/%.6d/ ; rsync $d %s/%.6d/)'
+        cmd = '(sleep 0.5 ; d=%s ; touch -c $d ; rsync $d %s/%.6d/ ; rsync $d %s/%.6d/)'
         cmds = [ cmd%(move,self.cfg['outDir'],runno,self.cfg['outDir'],runno) for move in moves ]
         job.setCmd(' ; '.join(cmds)+' ; true')
         self.addJob(job)

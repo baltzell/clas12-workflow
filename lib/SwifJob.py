@@ -15,7 +15,7 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    self.shell='/bin/tcsh'
+    self.shell='/bin/bash'
     self.tags=collections.OrderedDict()
     self.inputs=[]
     self.outputs=[]
