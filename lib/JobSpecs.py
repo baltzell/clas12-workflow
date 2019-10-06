@@ -13,10 +13,10 @@ class JobSpecs:
     self.host=None
     self.errors=None
     self.slurmerrors=SlurmErrors()
-    self.nfiles=-1#None
-    self.t1=-1#None
-    self.t2=-1#None
-    self.events=-1#None
+    self.nfiles=-1
+    self.t1=-1
+    self.t2=-1
+    self.events=-1
     self.starttime=None
     self.endtime=None
 
