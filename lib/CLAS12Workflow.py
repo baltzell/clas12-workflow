@@ -212,7 +212,7 @@ class CLAS12Workflow(SwifWorkflow):
         f2=RunFile(deletes[len(deletes)-1]).fileNumber
         job.addTag('file','%.5d-%.5d'%(f1,f2))
         job.addTag('mode','delete')
-        cmds = [ '(sleep 1 ; rm -f %s)'%delete for delete in deletes ]
+        cmds = [ '(sleep 0.5 ; rm -f %s)'%delete for delete in deletes ]
         job.setCmd(' ; '.join(cmds))
         self.addJob(job)
 
