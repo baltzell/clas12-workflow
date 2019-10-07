@@ -131,7 +131,7 @@ class CLAS12Workflow(SwifWorkflow):
       decoderOpts = '-c 2 -s %.4f -t %.4f'%(s,t)
 
       cmd='%s/bin/decoder %s -o out.hipo in.evio'%(self.cfg['coatjava'],decoderOpts)
-      cmd+=' && ls out.hipo'
+      cmd+=' && ls out.hipo && [ $(stat -c%s out.hipo) -gt 100 ]'
       cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
       job.setCmd(cmd)
@@ -164,8 +164,7 @@ class CLAS12Workflow(SwifWorkflow):
 
         job=SwifJob(self.name)
         job.setPhase(phase)
-# Note this RAM request is for PBS, on SLURM will be much lower
-        job.setRam('9GB')
+        job.setRam('1GB')
         job.setTime(ChefUtil.getMergeTimeReq(self.cfg['mergeSize']))
         job.setDisk(ChefUtil.getMergeDiskReq(self.cfg['mergeSize']))
         job.addTag('run','%.6d'%runno)
@@ -180,7 +179,7 @@ class CLAS12Workflow(SwifWorkflow):
         for ii in range(len(inputs)):
           job.addInput('in%.4d.hipo'%ii,inputs[ii])
           cmd += ' in%.4d.hipo'%ii
-        cmd+=' && ls out.hipo'
+        cmd+=' && ls out.hipo && [ $(stat -c%s out.hipo) -gt 100 ]'
         cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
         cmd+=' || rm -f out.hipo && ls out.hipo'
         job.setCmd(cmd)
