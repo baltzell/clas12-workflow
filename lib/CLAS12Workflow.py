@@ -14,6 +14,7 @@ class CLAS12Workflow(SwifWorkflow):
     self.setPhaseSize(self.cfg['phaseSize'])
     self.setCombineRuns(self.cfg['multiRun'])
     self.addRuns(self.cfg['runs'])
+    print '\nFinding files from '+str(self.cfg['inputs'])+' ...'
     self.findFiles(self.cfg['inputs'])
     self.logDir=None
     if self.cfg['logDir'] is not None:

@@ -40,16 +40,19 @@ def getRunList(data):
     data=str(data)
     # first column is run# if it's a file:
     if os.access(data,os.R_OK):
+      print '\nReading run numbers from file: '+data+' ... ',
       for line in open(data,'r').readlines():
         run=line.strip().split()[0]
         try:
           runs.append(int(run))
+          print run,
         except:
           print '\nERROR: Run numbers must be integers:  %s (%s)\n'%(fileName,line)
           return None
+      print
     # else it's a string run list:
     else:
-      print 'Adding run(s) '+data+' ...'
+      print '\nAdding run numbers from command-line: '+data+' ...'
       for run in data.split(','):
         if run.find('-')<0:
           try:
