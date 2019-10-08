@@ -30,7 +30,8 @@ class LogFinder:
     return None
 
   def cacheFarmoutLogs(self,user,cachefile):
-    os.remove(cachefile)
+    if os.path.isfile(cachefile):
+      os.remove(cachefile)
     print 'Generating /farm_out file cache at '+cachefile+' ...'
     with open(cachefile,'w') as f:
       subprocess.call(['find','/farm_out/'+user],stdout=f)
