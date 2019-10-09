@@ -13,7 +13,7 @@ cli.add_argument('-r',help='reload the log caches',default=False,action='store_t
 cli.add_argument('-o',metavar='rootfile',help='output ROOT file name',type=str,default=None)
 cli.add_argument('-n',metavar='#',help='maximum number of log files',type=int,default=0)
 cli.add_argument('-m',metavar='string',help='match all in filenames',type=str,default=[],action='append')
-cli.add_argument('-M',metavar='string',help='match any in filenames',type=str,default=[''],action='append')
+cli.add_argument('-M',metavar='string',help='match any in filenames',type=str,default=[],action='append')
 cli.add_argument('-t',metavar='title',help='title for plot',type=str,default=None)
 cli.add_argument('-f',metavar='flavor',help='choose specific flavors',type=str,default=[],action='append')
 cli.add_argument('p',metavar='path',nargs='*')
