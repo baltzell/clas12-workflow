@@ -115,6 +115,7 @@ class CLAS12Workflow(SwifWorkflow):
 
       job=SwifJob(self.name)
       job.setPhase(phase)
+      job.setRam('3GB')
       job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','decode')
