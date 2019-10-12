@@ -22,7 +22,11 @@ class CLAS12Workflow(SwifWorkflow):
     self._mkdirs()
 
   def _mkdirs(self):
+    print('\nMaking log directory at       '+self.logDir)
     ChefUtil.mkdir(self.logDir)
+    print('Making output directories at  '+self.cfg['outDir'])
+    if self.cfg['workDir'] is not None:
+      print('Making staging directories at '+self.cfg['workDir'])
     for run in self.getRunList():
       ChefUtil.mkdir('%s/%.6d'%(self.cfg['outDir'],run))
       if self.cfg['workDir'] is not None:
