@@ -6,6 +6,7 @@ class SwifJob:
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
+    self.env={}
     self.number=-1
     self.workflow=workflow
     self.phase=0
