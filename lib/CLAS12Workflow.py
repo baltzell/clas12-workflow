@@ -137,7 +137,7 @@ class CLAS12Workflow(SwifWorkflow):
       decoderOpts = '-c 2 -s %.4f -t %.4f'%(s,t)
 
       cmd='%s/bin/decoder %s -o out.hipo in.evio'%(self.cfg['coatjava'],decoderOpts)
-      cmd+=' && ls out.hipo && [ $(stat -c%s out.hipo) -gt 100 ]'
+      cmd+=' && ls out.hipo && if (`stat -c%s out.hipo` < 100) rm -f out.hipo'
       cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
       job.setCmd(cmd)
@@ -185,7 +185,7 @@ class CLAS12Workflow(SwifWorkflow):
         for ii in range(len(inputs)):
           job.addInput('in%.4d.hipo'%ii,inputs[ii])
           cmd += ' in%.4d.hipo'%ii
-        cmd+=' && ls out.hipo && [ $(stat -c%s out.hipo) -gt 100 ]'
+        cmd+=' && ls out.hipo && if (`stat -c%s out.hipo` < 100) rm -f out.hipo'
         cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
         cmd+=' || rm -f out.hipo && ls out.hipo'
         job.setCmd(cmd)
@@ -241,7 +241,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.addTag('run','%.6d'%runno)
         job.addTag('mode','move')
         job.addTag('outDir',self.cfg['outDir'])
-        cmd = '(sleep 0.5 ; d=%s ; touch -c $d ; rsync $d %s/%.6d/ ; rsync $d %s/%.6d/)'
+        cmd = '(sleep 0.5 ; set d=%s ; touch -c $d ; rsync $d %s/%.6d/ ; rsync $d %s/%.6d/ && rm -f $d)'
         cmds = [ cmd%(move,self.cfg['outDir'],runno,self.cfg['outDir'],runno) for move in moves ]
         job.setCmd(' ; '.join(cmds)+' ; true')
         self.addJob(job)
