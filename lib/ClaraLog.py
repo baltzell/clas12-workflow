@@ -58,6 +58,10 @@ class ClaraLog(JobSpecs):
         if file.endswith('.err'):
           self.slurmerrors.parse(file)
           break
+    if self.slurmerrors.watchdog:
+      self.errors.bits=0
+      self.errors.setBit('WDOG')
+#      self.errors.unsetBit('TRUNC')
 
   def stringToTimestamp(self,string):
     fmt='\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d'

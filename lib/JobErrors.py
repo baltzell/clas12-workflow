@@ -26,6 +26,12 @@ class Errors:
     return (self.bits & (1<<self.getIndex(string)))>0
   def setBit(self,string):
     self.bits |= (1<<self.getIndex(string))
+  def unsetBit(self,string):
+    mask=0
+    for i,name in enumerate(self._BITS):
+      if string!=name:
+        mask |= 1<<i
+    self.bits &= mask
   def __str__(self):
     ret=''
     for x in self._BITS:
@@ -43,6 +49,7 @@ class SlurmErrors(Errors):
       'ALIVE']
   def __init__(self):
     Errors.__init__(self)
+    self.watchdog=False
   def parse(self,filename):
     n=0
     maxlines=5
@@ -50,7 +57,9 @@ class SlurmErrors(Errors):
     for line in readlines_reverse(filename):
       if n==0 and line.find('waiting pid =')==0:
         self.setBit('ALIVE')
-      if line.find('CANCELLED')>=0:
+      if line.find('clara-wd:SevereError  Stop the data-processing')>=0:
+        self.watchdog=True
+      elif line.find('CANCELLED')>=0:
         cancelled=True
         if line.find('DUE TO TIME LIMIT')>=0:
           self.setBit('TIME')
@@ -82,6 +91,7 @@ class ClaraErrors(Errors):
       'CONT',
       'UDF',
       'DB',
+      'WDOG',
       'HUGE']
   def __init__(self):
     Errors.__init__(self)
