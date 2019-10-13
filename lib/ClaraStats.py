@@ -46,6 +46,7 @@ class ClaraStats:
 
   def __str__(self):
     ret=''
+    ret+='\nTotal Jobs: '+str(self.incomplete+self.successes)+'\n'
     ret+='\nClara Fail:\n'
     for b in ClaraErrors._BITS:
       ret+='  %7s : %10d : %4.1f%%\n'%(b,self.errors[b],100*float(self.errors[b])/(self.incomplete+self.successes))
@@ -169,10 +170,10 @@ class ClaraStats:
       totslurmerrors+=self.slurmerrors[x]
     tot=self.successes+self.incomplete
     #tot=self.successes+toterrors
-    self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%%'%('TOT',float(toterrors)/tot*100))
+    self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%% (%d)'%('TOT',float(toterrors)/tot*100,toterrors))
     for i,x in enumerate(ClaraErrors._BITS):
       self.text.DrawTextNDC(0.83,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.errors[x])/tot*100))
-    self.text.DrawTextNDC(0.12,0.90,'%s=%.2f%%'%('TOT',float(totslurmerrors)/tot*100))
+    self.text.DrawTextNDC(0.12,0.90,'%s=%.2f%% (%d)'%('TOT',float(totslurmerrors)/tot*100,totslurmerrors))
     for i,x in enumerate(SlurmErrors._BITS):
       self.text.DrawTextNDC(0.12,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.slurmerrors[x])/tot*100))
     if self.title:

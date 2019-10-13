@@ -5,7 +5,7 @@ from JobErrors import ClaraErrors
 from LogFinder import LogFinder
 
 _MAXSIZEMB=10
-_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception']
+_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception','Input','Output',' is cached']
 
 class ClaraLog(JobSpecs):
 
@@ -17,6 +17,7 @@ class ClaraLog(JobSpecs):
     self.filename=filename
     self.filesize=os.path.getsize(filename)
     self.host=self.getFarmoutHostname(filename)
+    self.outputprefix=None
     self.lastline=None
     if self.host is None:
       self.host=self.getClaraHostname(filename)
@@ -74,8 +75,6 @@ class ClaraLog(JobSpecs):
     return None
 
   def parse(self,x):
-    #if x.find('shutdown DPE')>=0:
-    #  print 'A: '+x
     # abort ASAP unless we find a tag:
     keeper=False
     for tag in _LOGTAGS:
@@ -98,6 +97,10 @@ class ClaraLog(JobSpecs):
         print x
         self.endtime=self.stringToTimestamp(x)
         print self.endtime
+      elif x.find('Input directory')==0:
+        self.inputdir=cols[3]
+      elif x.find('Output directory')==0:
+        self.outputdir=cols[3]
     elif len(cols)==5:
       if x.find('Number of files')>=0:
         if self.nfiles<0:
@@ -107,6 +110,11 @@ class ClaraLog(JobSpecs):
       elif x.find('Start time')==0:
         if self.starttime is None:
           self.starttime=self.stringToTimestamp(x)
+      elif x.find('Output file prefix')==0:
+        self.outprefix=cols[4]
+    elif len(cols)==6:
+      if cols[4]=='is' and cols[5]=='cached':
+        self.inputfiles.append(cols[3].split('/').pop())
     elif len(cols)==8:
       if cols[2]=='Average' and cols[3]=='processing' and cols[4]=='time':
         if self.t2<0:

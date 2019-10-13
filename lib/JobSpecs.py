@@ -19,6 +19,9 @@ class JobSpecs:
     self.events=-1
     self.starttime=None
     self.endtime=None
+    self.inputdir=None
+    self.outputdir=None
+    self.inputfiles=[]
 
   def parseSlurmLog(self,filename):
     n=0
