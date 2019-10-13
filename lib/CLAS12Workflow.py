@@ -236,7 +236,7 @@ class CLAS12Workflow(SwifWorkflow):
         job=SwifJob(self.name)
         job.setPhase(phase)
         job.setRam('1GB')
-        job.setTime('%ds'%(60+3*len(moves)))
+        job.setTime('%ds'%(600+60*len(moves)))
         job.setDisk('100MB')
         job.addTag('run','%.6d'%runno)
         job.addTag('mode','move')
