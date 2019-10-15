@@ -55,6 +55,8 @@ class SlurmErrors(Errors):
     maxlines=5
     cancelled=False
     for line in readlines_reverse(filename):
+      if line=='':
+        continue
       if n==0:
         if line.find('waiting pid =')==0:
           self.setBit('ALIVE')
