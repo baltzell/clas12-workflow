@@ -43,6 +43,15 @@ class ClaraLog(JobSpecs):
         self.errors.parse(self.lastline)
     self.attachFarmout()
 
+  def findOutputFiles(self):
+    of=[]
+    for f in self.inputfiles:
+      basename=self.outputprefix+f.split('/').pop()
+      fout=self.outputdir+'/'+basename
+      if os.path.exists(fout):
+        of.append(fout)
+    return of
+
   # Extract the hostname from a /farm_out logfile
   def getClaraHostname(self,logfilename):
     for flavor in JobSpecs._FLAVORS:
@@ -110,8 +119,8 @@ class ClaraLog(JobSpecs):
       elif x.find('Start time')==0:
         if self.starttime is None:
           self.starttime=self.stringToTimestamp(x)
-      elif x.find('Output file prefix')==0:
-        self.outprefix=cols[4]
+      elif x.find('Output file prefix')>=0:
+        self.outputprefix=cols[4]
     elif len(cols)==6:
       if cols[4]=='is' and cols[5]=='cached':
         self.inputfiles.append(cols[3].split('/').pop())

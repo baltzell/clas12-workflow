@@ -55,10 +55,15 @@ class SlurmErrors(Errors):
     maxlines=5
     cancelled=False
     for line in readlines_reverse(filename):
-      if n==0 and line.find('waiting pid =')==0:
-        self.setBit('ALIVE')
-      if line.find('clara-wd:SevereError  Stop the data-processing')>=0:
+      if n==0:
+        if line.find('waiting pid =')==0:
+          self.setBit('ALIVE')
+        elif line.find('clara-wd:Error')>=0 and line.find('DPE_PID')>0:
+          self.setBit('ALIVE')
+      elif line.find('clara-wd:SevereError  Stop the data-processing')>=0:
         self.watchdog=True
+#      elif line.find('No space left on device')>0:
+#        self.setBit('DISK')
       elif line.find('CANCELLED')>=0:
         cancelled=True
         if line.find('DUE TO TIME LIMIT')>=0:
@@ -75,6 +80,11 @@ class SlurmErrors(Errors):
       n+=1
     if cancelled and self.bits==0:
       self.setBit('USER')
+
+    for line in readlines_reverse(filename):
+      if self.watchdog and line.find('clas-watchdog.sh')>0 and line.find('No such process')>0:
+        self.watchdog=False
+        break
 
 class ClaraErrors(Errors):
   _BITS=[
@@ -121,7 +131,8 @@ class ClaraErrors(Errors):
     elif lastline.find('could not start container')>=0:
       self.setBit('CONT')
     elif re.match('.*\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d.*',lastline.strip()) is not None:
-      self.setBit('TRUNC')
+      if lastline.find('Processing is complete.')<0:
+        self.setBit('TRUNC')
     elif lastline.find('===========')==0:
       self.setBit('TRUNC')
     else:

@@ -25,6 +25,8 @@ class ClaraStats:
     self.slurmerrors={}
     self.flavors={}
     self.flavorlist=JobSpecs._FLAVORS
+    self.expectedfiles=[]
+    self.foundfiles=[]
     for x in ClaraErrors._BITS:
       self.errors[x]=0
     for x in SlurmErrors._BITS:
@@ -61,6 +63,10 @@ class ClaraStats:
       else:
         ret+='N/A'
       ret+='\n'
+    for flavor in sorted(self.histos.keys()):
+      for threads in sorted(self.histos[flavor].keys()):
+        ret+='/'+str(self.histos[flavor][threads].GetEntries())
+    ret+='\n'
     return ret
 
   def fill(self,jl,val):
@@ -83,6 +89,8 @@ class ClaraStats:
       if self.ntuple is None:
         self.ntuple=self.ROOT.TNtuple("claraStats","","threads:files:events:etime1:etime2:flavor:filesize:s_errors:c_errors:c_walltime")
       self.ntuple.Fill(jl.threads,jl.nfiles,jl.events,jl.t1,jl.t2,JobSpecs._FLAVORS.index(jl.flavor),jl.filesize,jl.errors.bits,jl.slurmerrors.bits,0)
+    self.expectedfiles.extend(jl.inputfiles)
+    self.foundfiles.extend(jl.findOutputFiles())
     if jl.isComplete():
       if not jl.flavor in self.histos:
         self.histos[jl.flavor]={}
@@ -176,8 +184,10 @@ class ClaraStats:
     self.text.DrawTextNDC(0.12,0.90,'%s=%.2f%% (%d)'%('TOT',float(totslurmerrors)/tot*100,totslurmerrors))
     for i,x in enumerate(SlurmErrors._BITS):
       self.text.DrawTextNDC(0.12,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.slurmerrors[x])/tot*100))
+    title='(Jobs:%d, Files:%d/%d)'%(self.incomplete+self.successes,len(self.foundfiles),len(self.expectedfiles))
     if self.title:
-      self.text.DrawTextNDC(0.4,0.96,self.title)
+      title=self.title+' '+title
+    self.text.DrawTextNDC(0.4,0.96,title)
     self.canvas.BuildLegend(0.6,0.95-len(histos)*0.04,0.82,0.95)
     self.canvas.Update()
 
