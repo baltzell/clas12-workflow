@@ -62,7 +62,7 @@ class SlurmErrors(Errors):
           self.setBit('ALIVE')
         elif line.find('clara-wd:Error')>=0 and line.find('DPE_PID')>0:
           self.setBit('ALIVE')
-      elif line.find('clara-wd:SevereError  Stop the data-processing')>=0:
+      if line.find('clara-wd:SevereError  Stop the data-processing')>=0:
         self.watchdog=True
 #      elif line.find('No space left on device')>0:
 #        self.setBit('DISK')
@@ -115,6 +115,8 @@ class ClaraErrors(Errors):
     elif lastline.find('Could not stage input file')==0:
       self.setBit('READ')
     elif lastline.find('Could not open input')==0:
+      self.setBit('READ')
+    elif lastline.find('No space left on device')>=0:
       self.setBit('READ')
     elif lastline.find('Could not open output file')==0:
       self.setBit('WRITE')

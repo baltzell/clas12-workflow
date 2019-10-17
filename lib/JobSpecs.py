@@ -1,4 +1,4 @@
-import re,os
+import re,os,subprocess
 
 from JobErrors import SlurmErrors
 
@@ -7,6 +7,9 @@ class JobSpecs:
   _FLAVORS=['farm18','farm16','farm14','farm13','qcd12s']
 
   def __init__(self):
+    self.augerid=None
+    self.slurmid=None
+    self.slurmstatus=None
     self.threads=None
     self.flavor=None
     self.host=None

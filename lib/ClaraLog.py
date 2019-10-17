@@ -4,7 +4,9 @@ from JobSpecs import JobSpecs
 from JobErrors import ClaraErrors
 from LogFinder import LogFinder
 
-_MAXSIZEMB=10
+_MAXLOGSIZEMB=10
+_MINHIPOSIZEMB=100
+
 _LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception','Input','Output',' is cached']
 
 class ClaraLog(JobSpecs):
@@ -17,6 +19,7 @@ class ClaraLog(JobSpecs):
     self.filename=filename
     self.filesize=os.path.getsize(filename)
     self.host=self.getFarmoutHostname(filename)
+    self.slurmid=ClaraLog.logFinder.getClaraSlurmId(filename)
     self.outputprefix=None
     self.lastline=None
     if self.host is None:
@@ -28,7 +31,7 @@ class ClaraLog(JobSpecs):
       if self.host.find(x)==0:
         self.flavor=x
         break
-    if os.path.getsize(filename)>_MAXSIZEMB*1e6:
+    if os.path.getsize(filename)>_MAXLOGSIZEMB*1e6:
       self.errors.setBit('HUGE')
     else:
       with open(filename,'r') as f:
@@ -42,13 +45,15 @@ class ClaraLog(JobSpecs):
       if not self.isComplete():
         self.errors.parse(self.lastline)
     self.attachFarmout()
+    if self.slurmstatus=='R':
+      self.slurmerrors.setBit('ALIVE')
 
   def findOutputFiles(self):
     of=[]
     for f in self.inputfiles:
       basename=self.outputprefix+f.split('/').pop()
       fout=self.outputdir+'/'+basename
-      if os.path.exists(fout):
+      if os.path.exists(fout) and os.path.getsize(fout)>_MINHIPOSIZEMB*1e6:
         of.append(fout)
     return of
 
@@ -67,6 +72,8 @@ class ClaraLog(JobSpecs):
       for file in files:
         if file.endswith('.err'):
           self.slurmerrors.parse(file)
+          self.augerid=ClaraLog.logFinder.getFarmoutAugerId(file)
+          self.slurmstatus=ClaraLog.logFinder.getStatus(self.augerid,ClaraLog.logFinder.getuser(file))
           break
     if self.slurmerrors.watchdog:
       self.errors.bits=0
