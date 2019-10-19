@@ -139,7 +139,7 @@ class CLAS12Workflow(SwifWorkflow):
       cmd='%s/bin/decoder %s -o out.hipo in.evio'%(self.cfg['coatjava'],decoderOpts)
       cmd+=' && ls out.hipo && if (`stat -c%s out.hipo` < 100) rm -f out.hipo'
       cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
-      cmd+=' || rm -f out.hipo && ls out.hipo'
+      cmd+=' || rm -f out.hipo ; ls out.hipo'
       job.setCmd(cmd)
 
       self.addJob(job)
@@ -187,7 +187,7 @@ class CLAS12Workflow(SwifWorkflow):
           cmd += ' in%.4d.hipo'%ii
         cmd+=' && ls out.hipo && if (`stat -c%s out.hipo` < 100) rm -f out.hipo'
         cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
-        cmd+=' || rm -f out.hipo && ls out.hipo'
+        cmd+=' || rm -f out.hipo ; ls out.hipo'
         job.setCmd(cmd)
 
         self.addJob(job)
