@@ -5,13 +5,13 @@ from ChefConfig import ChefConfig
 cc=ChefConfig(sys.argv[1:])
 workflow=cc.getWorkflow()
 
-print 'Generating workflow ...'
+print '\nGenerating workflow ...'
 workflow.generate()
 
-print 'Creating %d jobs based on %d runs with %d total files.'%\
+print '\nCreated workflow with %d jobs based on %d runs with %d total input files.'%\
     (len(workflow.jobs),len(workflow.getRunList(1)),workflow.getFileCount())
 
-print 'Writing workflow to ./'+workflow.name+'.json ...'
+print '\nWriting workflow to ./'+workflow.name+'.json ...'
 with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
 
@@ -20,6 +20,6 @@ with open(workflow.name+'.json','w') as out:
 #  out.write(workflow.getShell())
 
 if cc.get('submit'):
-  print 'Submitting %s.json with %d jobs ...'%(workflow.name,len(workflow.jobs))
+  print '\nSubmitting %s.json with %d jobs ...'%(workflow.name,len(workflow.jobs))
   workflow.submitJson()
 

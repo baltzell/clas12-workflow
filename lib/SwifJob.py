@@ -6,6 +6,7 @@ class SwifJob:
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
+    self.env={}
     self.number=-1
     self.workflow=workflow
     self.phase=0
@@ -15,6 +16,7 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
+    # this is no longer honored but defaults to login shell (bah, bad!):
     self.shell='/bin/tcsh'
     self.tags=collections.OrderedDict()
     self.inputs=[]
