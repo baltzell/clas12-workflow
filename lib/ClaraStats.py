@@ -116,6 +116,8 @@ class ClaraStats:
   def save(self,filename):
     f=self.ROOT.TFile(filename,'RECREATE')
     f.cd()
+    if self.canvas is not None:
+      self.canvas.Write()
     if self.ntuple is not None:
       self.ntuple.Write()
     for x in self.histos.values():
@@ -130,7 +132,7 @@ class ClaraStats:
     self.ROOT.gStyle.SetOptStat(0)
     if self.canvas is None:
       t=self.title
-      if t is None: t='none'
+      if t is None: t='canvas'
       # copied from ~/.rootlogon.C, to be cleaned up:
       self.ROOT.gStyle.SetCanvasColor(0)
       self.ROOT.gStyle.SetPadColor(0)

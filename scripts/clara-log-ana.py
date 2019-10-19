@@ -53,18 +53,19 @@ for logfile in logfiles:
   clog=ClaraLog(logfile)
   cs.fill(clog,clog.t1)
   # update the plot:
-  if args.i and clog.isComplete() and cs.successes%10==0:
-    cs.draw()
-    if args.v:
-      print cs
+  if args.i and clog.isComplete():
+    if cs.successes==1 or cs.successes%10==0:
+      cs.draw()
+      if args.v:
+        print cs
   # printout unknown errors:
-  #if clog.errors.getBit('UDF'):
-  #  print 'UDF:    ',logfile,'\n',str(clog.lastline)
-  if clog.errors.getBit('TRUNC'):
+  if args.v and clog.errors.getBit('UDF'):
+    print 'UDF:    ',logfile,'\n',str(clog.lastline)
+  if args.v and clog.errors.getBit('TRUNC'):
     print 'TRUNC::::::::::::::::::::::::  '
     print logfile,'\n',str(clog.lastline),'\n',clog.slurmlog
   # abort, we already got the requested statistics:
-  if args.n>0 and s.successes>args.n:
+  if args.n>0 and cs.successes>args.n:
     break
 
 print cs

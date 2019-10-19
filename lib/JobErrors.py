@@ -57,11 +57,11 @@ class SlurmErrors(Errors):
     for line in readlines_reverse(filename):
       if line=='':
         continue
-      if n==0:
-        if line.find('waiting pid =')==0:
-          self.setBit('ALIVE')
-        elif line.find('clara-wd:Error')>=0 and line.find('DPE_PID')>0:
-          self.setBit('ALIVE')
+      #if n==0:
+        #if line.find('waiting pid =')==0:
+        #  self.setBit('ALIVE')
+        #elif line.find('clara-wd:Error')>=0 and line.find('DPE_PID')>0:
+        #  self.setBit('ALIVE')
       if line.find('clara-wd:SevereError  Stop the data-processing')>=0:
         self.watchdog=True
 #      elif line.find('No space left on device')>0:
