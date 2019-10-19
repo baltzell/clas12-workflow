@@ -113,11 +113,12 @@ class ClaraStats:
     else:
       self.incomplete+=1
 
-  def save(self,filename):
-    f=self.ROOT.TFile(filename,'RECREATE')
+  def save(self,prefix):
+    f=self.ROOT.TFile(prefix+'.root','RECREATE')
     f.cd()
     if self.canvas is not None:
       self.canvas.Write()
+      self.canvas.SaveAs(prefix+'.png')
     if self.ntuple is not None:
       self.ntuple.Write()
     for x in self.histos.values():

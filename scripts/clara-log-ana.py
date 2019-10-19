@@ -11,7 +11,7 @@ cli=argparse.ArgumentParser(description='Collect job statistics from CLARA logs.
 cli.add_argument('-i',help='draw histos interactively',default=False,action='store_true')
 cli.add_argument('-r',help='reload the log caches',default=False,action='store_true')
 cli.add_argument('-v',help='verbose mode',default=False,action='store_true')
-cli.add_argument('-o',metavar='rootfile',help='output ROOT file name',type=str,default=None)
+cli.add_argument('-o',metavar='output prefix',help='output ROOT file name',type=str,default=None)
 cli.add_argument('-n',metavar='#',help='maximum number of log files',type=int,default=0)
 cli.add_argument('-m',metavar='string',help='match all in filenames',type=str,default=[],action='append')
 cli.add_argument('-M',metavar='string',help='match any in filenames',type=str,default=[],action='append')
