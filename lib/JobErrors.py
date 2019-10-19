@@ -26,6 +26,12 @@ class Errors:
     return (self.bits & (1<<self.getIndex(string)))>0
   def setBit(self,string):
     self.bits |= (1<<self.getIndex(string))
+  def unsetBit(self,string):
+    mask=0
+    for i,name in enumerate(self._BITS):
+      if string!=name:
+        mask |= 1<<i
+    self.bits &= mask
   def __str__(self):
     ret=''
     for x in self._BITS:
@@ -43,14 +49,24 @@ class SlurmErrors(Errors):
       'ALIVE']
   def __init__(self):
     Errors.__init__(self)
+    self.watchdog=False
   def parse(self,filename):
     n=0
     maxlines=5
     cancelled=False
     for line in readlines_reverse(filename):
-      if n==0 and line.find('waiting pid =')==0:
-        self.setBit('ALIVE')
-      if line.find('CANCELLED')>=0:
+      if line=='':
+        continue
+      if n==0:
+        if line.find('waiting pid =')==0:
+          self.setBit('ALIVE')
+        elif line.find('clara-wd:Error')>=0 and line.find('DPE_PID')>0:
+          self.setBit('ALIVE')
+      if line.find('clara-wd:SevereError  Stop the data-processing')>=0:
+        self.watchdog=True
+#      elif line.find('No space left on device')>0:
+#        self.setBit('DISK')
+      elif line.find('CANCELLED')>=0:
         cancelled=True
         if line.find('DUE TO TIME LIMIT')>=0:
           self.setBit('TIME')
@@ -67,6 +83,11 @@ class SlurmErrors(Errors):
     if cancelled and self.bits==0:
       self.setBit('USER')
 
+    for line in readlines_reverse(filename):
+      if self.watchdog and line.find('clas-watchdog.sh')>0 and line.find('No such process')>0:
+        self.watchdog=False
+        break
+
 class ClaraErrors(Errors):
   _BITS=[
       'NULL',
@@ -82,6 +103,7 @@ class ClaraErrors(Errors):
       'CONT',
       'UDF',
       'DB',
+      'WDOG',
       'HUGE']
   def __init__(self):
     Errors.__init__(self)
@@ -93,6 +115,8 @@ class ClaraErrors(Errors):
     elif lastline.find('Could not stage input file')==0:
       self.setBit('READ')
     elif lastline.find('Could not open input')==0:
+      self.setBit('READ')
+    elif lastline.find('No space left on device')>=0:
       self.setBit('READ')
     elif lastline.find('Could not open output file')==0:
       self.setBit('WRITE')
@@ -111,7 +135,8 @@ class ClaraErrors(Errors):
     elif lastline.find('could not start container')>=0:
       self.setBit('CONT')
     elif re.match('.*\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d.*',lastline.strip()) is not None:
-      self.setBit('TRUNC')
+      if lastline.find('Processing is complete.')<0:
+        self.setBit('TRUNC')
     elif lastline.find('===========')==0:
       self.setBit('TRUNC')
     else:

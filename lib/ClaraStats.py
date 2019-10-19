@@ -12,8 +12,9 @@ class ClaraStats:
   def __init__(self):
     # importing ROOT is slow, wait until necessary
     self.ROOT=__import__('ROOT')
-    self.template=self.ROOT.TH1F('h',';Average Event Time per Core (ms);Jobs',100,0,2500)
+    self.template=self.ROOT.TH1F('h',';Average Event Time per Core (ms)',100,0,2500)
     self.template.GetYaxis().SetTickLength(0)
+    self.template.GetXaxis().CenterTitle()
     self.histos={}
     self.incomplete=0
     self.successes=0
@@ -25,6 +26,8 @@ class ClaraStats:
     self.slurmerrors={}
     self.flavors={}
     self.flavorlist=JobSpecs._FLAVORS
+    self.expectedfiles=[]
+    self.foundfiles=[]
     for x in ClaraErrors._BITS:
       self.errors[x]=0
     for x in SlurmErrors._BITS:
@@ -46,6 +49,7 @@ class ClaraStats:
 
   def __str__(self):
     ret=''
+    ret+='\nTotal Jobs: '+str(self.incomplete+self.successes)+'\n'
     ret+='\nClara Fail:\n'
     for b in ClaraErrors._BITS:
       ret+='  %7s : %10d : %4.1f%%\n'%(b,self.errors[b],100*float(self.errors[b])/(self.incomplete+self.successes))
@@ -56,7 +60,13 @@ class ClaraStats:
     for f in JobSpecs._FLAVORS:
       ret+=f+' '
       if self.flavors[f]['total']>0:
-        ret+='%.2f%%'%(100*float(self.flavors[f]['fail'])/(self.flavors[f]['fail']+self.flavors[f]['success']))
+        ret+='%7.2f%%'%(100*float(self.flavors[f]['fail'])/(self.flavors[f]['fail']+self.flavors[f]['success']))
+        ret+='  (%d/%d)'%(self.flavors[f]['fail'],(self.flavors[f]['fail']+self.flavors[f]['success']))
+        good=0
+        if f in self.histos:
+          for threads in sorted(self.histos[f].keys()):
+            good+=self.histos[f][threads].GetEntries()
+        ret+='  (%d)'%good
       else:
         ret+='N/A'
       ret+='\n'
@@ -82,6 +92,8 @@ class ClaraStats:
       if self.ntuple is None:
         self.ntuple=self.ROOT.TNtuple("claraStats","","threads:files:events:etime1:etime2:flavor:filesize:s_errors:c_errors:c_walltime")
       self.ntuple.Fill(jl.threads,jl.nfiles,jl.events,jl.t1,jl.t2,JobSpecs._FLAVORS.index(jl.flavor),jl.filesize,jl.errors.bits,jl.slurmerrors.bits,0)
+    self.expectedfiles.extend(jl.inputfiles)
+    self.foundfiles.extend(jl.findOutputFiles())
     if jl.isComplete():
       if not jl.flavor in self.histos:
         self.histos[jl.flavor]={}
@@ -150,6 +162,7 @@ class ClaraStats:
       self.ROOT.gROOT.ForceStyle()
       self.canvas=self.ROOT.TCanvas('c',t,700,500)
       self.canvas.GetPad(0).SetRightMargin(0.18)
+      self.canvas.GetPad(0).SetLeftMargin(0.2)
     if self.text is None:
       self.text=self.ROOT.TText()
       self.text.SetTextSize(0.03)
@@ -169,14 +182,23 @@ class ClaraStats:
       totslurmerrors+=self.slurmerrors[x]
     tot=self.successes+self.incomplete
     #tot=self.successes+toterrors
-    self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%%'%('TOT',float(toterrors)/tot*100))
+    self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%% (%d)'%('TOT',float(toterrors)/tot*100,toterrors))
     for i,x in enumerate(ClaraErrors._BITS):
       self.text.DrawTextNDC(0.83,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.errors[x])/tot*100))
-    self.text.DrawTextNDC(0.12,0.90,'%s=%.2f%%'%('TOT',float(totslurmerrors)/tot*100))
+    self.text.DrawTextNDC(0.01,0.90,'%s=%.2f%% (%d)'%('TOT',float(totslurmerrors)/tot*100,totslurmerrors))
     for i,x in enumerate(SlurmErrors._BITS):
-      self.text.DrawTextNDC(0.12,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.slurmerrors[x])/tot*100))
+      self.text.DrawTextNDC(0.01,0.90-(i+1.5)*0.05,'%s=%.1f%% (%d)'%(x,float(self.slurmerrors[x])/tot*100,self.slurmerrors[x]))
+    title='Jobs:%d/%d, Files:%d/%d'%(self.successes,self.incomplete+self.successes,len(self.foundfiles),len(self.expectedfiles))
+    for i,f in enumerate(JobSpecs._FLAVORS):
+      ret=f+' '
+      if self.flavors[f]['total']>0:
+        ret+='%5.1f%% (%d)'%(100*float(self.flavors[f]['fail'])/(self.flavors[f]['fail']+self.flavors[f]['success']),self.flavors[f]['fail'])
+      else:
+        ret+='N/A'
+      self.text.DrawTextNDC(0.01,0.40-(i+1.5)*0.05,ret)
     if self.title:
-      self.text.DrawTextNDC(0.4,0.96,self.title)
+      title=self.title+'     '+title
+    self.text.DrawTextNDC(0.3,0.96,title)
     self.canvas.BuildLegend(0.6,0.95-len(histos)*0.04,0.82,0.95)
     self.canvas.Update()
 

@@ -1,11 +1,53 @@
-import pwd,os,subprocess
+import pwd,os,re,subprocess
+from JobSpecs import JobSpecs
 
 RECACHE=False
 
 class LogFinder:
+  
+  _STATUSCACHE={}
 
   def __init__(self):
     self.files={}
+
+  def loadStatusCache(self,user):
+    if user not in LogFinder._STATUSCACHE:
+      print 'Loading slurmJobs cache for user='+user+' ...'
+      keys=[]
+      for line in subprocess.check_output(['slurmJobs','-u',user]).split('\n'):
+        cols=line.strip().split()
+        if len(cols)>1:
+          if cols[0]=='JOB_ID':
+            keys=cols
+            LogFinder._STATUSCACHE[user]={}
+          else:
+            augerid=int(cols[0])
+            LogFinder._STATUSCACHE[user][augerid]={}
+            cols[8]+=cols.pop(9)
+            for ii in range(1,len(cols)):
+              LogFinder._STATUSCACHE[user][augerid][keys[ii]]=cols[ii]
+
+  def getStatus(self,augerid,user):
+    self.loadStatusCache(user)
+    if user in self._STATUSCACHE:
+      if augerid in self._STATUSCACHE[user]:
+        if 'STAT' in self._STATUSCACHE[user][augerid]:
+          return self._STATUSCACHE[user][augerid]['STAT']
+    return None
+
+  def getFarmoutAugerId(self,filename):
+    for flavor in JobSpecs._FLAVORS:
+      x=re.match('.*-(\d+)-%s\d+'%flavor,filename)
+      if x is not None:
+        return int(x.group(1))
+    return None
+
+  def getClaraSlurmId(self,filename):
+    x=filename.split('/')
+    try:
+      return int(x[len(x)-2])
+    except:
+      return None
 
   def getuser(self,filename):
     try:
