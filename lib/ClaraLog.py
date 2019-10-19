@@ -17,6 +17,7 @@ class ClaraLog(JobSpecs):
     JobSpecs.__init__(self)
     self.errors=ClaraErrors()
     self.filename=filename
+    self.slurmlog=None
     self.filesize=os.path.getsize(filename)
     self.host=self.getFarmoutHostname(filename)
     self.slurmid=ClaraLog.logFinder.getClaraSlurmId(filename)
@@ -47,6 +48,7 @@ class ClaraLog(JobSpecs):
     self.attachFarmout()
     if self.slurmstatus=='R':
       self.slurmerrors.setBit('ALIVE')
+      self.errors.unsetBit('TRUNC')
 
   def findOutputFiles(self):
     of=[]
@@ -74,6 +76,7 @@ class ClaraLog(JobSpecs):
           self.slurmerrors.parse(file)
           self.augerid=ClaraLog.logFinder.getFarmoutAugerId(file)
           self.slurmstatus=ClaraLog.logFinder.getStatus(self.augerid,ClaraLog.logFinder.getuser(file))
+          self.slurmlog=file
           break
     if self.slurmerrors.watchdog:
       self.errors.bits=0

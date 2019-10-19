@@ -58,10 +58,11 @@ for logfile in logfiles:
     if args.v:
       print cs
   # printout unknown errors:
-  if clog.errors.getBit('UDF'):
-    print 'UDF:    ',logfile,'\n',str(clog.lastline)
-  #if clog.errors.getBit('TRUNC'):
-  #  print 'TRUNC:  ',logfile,'\n',str(clog.lastline)
+  #if clog.errors.getBit('UDF'):
+  #  print 'UDF:    ',logfile,'\n',str(clog.lastline)
+  if clog.errors.getBit('TRUNC'):
+    print 'TRUNC::::::::::::::::::::::::  '
+    print logfile,'\n',str(clog.lastline),'\n',clog.slurmlog
   # abort, we already got the requested statistics:
   if args.n>0 and s.successes>args.n:
     break
