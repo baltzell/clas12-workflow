@@ -32,7 +32,7 @@ class SwifWorkflow(RunFileGroups):
 
   def getJson(self):
     json  = '{"name":"'+self.name+'","jobs":[\n'
-    json += ',\n'.join([job.getJson() for job in self.jobs])
+    json += ',\n'.join([job.getJson(pretty=True) for job in self.jobs])
     json += '\n]}'
     return json
 

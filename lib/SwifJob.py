@@ -24,6 +24,12 @@ class SwifJob:
     self.logDir=None
     self.cmd=''
 
+  def setTrack(self,track):
+    self.track=track
+
+  def setCores(self,cores):
+    self.cores=cores
+
   def setNumber(self,number):
     self.number=number
 
@@ -45,7 +51,7 @@ class SwifJob:
     self.time=time
 
   def setCmd(self,cmd):
-    self.cmd='unalias -a ; '+cmd
+    self.cmd=cmd
 
   def setShell(self,shell):
     self.shell=shell
@@ -53,7 +59,7 @@ class SwifJob:
   def setLogDir(self,logDir):
     self.logDir=logDir
 
-  def addIO(self,io,local,remote):
+  def _addIO(self,io,local,remote):
     if not remote.find('mss:')==0 and not remote.find('file:')==0:
       if remote.find('/mss/')==0:
         remote='mss:'+remote
@@ -62,19 +68,24 @@ class SwifJob:
     io.append({'local':local,'remote':remote})
 
   def addInput(self,local,remote):
-    self.addIO(self.inputs,local,remote)
+    self._addIO(self.inputs,local,remote)
 
   def addOutput(self,local,remote):
-    self.addIO(self.outputs,local,remote)
+    self._addIO(self.outputs,local,remote)
 
-  def getCopyInputsCmd(self):
-    cmd='ls -l'
-    for item in self.inputs:
-      if item['remote'].find('mss:/mss')==0:
-        remote = item['remote'].replace('mss:/mss','/cache')
-        cmd += ' && rm -f %s'%item['local']
-        cmd += ' && /bin/dd bs=1M if=%s of=%s'%(remote,item['local'])
-    return cmd
+  def getBytes(self,size):
+    scale=1
+    if   size.find('GB')>0: scale=int(1e9)
+    elif size.find('MB')>0: scale=int(1e6)
+    elif size.find('KB')>0: scale=int(1e3)
+    return int(scale * int(size.rstrip('GMKB')))
+
+  def getSeconds(self,time):
+    scale=1
+    if   time.find('h')>0:  scale=60*60
+    elif time.find('m')>0:  scale=60
+    elif time.find('s')>0:  scale=1
+    return int(scale * int(time.rstrip('secondminutehour')))
 
   def getJobName(self):
     name='%s-%.5d'%(self.workflow,self.number)
@@ -103,6 +114,23 @@ class SwifJob:
         prefix+='_'+key+val
     return prefix
 
+  def _getCopyInputsCmd(self):
+    cmd='ls -l'
+    for item in self.inputs:
+      if item['remote'].find('mss:/mss')==0:
+        remote = item['remote'].replace('mss:/mss','/cache')
+        cmd += ' && rm -f %s'%item['local']
+        cmd += ' && /bin/dd bs=1M if=%s of=%s'%(remote,item['local'])
+    return cmd
+
+  def _createCommand(self):
+    cmd='unalias -a ; '
+    for xx in self.env.keys():
+      cmd+='setenv '+xx+' '+self.env[xx]+' ; '
+    cmd+=self._getCopyInputsCmd()
+    cmd+=' && '+self.cmd
+    return cmd
+
   def getShell(self):
 
     job=('swif add-job -create -workflow '+self.workflow+' -slurm '
@@ -120,25 +148,11 @@ class SwifJob:
       job += ' -stdout file:'+self.getLogPrefix()+'.out'
       job += ' -stderr file:'+self.getLogPrefix()+'.err'
 
-    job += ' \''+self.getCopyInputsCmd()+' && '+self.cmd+'\''
+    job += ' \''+self._createCommand()+'\''
 
     return job
 
-  def getBytes(self,size):
-    scale=1
-    if   size.find('GB')>0: scale=int(1e9)
-    elif size.find('MB')>0: scale=int(1e6)
-    elif size.find('KB')>0: scale=int(1e3)
-    return int(scale * int(size.rstrip('GMKB')))
-
-  def getSeconds(self,time):
-    scale=1
-    if   time.find('h')>0:  scale=60*60
-    elif time.find('m')>0:  scale=60
-    elif time.find('s')>0:  scale=1
-    return int(scale * int(time.rstrip('secondminutehour')))
-
-  def getJson(self):
+  def getJson(self,pretty=False):
     jsonData = collections.OrderedDict()
     jsonData['name']=self.getJobName()
     jsonData['phase']=self.phase
@@ -150,7 +164,7 @@ class SwifJob:
     jsonData['ramBytes']=self.getBytes(self.ram)
     jsonData['timeSecs']=self.getSeconds(self.time)
     jsonData['tags']=self.tags
-    jsonData['command']=self.getCopyInputsCmd()+' && '+self.cmd
+    jsonData['command']=self._createCommand()
     if len(self.inputs)>0:
       jsonData['input']=self.inputs
     if len(self.outputs)>0:
@@ -158,7 +172,10 @@ class SwifJob:
     if self.logDir is not None:
       jsonData['stdout']='file:'+self.getLogPrefix()+'.out'
       jsonData['stderr']='file:'+self.getLogPrefix()+'.err'
-    return json.dumps(jsonData)
+    if pretty:
+      return json.dumps(jsonData,indent=2,separators=(',',': '))
+    else:
+      return json.dumps(jsonData)
 
 if __name__ == '__main__':
   job=SwifJob('foobar')

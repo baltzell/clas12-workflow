@@ -15,7 +15,8 @@ class Models:
   RollingDecoding=1
   SinglesDecoding=2
   DecodeAndReconTest=3
-  Choices=[0,1,2,3]
+  ClaraRecon=4
+  Choices=[0,1,2,3,4]
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
@@ -36,7 +37,7 @@ CFG={
     'workDir'       : None,
     'outDir'        : None,
     'logDir'        : '/farm_out/'+getpass.getuser(),
-    'phaseSize'     : 2000,
+    'phaseSize'     : 0,
     'mergeSize'     : 10,
     'model'         : 2,
     'torus'         : None,
@@ -88,6 +89,8 @@ class ChefConfig:
         self._workflow = CLAS12Workflows.SinglesOnlyDecoding(name,self.cfg)
       elif self.cfg['model']==Models.DecodeAndReconTest:
         self._workflow = CLAS12Workflows.DecodingReconTest(name,self.cfg)
+      elif self.cfg['model']==Models.ClaraRecon:
+        self._workflow = CLAS12Workflows.ClaraSingles(name,self.cfg)
       else:
         sys.exit('This should never happen #1.')
     if self._workflow.getFileCount()<1:
@@ -186,7 +189,7 @@ class ChefConfig:
           self.cli.error('"'+xx+'" must be an absolute path, not '+self.cfg[xx])
 
     # non-merging workflows:
-    if self.cfg['model']==Models.SinglesDecoding:
+    if self.cfg['model']==Models.SinglesDecoding or self.cfg['model']==Models.ClaraRecon:
 
       if self.cfg['workDir'] is not None:
         print 'WARNING:  ignoring "workDir" for non-merging workflow.'

@@ -1,5 +1,6 @@
 import os
 from SwifJob import SwifJob
+from CLAS12ClaraJob import CLAS12ClaraJob
 from SwifWorkflow import SwifWorkflow
 from RcdbManager import RcdbManager
 from RunFileUtil import RunFile
@@ -22,14 +23,14 @@ class CLAS12Workflow(SwifWorkflow):
     self._mkdirs()
 
   def _mkdirs(self):
-    print('\nMaking log directory at       '+self.logDir)
-    ChefUtil.mkdir(self.logDir)
-    print('Making output directories at  '+self.cfg['outDir'])
-    if self.cfg['workDir'] is not None:
-      print('Making staging directories at '+self.cfg['workDir'])
+    if self.cfg['logDir'] is not None:
+      print('\nMaking log directory at       '+self.logDir)
+      ChefUtil.mkdir(self.logDir)
     for run in self.getRunList():
+      print('Making output directories at  '+self.cfg['outDir'])
       ChefUtil.mkdir('%s/%.6d'%(self.cfg['outDir'],run))
       if self.cfg['workDir'] is not None:
+        print('Making staging directories at '+self.cfg['workDir'])
         ChefUtil.mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
         ChefUtil.mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
@@ -38,11 +39,11 @@ class CLAS12Workflow(SwifWorkflow):
     SwifWorkflow.addJob(self,job)
 
   #
-  # recon:  add jobs for running single-threaded recon
+  # reconutil:  add jobs for running single-threaded recon
   # - one job per file
   # - return list of reconstructed hipo files
   #
-  def recon(self,phase,hipoFiles):
+  def reconutil(self,phase,hipoFiles):
 
     reconnedFiles=[]
 
@@ -245,4 +246,45 @@ class CLAS12Workflow(SwifWorkflow):
         cmds = [ cmd%(move,self.cfg['outDir'],runno,self.cfg['outDir'],runno) for move in moves ]
         job.setCmd(' ; '.join(cmds)+' ; true')
         self.addJob(job)
+
+
+  def reconclara(self,phase,hipoFiles):
+
+    reconnedFiles=[]
+
+    for hipoFileName in hipoFiles:
+
+      basename=hipoFileName.split('/').pop()
+
+      runno = RunFile(hipoFileName).runNumber
+      fileno = RunFile(hipoFileName).fileNumber
+      outDir = '%s/recon/%.6d/'%(self.cfg['outDir'],runno)
+
+      reconBaseName = 'rec_'+basename
+      reconFileName = outDir+'/'+reconBaseName
+      reconnedFiles.append(reconFileName)
+
+      ChefUtil.mkdir(outDir)
+
+      job=CLAS12ClaraJob(self.name)
+      job.setPhase(phase)
+      job.setRam('16GB')
+      job.setTime('24h')
+      job.setDisk('20GB')
+      job.setCores(16)
+      job.addTag('run','%.6d'%runno)
+      job.addTag('file','%.5d'%fileno)
+      job.addTag('mode','recon')
+      job.addTag('coatjava',self.cfg['coatjava'])
+      job.addTag('outDir',outDir)
+      job.addInput('clara.yaml','/volatile/clas12/users/baltzell/clara-test/data.yaml')
+      job.addInput(basename,hipoFileName)
+      job.addOutput(reconBaseName,reconFileName)
+      temphack=job.getJobName()
+      temphack=temphack.replace('--00001','-%.5d'%len(reconnedFiles))
+      job.setCmd('./clara.sh -t 16 -l /volatile/clas12/users/baltzell/clara-test/nostage/v000/log '+temphack)
+
+      self.addJob(job)
+
+    return reconnedFiles
 

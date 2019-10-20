@@ -132,6 +132,22 @@ class SinglesOnlyDecoding(CLAS12Workflow):
       phase += 1
       self.decode(phase,evioFiles)
 
+class ClaraSingles(CLAS12Workflow):
+
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+
+  def generate(self):
+
+    reconfiles=[]
+
+    self.jobs=[]
+    phase=0
+
+    for hipoFiles in self.getGroups():
+      reconfiles.extend(self.reconclara(phase,hipoFiles))
+
+    return reconfiles
 
 if __name__ == '__main__':
   import os,sys
