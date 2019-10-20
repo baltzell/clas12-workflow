@@ -13,4 +13,5 @@ set sourced=($_)
 set curdir=`/usr/bin/readlink -f $sourced[2]`
 set curdir=`/usr/bin/dirname $curdir`
 setenv PYTHONPATH ${PYTHONPATH}:${curdir}/lib
+setenv PATH ${PATH}:${curdir}/scripts
 
