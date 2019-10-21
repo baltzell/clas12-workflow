@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys
+import sys,os
 from ChefConfig import ChefConfig
 
 cc=ChefConfig(sys.argv[1:])
@@ -12,6 +12,8 @@ print '\nCreated workflow with %d jobs based on %d runs with %d total input file
     (len(workflow.jobs),len(workflow.getRunList(1)),workflow.getFileCount())
 
 print '\nWriting workflow to ./'+workflow.name+'.json ...'
+if os.path.exists(workflow.name+'.json'):
+  sys.exit('ERROR: file already exists:  '+workflow.name+'.json')
 with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
 
