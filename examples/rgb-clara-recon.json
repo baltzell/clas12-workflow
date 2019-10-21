@@ -1,0 +1,9 @@
+{
+    "runGroup": "test",
+    "task": "recon",
+    "tag": "v001",
+    "model": 4,
+    "inputs": ["/cache/clas12/rg-b/production/decoded/6b.1.1"],
+    "outDir": "/volatile/clas12/users/baltzell/clara-test/nostage/v000/data",
+    "logDir": null
+}

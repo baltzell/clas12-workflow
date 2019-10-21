@@ -1,9 +1,9 @@
 import os
 from SwifJob import SwifJob
-from CLAS12ClaraJob import CLAS12ClaraJob
 from SwifWorkflow import SwifWorkflow
 from RcdbManager import RcdbManager
 from RunFileUtil import RunFile
+import CLAS12Jobs
 import ChefUtil
 
 class CLAS12Workflow(SwifWorkflow):
@@ -26,11 +26,13 @@ class CLAS12Workflow(SwifWorkflow):
     if self.cfg['logDir'] is not None:
       print('\nMaking log directory at       '+self.logDir)
       ChefUtil.mkdir(self.logDir)
-    for run in self.getRunList():
+    if self.cfg['outDir'] is not None:
       print('Making output directories at  '+self.cfg['outDir'])
+    if self.cfg['workDir'] is not None:
+      print('Making staging directories at '+self.cfg['workDir'])
+    for run in self.getRunList():
       ChefUtil.mkdir('%s/%.6d'%(self.cfg['outDir'],run))
       if self.cfg['workDir'] is not None:
-        print('Making staging directories at '+self.cfg['workDir'])
         ChefUtil.mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
         ChefUtil.mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
@@ -44,6 +46,8 @@ class CLAS12Workflow(SwifWorkflow):
   # - return list of reconstructed hipo files
   #
   def reconutil(self,phase,hipoFiles):
+
+    raise NotImplementedError('Need to update GEOM/DC env vars')
 
     reconnedFiles=[]
 
@@ -69,7 +73,7 @@ class CLAS12Workflow(SwifWorkflow):
 
       ChefUtil.mkdir(outDir)
 
-      job=SwifJob(self.name)
+      job=CLAS12Jobs.Job(self.name)
       job.setPhase(phase)
       job.setRam('4000MB')
       job.setTime('%dh'%(12*nFiles))
@@ -81,11 +85,10 @@ class CLAS12Workflow(SwifWorkflow):
       job.addTag('outDir',outDir)
       job.addInput('in.hipo',hipoFileName)
       job.addOutput('out.hipo',reconFileName)
-
-      cmd= ' export GEOMDBVAR=may_2018_engineers ;'
-      cmd+=' export USESTT=true ;'
-      cmd+=' export SOLSHIFT=-1.9 ;'
-      cmd+=' %s/bin/recon-util -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
+      job.addEnv('GEOMDBVAR','may_2018_engineers')
+      job.addEnv('USESTT','true')
+      job.addEnv('SOLSHIFT','-1.9')
+      cmd =' %s/bin/recon-util -c 2 -i in.hipo -o out.hipo'%self.cfg['coatjava']
       cmd+=' && ls out.hipo'
       cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
       cmd+=' || rm -f out.hipo && ls out.hipo'
@@ -118,12 +121,10 @@ class CLAS12Workflow(SwifWorkflow):
       hipoFileName = outDir + hipoBaseName
       hipoFiles.append(hipoFileName)
 
-      job=SwifJob(self.name)
+      job=CLAS12Jobs.DecodingJob(self.name)
       job.setPhase(phase)
-      job.setRam('3GB')
       job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
-      job.addTag('mode','decode')
       job.addTag('coatjava',self.cfg['coatjava'])
       job.addTag('outDir',outDir)
       job.addInput('in.evio',evioFileName)
@@ -169,7 +170,7 @@ class CLAS12Workflow(SwifWorkflow):
         outFile=outDir+self.cfg['mergePattern']%(runno,fileno1,fileno2)
         merged.append(outFile)
 
-        job=SwifJob(self.name)
+        job=CLAS12Jobs.Job(self.name)
         job.setPhase(phase)
         job.setRam('1GB')
         job.setTime(ChefUtil.getMergeTimeReq(self.cfg['mergeSize']))
@@ -266,23 +267,17 @@ class CLAS12Workflow(SwifWorkflow):
 
       ChefUtil.mkdir(outDir)
 
-      job=CLAS12ClaraJob(self.name)
+      job=CLAS12Jobs.ClaraJob(self.name)
       job.setPhase(phase)
-      job.setRam('16GB')
-      job.setTime('24h')
-      job.setDisk('20GB')
-      job.setCores(16)
       job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
-      job.addTag('mode','recon')
-      job.addTag('coatjava',self.cfg['coatjava'])
       job.addTag('outDir',outDir)
       job.addInput('clara.yaml','/volatile/clas12/users/baltzell/clara-test/data.yaml')
       job.addInput(basename,hipoFileName)
       job.addOutput(reconBaseName,reconFileName)
       temphack=job.getJobName()
       temphack=temphack.replace('--00001','-%.5d'%len(reconnedFiles))
-      job.setCmd('./clara.sh -t 16 -l /volatile/clas12/users/baltzell/clara-test/nostage/v000/log '+temphack)
+      job.setCmd('./clara.sh -t 16 -l /volatile/clas12/users/baltzell/clara-test/nostage/v001/log '+temphack)
 
       self.addJob(job)
 
