@@ -24,6 +24,9 @@ class SwifJob:
     self.logDir=None
     self.cmd=''
 
+  def addEnv(self,key,val):
+    self.env[key]=val
+
   def setTrack(self,track):
     self.track=track
 
@@ -126,7 +129,7 @@ class SwifJob:
   def _createCommand(self):
     cmd='unalias -a ; '
     for xx in self.env.keys():
-      cmd+='setenv '+xx+' '+self.env[xx]+' ; '
+      cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
     cmd+=self._getCopyInputsCmd()
     cmd+=' && '+self.cmd
     return cmd
