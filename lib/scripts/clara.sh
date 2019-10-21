@@ -57,7 +57,6 @@ $CLARA_HOME/lib/clara/run-clara \
         -x $logdir \
         -t 16 \
         -s $jobname \
-        -e 1000 \
         ./clara.yaml \
         ./filelist.txt
 claraexit=$?
