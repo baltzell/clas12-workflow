@@ -2,7 +2,8 @@
 import sys,os,logging
 from ChefConfig import ChefConfig
 
-logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s %(lineno).3d] %(message)s')
+#logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s %(lineno).3d] %(message)s')
+logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
 logger=logging.getLogger(__name__)
 
 print('')
@@ -22,10 +23,6 @@ if os.path.exists(workflow.name+'.json'):
 logger.info('Writing workflow to ./'+workflow.name+'.json ...')
 with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
-
-# for big workflows, swif -add-job is much slower than swif -import:
-#with open(workflow.name+'.sh','w') as out:
-#  out.write(workflow.getShell())
 
 if cc.get('submit'):
   logger.info('Submitting %s.json with %d jobs ...'%(workflow.name,len(workflow.jobs)))
