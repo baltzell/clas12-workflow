@@ -1,7 +1,4 @@
-import os
-import subprocess
-import requests
-import json
+import os,json,requests,subprocess
 
 from ChefConfig import CHOICES
 from ChefUtil import mkdir
