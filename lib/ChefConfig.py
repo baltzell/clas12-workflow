@@ -17,21 +17,21 @@ class Models:
   DecodeAndReconTest=3
   ClaraRecon=4
   Choices=[0,1,2,3,4]
+  Tasks=['dec','dec','dec','decrec','rec']
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
     'track'   : ['reconstruction','debug'],
-    'task'    : ['decode','recon'],
-    'model'   : Models.Choices
+    'model'   : Models.Choices,
 }
 
 CFG={
     'project'       : 'clas12',
     'track'         : 'reconstruction',
-    'task'          : 'decode',
     'runGroup'      : None,
     'coatjava'      : '/group/clas12/packages/coatjava/6.3.1',
     'tag'           : None,
+    'task'          : None,
     'inputs'        : [],
     'runs'          : [],
     'workDir'       : None,
@@ -104,7 +104,6 @@ class ChefConfig:
 
     cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=CHOICES['runGroup'], default=None)
     cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
-    cli.add_argument('--task',    metavar='NAME',help='* task name', type=str, choices=CHOICES['task'], default=None)
     cli.add_argument('--model', help='* workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=CHOICES['model'],default=None)
 
     cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
@@ -130,7 +129,7 @@ class ChefConfig:
     cli.add_argument('--defaults',help='print default config and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
 
-    #  cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
+    cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
     #  cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name',   type=str, default=None)
 
     cli.add_argument('--version',action='version',version='0.1')
@@ -212,6 +211,9 @@ class ChefConfig:
 
       if self.cfg['multiRun']:
         self.cli.error('"multiRun" is not allowed in merging workflows.')
+
+    # set the task based on the model:
+    self.cfg['task']=Models.Tasks[self.cfg['model']]
 
     # parse run list:
     self.cfg['runs'] = ChefUtil.getRunList(self.args.runs)
