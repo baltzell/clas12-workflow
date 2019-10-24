@@ -1,14 +1,9 @@
-import os
-import sys
-import json
-import copy
-import getpass
-import argparse
-import traceback
-
+import os,sys,json,copy,logging,getpass,argparse,traceback
 import ChefUtil
 import RunFileUtil
 import CLAS12Workflows
+
+_LOGGER=logging.getLogger(__name__)
 
 class Models:
   ThreePhaseDecoding=0
@@ -16,8 +11,10 @@ class Models:
   SinglesDecoding=2
   DecodeAndReconTest=3
   ClaraRecon=4
-  Choices=[0,1,2,3,4]
-  Tasks=['dec','dec','dec','decrec','rec']
+  Choices =[0,     1,     2,     3,        4    ]
+  Tasks   =['dec', 'dec', 'dec', 'decrec', 'rec']
+  Clara   =[False, False, False, False,    True ]
+  Coatjava=[True,  True,  True,  True,     False]
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
@@ -29,7 +26,8 @@ CFG={
     'project'       : 'clas12',
     'track'         : 'reconstruction',
     'runGroup'      : None,
-    'coatjava'      : '/group/clas12/packages/coatjava/6.3.1',
+    'coatjava'      : None,
+    'clara'         : None,
     'tag'           : None,
     'task'          : None,
     'inputs'        : [],
@@ -46,7 +44,9 @@ CFG={
     'mergePattern'  : 'clas_%.6d.evio.%.5d-%.5d.hipo',
     'singlePattern' : 'clas_%.6d.evio.%.5d.hipo',
     'fileRegex'     : RunFileUtil.getFileRegex(),
-    'submit'        : False
+    'submit'        : False,
+    'reconYaml'     : None,
+    'trainYaml'     : None,
 }
 
 class ChefConfig:
@@ -69,7 +69,7 @@ class ChefConfig:
 
     self._loadCliArgs()
 
-    self._checkConfig()
+    self._verifyConfig()
 
     if self.args.show:
       sys.exit(str(self))
@@ -114,6 +114,7 @@ class ChefConfig:
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
+    cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files per phase', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
@@ -144,7 +145,7 @@ class ChefConfig:
     try:
       cfg = json.load(open(filename,'r'))
     except:
-      print traceback.format_exc()
+      print(traceback.format_exc())
       sys.exit('FATAL ERROR: Config file '+filename+' has invalid JSON format.')
 
     for key,val in cfg.iteritems():
@@ -163,7 +164,7 @@ class ChefConfig:
           continue
         self.cfg[key]=val
 
-  def _checkConfig(self):
+  def _verifyConfig(self):
 
     if self.cfg['runGroup'] is None:
       self.cli.error('"runGroup" must be defined.')
@@ -191,7 +192,7 @@ class ChefConfig:
     if self.cfg['model']==Models.SinglesDecoding or self.cfg['model']==Models.ClaraRecon:
 
       if self.cfg['workDir'] is not None:
-        print 'WARNING:  ignoring "workDir" for non-merging workflow.'
+        _LOGGER.warning('ignoring "workDir" for non-merging workflow.')
         self.cfg['workDir']=None
 
       if self.cfg['fileRegex'] != RunFileUtil.getFileRegex():
@@ -215,6 +216,24 @@ class ChefConfig:
     # set the task based on the model:
     self.cfg['task']=Models.Tasks[self.cfg['model']]
 
+    # check for clara:
+    if Models.Clara[self.cfg['model']]:
+      if self.cfg['clara'] is None:
+        self.cli.error('"clara" must be defined for model='+str(self.cfg['model']))
+      if not os.path.exists(self.cfg['clara']):
+        self.cli.error('"clara" does not exist: '+self.cfg['clara'])
+
+    # check for coatjava
+    if Models.Coatjava[self.cfg['model']]:
+      if self.cfg['coatjava'] is None:
+        if self.cfg['clara'] is not None:
+          _LOGGER.warning('Using coatjava from clara: '+self.cfg['clara'])
+          self.cfg['coatjava']=self.cfg['clara']+'/plugins/clas12'
+        else:
+          self.cli.error('"coatjava" must be defined for model='+str(self.cfg['model']))
+      if not os.path.exists(self.cfg['coatjava']):
+        self.cli.error('"coatjava" does not exist: '+self.cfg['coatjava'])
+
     # parse run list:
     self.cfg['runs'] = ChefUtil.getRunList(self.args.runs)
     if self.cfg['runs'] is None or len(self.cfg['runs'])==0:
@@ -229,5 +248,5 @@ class ChefConfig:
 
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])
-  print str(cc)
+  print(str(cc))
 

@@ -160,6 +160,6 @@ if __name__ == '__main__':
   workflow.addRun(4013)
   workflow.addFiles(open('/home/baltzell/clas12/rga/rga-spring-files.txt','r').readlines())
   workflow.generate()
-  print workflow.getShell()
-  print workflow.getJson()
+  print(workflow.getShell())
+  print(workflow.getJson())
 

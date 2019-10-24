@@ -1,16 +1,14 @@
-import os
-import re
-import glob
-import collections
+import os,re,glob,logging,collections
 
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
 __DEBUG=False
+_LOGGER=logging.getLogger(__name__)
 
 def setFileRegex(regex):
   global __FILEREGEX
-  print '\nChanging file regex to '+regex+' ... checking for compilation ...'
+  _LOGGER.info('Changing file regex to '+regex+' ... checking for compilation ...')
   re.compile(regex)
-  __FILEREGEX = regex
+  __FILEREGEX=regex
 
 def getFileRegex():
   return __FILEREGEX
@@ -18,8 +16,7 @@ def getFileRegex():
 def getRunFileNumber(fileName):
   mm = re.match(__FILEREGEX,fileName)
   if mm is None:
-    if __DEBUG:
-      print 'WARNING:  getRunFileNumber Failed on  '+fileName
+    _LOGGER.debug('Failed to find run number in:  '+fileName)
     return None
   runno=mm.group(1)
   fileno=mm.group(2)
@@ -37,8 +34,6 @@ class RunFile:
     self.fileNumber=None
     if isinstance(fileName,unicode):
       fileName=str(fileName)
-    if not type(fileName) is str:
-      raise ValueError('fileName must be a string: '+str(fileName))
     fileName=fileName.strip()
     rf=getRunFileNumber(fileName)
     self.fileName=fileName
@@ -67,7 +62,7 @@ class RunFile:
   def __str__(self):
     return '%s(%d/%d)'%(self.fileName,self.runNumber,self.fileNumber)
   def show(self):
-    print self.fileName,self.runNumber,self.fileNumber
+    print(self.fileName,self.runNumber,self.fileNumber)
 
 # TODO:  make this a subclass of list
 class RunFileGroup():
@@ -105,7 +100,7 @@ class RunFileGroup():
     xx+=')'
     return xx
   def show(self):
-    print str(self.runNumber)
+    print(str(self.runNumber))
     for rf in self.runFileList: rf.show()
 
 class RunFileGroups:
@@ -142,7 +137,7 @@ class RunFileGroups:
     self.rfgs[rf.runNumber].addFile(fileName)
 
   def addDir(self,dirName):
-    print 'Adding directory '+dirName+' ...'
+    _LOGGER.info('Adding directory '+dirName+' ...')
     for dirpath,dirnames,filenames in os.walk(dirName):
       for filename in filenames:
         self.addFile(dirpath+'/'+filename)
@@ -165,7 +160,7 @@ class RunFileGroups:
 
     # else assume it's a glob:
     else:
-      print 'Assuming '+data+' is a glob.'
+      _LOGGER.warning('Assuming '+data+' is a glob.')
       for xx in glob.glob(data):
         if os.path.isdir(xx):
           self.addDir(xx)
@@ -209,11 +204,11 @@ class RunFileGroups:
 
   def showGroups(self):
     for group in self.getGroups():
-      print group
+      print(group)
 
   def showFlatList(self):
     for key,val in self.rfgs.iteritems():
-      print key,
+      print(key,)
       val.show()
 
   def getFileCount(self):

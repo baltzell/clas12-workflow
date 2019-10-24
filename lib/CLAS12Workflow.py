@@ -1,10 +1,12 @@
-import os
+import os,logging
 from SwifJob import SwifJob
 from SwifWorkflow import SwifWorkflow
 from RcdbManager import RcdbManager
 from RunFileUtil import RunFile
 import CLAS12Jobs
 import ChefUtil
+
+_LOGGER=logging.getLogger(__name__)
 
 class CLAS12Workflow(SwifWorkflow):
 
@@ -15,17 +17,17 @@ class CLAS12Workflow(SwifWorkflow):
     self.setPhaseSize(self.cfg['phaseSize'])
     self.setCombineRuns(self.cfg['multiRun'])
     self.addRuns(self.cfg['runs'])
-    print '\nFinding files from '+str(self.cfg['inputs'])+' ...'
+    _LOGGER.info('Finding files from '+str(self.cfg['inputs']))
     self.findFiles(self.cfg['inputs'])
     self.logDir=None
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
-      print('\nMaking log directory at       '+self.logDir)
+      _LOGGER.info('Making log directory at '+self.logDir)
       ChefUtil.mkdir(self.logDir)
     if self.cfg['outDir'] is not None:
-      print('Making output directories at  '+self.cfg['outDir'])
+      _LOGGER.info('Making output directories at  '+self.cfg['outDir'])
     if self.cfg['workDir'] is not None:
-      print('Making staging directories at '+self.cfg['workDir'])
+      _LOGGER.info('Making staging directories at '+self.cfg['workDir'])
 
   def addJob(self,job):
     job.setLogDir(self.logDir)

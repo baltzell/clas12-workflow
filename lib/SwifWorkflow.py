@@ -1,5 +1,4 @@
-import tempfile
-import subprocess
+import tempfile,subprocess
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
 
@@ -32,21 +31,21 @@ class SwifWorkflow(RunFileGroups):
 
   def getJson(self):
     json  = '{"name":"'+self.name+'","jobs":[\n'
-    json += ',\n'.join([job.getJson(pretty=True) for job in self.jobs])
+    json += ',\n'.join([job.getJson() for job in self.jobs])
     json += '\n]}'
     return json
 
   def submitShell(self):
     for job in self.jobs:
-      print subprocess.check_output(job.getShell().split())
+      print(subprocess.check_output(job.getShell().split()))
 
   def submitJson(self):
     with tempfile.NamedTemporaryFile() as jsonFile:
       jsonFile.write(self.getJson())
       jsonFile.flush()
-      print subprocess.check_output(['swif','import','-file',jsonFile.name])
-    print subprocess.check_output(['swif','run','-workflow',self.name])
-    print subprocess.check_output(['swif','status','-workflow',self.name])
+      print(subprocess.check_output(['swif','import','-file',jsonFile.name]))
+    print(subprocess.check_output(['swif','run','-workflow',self.name]))
+    print(subprocess.check_output(['swif','status','-workflow',self.name]))
 
 if __name__ == '__main__':
   name = 'myWorkflow'
@@ -60,7 +59,7 @@ if __name__ == '__main__':
     job.setCmd('evio2xml in.evio > out.xml')
     job.setLogDir('/tmp/log')
     workflow.addJob(job)
-  print workflow.getShell()
-  print workflow.getJson()
+  print(workflow.getShell())
+  print(workflow.getJson())
   #workflow.submitJson()
 

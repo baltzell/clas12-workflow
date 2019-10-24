@@ -1,15 +1,19 @@
-import os,sys
+import os,sys,subprocess,logging
+
+_LOGGER=logging.getLogger(__name__)
 
 def mkdir(path):
   if path is not None:
     if os.access(path,os.F_OK):
       if not os.access(path,os.W_OK):
-        sys.exit('\nERROR:  You do not have write permissions on '+path)
+        _LOGGER.critical('You do not have write permissions on '+path)
+        sys.exit(1)
     else:
       try:
         os.makedirs(path)
       except:
-        sys.exit('\nERROR:  Cannot make directory: '+path)
+        _LOGGER.critical('Cannot make directory: '+path)
+        sys.exit(1)
 
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'
@@ -27,8 +31,22 @@ def getFileList(fileOrDir):
     with open(fileOrDir,'r') as file:
       fileList.extend(file.readlines())
   else:
-    raise ValueError('It must be a file or a directory')
+    _LOGGER.critical('Argument must be a file or directory.')
+    sys.exit(1)
   return fileList
+
+def countHipoEvents(filename):
+  x=subprocess.check_output(['hipo-utils','-info',filename])
+  for line in reversed(x.split('\n')):
+    cols=line.strip().split()
+    if len(cols)==3 and line.strip().find('Entries = ')==0:
+      try:
+        return int(cols[2])
+      except:
+        _LOGGER.error('invalid entries from hipo-utils')
+        return None
+  _LOGGER.error('cannot find entries from hipo-utils')
+  return None
 
 def getRunList(data):
   runs=[]
@@ -40,29 +58,28 @@ def getRunList(data):
     data=str(data)
     # first column is run# if it's a file:
     if os.access(data,os.R_OK):
-      print '\nReading run numbers from file: '+data+' ... ',
+      _LOGGER.info('Reading run numbers from file: '+data)
       for line in open(data,'r').readlines():
         run=line.strip().split()[0]
         try:
           runs.append(int(run))
-          print run,
         except:
-          print '\nERROR: Run numbers must be integers:  %s (%s)\n'%(fileName,line)
+          _LOGGER.error('Run numbers must be integers:  %s (%s)'%(fileName,line))
           return None
-      print
+      _LOGGER.info('Read run numbers:  '+','.join(runs))
     # else it's a string run list:
     else:
-      print '\nAdding run numbers from command-line: '+data+' ...'
+      _LOGGER.info('Adding run numbers from command-line: '+data)
       for run in data.split(','):
         if run.find('-')<0:
           try:
             runs.append(int(run))
           except:
-            print '\nERROR: Run numbers must be integers:  '+run+'\n'
+            _LOGGER.error('Run numbers must be integers:  '+run)
             return None
         else:
           if run.count('-') != 1:
-            print '\nERROR:  Invalid run range: '+run+'\n'
+            _LOGGER.error('Invalid run range: '+run)
             return None
           try:
             start,end=run.split('-')
@@ -71,7 +88,7 @@ def getRunList(data):
             for run in range(start,end+1):
               runs.append(run)
           except:
-            print '\nERROR: Run numbers must be integers:  '+run+'\n'
+            _LOGGER.error('Run numbers must be integers:  '+run)
             return None
   return runs
 

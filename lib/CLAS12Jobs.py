@@ -18,7 +18,8 @@ class DecodingJob(Job):
 class ClaraJob(Job):
   def __init__(self,workflow):
     Job.__init__(self,workflow)
-    self.addEnv('CLARA_HOME','/group/clas12/packages/clara/4.3.11c_6.3.1')
+    #self.addEnv('CLARA_HOME','/group/clas12/packages/clara/4.3.11c_6.3.1')
+    self.addEnv('CLARA_HOME','/group/clas12/packages/clara/4.3.11_6c.3.4')
     self.addEnv('JAVA_OPTS','-Xmx10g -Xms8g')
     self.addTag('mode','recon')
     self.setRam('12GB')
@@ -39,5 +40,5 @@ if __name__ == '__main__':
   from SwifWorkflow import SwifWorkflow
   wflow=SwifWorkflow('wflow')
   wflow.addJob(job)
-  print wflow.getJson()
+  print(wflow.getJson())
 

@@ -1,6 +1,6 @@
-import os,sys,json
+import os,sys,json,logging
 
-_DEBUG=False
+_LOGGER=logging.getLogger(__name__)
 
 class RcdbManager():
 
@@ -20,33 +20,34 @@ class RcdbManager():
     try:
       self.rcdb=__import__('rcdb')
     except:
-      if _DEBUG:
-        print('[RcdbManager] WARNING:  Failed to load RCDB python module from $PYTHONPATH.')
+      _LOGGER.warning('Failed to load RCDB python module from $PYTHONPATH.')
       self.rcdb=None
 
   def get(self,run):
 
     # exit if we couldn't find RCDB python module:
     if self.rcdb is None:
-      sys.exit('[RcdbManager] ERROR:  Failed to load RCBD python module from $PYTHONPATH.')
+      _LOGGER.error('Failed to load RCBD python module from $PYTHONPATH.')
+      sys.exit()
 
     # exit if run isn't an integer:
     try:
       int(run)
     except:
-      sys.exit('[RcdbManager] ERROR:  Run number is not an integer:  '+run)
+      _LOGGER.error('Run number is not an integer:  '+run)
+      sys.exit()
 
     # return it if we already cached this run:
     if int(run) in self.data:
       return self.data[int(run)]
 
     # connect to database:
+    _LOGGER.debug('Opening connection to '+self.uri+' for run '+str(run))
     try:
-      if _DEBUG:
-        print('[RcdbManager] INFO:  Opening connection to '+self.uri+' for run '+run)
       db=self.rcdb.RCDBProvider(self.uri)
     except:
-      sys.exit('[RcdbManager] ERROR:  Failed connecting to '+self.uri)
+      _LOGGER.critical('Failed connecting to '+self.uri)
+      sys.exit()
 
     # read all variables from database for this run:
     try:
@@ -56,12 +57,11 @@ class RcdbManager():
       for key in self._RCDBKEYS:
         self.data[int(run)][key]=db.get_condition(int(run),key).value
     except:
-      print('[RcdbManager] ERROR:  Failed to retrieve constants for run '+run)
+      _LOGGER.error('Failed to retrieve constants for run '+str(run))
 
     # close connection:
     db.disconnect()
-    if _DEBUG:
-      print('[RcdbManager] INFO:  Closed connection to '+self.uri)
+    _LOGGER.debug('Closed connection to '+self.uri)
 
     # return the cached data for this run:
     return self.data[int(run)]
@@ -84,6 +84,6 @@ if __name__ == '__main__':
   if len(sys.argv)<2:
     sys.exit(usage)
   for run in sys.argv[1:]:
-    print r.getSolenoidScale(run)
-  print r
+    print(r.getSolenoidScale(run))
+  print (r)
 

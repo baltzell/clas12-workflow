@@ -80,15 +80,15 @@ if __name__ == '__main__':
   nc=NumaConfig()
 
   if args.t>=0:
-    print nc.tasksetArg(args.t)
+    print(nc.tasksetArg(args.t))
 
   elif args.n==True:
-    print len(nc.nodes())
+    print(len(nc.nodes()))
 
   else:
     for node in nc.nodes():
-      print node,'%3d'%len(nc.cpus(node)),nc.tasksetArg(node)
-      print '%22s'%('0x%x'%nc.mask(node)),
-      for cpu in nc.cpus(node): print '%.2d'%cpu,
-      print
+      print(node,'%3d'%len(nc.cpus(node)),nc.tasksetArg(node))
+      print('%22s'%('0x%x'%nc.mask(node)),)
+      for cpu in nc.cpus(node): print('%.2d'%cpu,)
+      print('')
 

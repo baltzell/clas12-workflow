@@ -1,8 +1,9 @@
-import sys
-import collections
-import json
+import sys,json,logging,collections
 
 class SwifJob:
+
+  __JSONFORMAT={'indent':2,'separators':(',',': ')}
+  #__JSONFORMAT={}
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
@@ -93,10 +94,7 @@ class SwifJob:
   def getJobName(self):
     name='%s-%.5d'%(self.workflow,self.number)
     if len(name)>50:
-      print ''
-      print 'ERROR:  Maximum (JLab batch) job name length is 50 characters.'
-      print 'This is too long:  '+name
-      print ''
+      logging.getLogger(__name__).critical('Greater than max job name length (50 characters): '+name)
       sys.exit()
     return name
 
@@ -155,7 +153,7 @@ class SwifJob:
 
     return job
 
-  def getJson(self,pretty=False):
+  def getJson(self):
     jsonData = collections.OrderedDict()
     jsonData['name']=self.getJobName()
     jsonData['phase']=self.phase
@@ -175,10 +173,7 @@ class SwifJob:
     if self.logDir is not None:
       jsonData['stdout']='file:'+self.getLogPrefix()+'.out'
       jsonData['stderr']='file:'+self.getLogPrefix()+'.err'
-    if pretty:
-      return json.dumps(jsonData,indent=2,separators=(',',': '))
-    else:
-      return json.dumps(jsonData)
+    return json.dumps(jsonData,**SwifJob.__JSONFORMAT)
 
 if __name__ == '__main__':
   job=SwifJob('foobar')
@@ -187,6 +182,6 @@ if __name__ == '__main__':
   job.addTag('foo','bar')
   job.setLogDir('/tmp/logs')
   job.setPhase(77)
-  print job.getShell()
-  print job.getJson()
+  print(job.getShell())
+  print(job.getJson())
 
