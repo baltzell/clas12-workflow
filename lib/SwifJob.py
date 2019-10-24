@@ -40,6 +40,10 @@ class SwifJob:
   def addTag(self,key,val):
     self.tags[key]=val
 
+  def getTag(self,key):
+    if key in self.tags: return self.tags[key]
+    return None
+
   def setPhase(self,phase):
     if not phase is None and not type(phase) is int:
       raise ValueError('phase must be None or an integer.')
