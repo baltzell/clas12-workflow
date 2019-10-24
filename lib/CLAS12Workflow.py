@@ -20,21 +20,12 @@ class CLAS12Workflow(SwifWorkflow):
     self.logDir=None
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
-    self._mkdirs()
-
-  def _mkdirs(self):
-    if self.cfg['logDir'] is not None:
       print('\nMaking log directory at       '+self.logDir)
       ChefUtil.mkdir(self.logDir)
     if self.cfg['outDir'] is not None:
       print('Making output directories at  '+self.cfg['outDir'])
     if self.cfg['workDir'] is not None:
       print('Making staging directories at '+self.cfg['workDir'])
-    for run in self.getRunList():
-      ChefUtil.mkdir('%s/%.6d'%(self.cfg['outDir'],run))
-      if self.cfg['workDir'] is not None:
-        ChefUtil.mkdir('%s/singles/%.6d'%(self.cfg['workDir'],run))
-        ChefUtil.mkdir('%s/merged/%.6d'%(self.cfg['workDir'],run))
 
   def addJob(self,job):
     job.setLogDir(self.logDir)
@@ -117,6 +108,8 @@ class CLAS12Workflow(SwifWorkflow):
       else:
         outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],runno)
 
+      ChefUtil.mkdir(outDir)
+
       hipoBaseName = self.cfg['singlePattern']%(runno,fileno)
       hipoFileName = outDir + hipoBaseName
       hipoFiles.append(hipoFileName)
@@ -167,6 +160,7 @@ class CLAS12Workflow(SwifWorkflow):
         fileno1 = RunFile(inputs[0]).fileNumber
         fileno2 = RunFile(inputs[len(inputs)-1]).fileNumber
         outDir='%s/merged/%.6d/'%(self.cfg['workDir'],runno)
+        ChefUtil.mkdir(outDir)
         outFile=outDir+self.cfg['mergePattern']%(runno,fileno1,fileno2)
         merged.append(outFile)
 
@@ -243,8 +237,10 @@ class CLAS12Workflow(SwifWorkflow):
         job.addTag('run','%.6d'%runno)
         job.addTag('mode','move')
         job.addTag('outDir',self.cfg['outDir'])
-        cmd = '(sleep 0.5 ; set d=%s ; touch -c $d ; rsync $d %s/%.6d/ ; rsync $d %s/%.6d/ && rm -f $d)'
-        cmds = [ cmd%(move,self.cfg['outDir'],runno,self.cfg['outDir'],runno) for move in moves ]
+        outDir='%s/%.6d'%(self.cfg['outDir'],runno)
+        ChefUtil.mkdir(outDir)
+        cmd = '(sleep 0.5 ; set d=%s ; touch -c $d ; rsync $d %s/ ; rsync $d %s/ && rm -f $d)'
+        cmds = [ cmd%(move,outDir,outDir) for move in moves ]
         job.setCmd(' ; '.join(cmds)+' ; true')
         self.addJob(job)
 
@@ -260,24 +256,26 @@ class CLAS12Workflow(SwifWorkflow):
       runno = RunFile(hipoFileName).runNumber
       fileno = RunFile(hipoFileName).fileNumber
       outDir = '%s/recon/%.6d/'%(self.cfg['outDir'],runno)
+      logDir = '%s/log/%.6d/'%(self.cfg['outDir'],runno)
 
       reconBaseName = 'rec_'+basename
       reconFileName = outDir+'/'+reconBaseName
       reconnedFiles.append(reconFileName)
 
       ChefUtil.mkdir(outDir)
+      ChefUtil.mkdir(logDir)
 
       job=CLAS12Jobs.ClaraJob(self.name)
       job.setPhase(phase)
       job.addTag('run','%.6d'%runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('outDir',outDir)
-      job.addInput('clara.yaml','/volatile/clas12/users/baltzell/clara-test/data.yaml')
+      job.addInput('clara.yaml','/home/baltzell/calibration.yaml')
       job.addInput(basename,hipoFileName)
       job.addOutput(reconBaseName,reconFileName)
       temphack=job.getJobName()
       temphack=temphack.replace('--00001','-%.5d'%len(reconnedFiles))
-      job.setCmd('./clara.sh -t 16 -l /volatile/clas12/users/baltzell/clara-test/nostage/v001/log '+temphack)
+      job.setCmd('./clara.sh -t 16 -l '+logDir+' '+temphack)
 
       self.addJob(job)
 
