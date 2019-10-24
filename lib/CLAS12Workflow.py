@@ -20,14 +20,22 @@ class CLAS12Workflow(SwifWorkflow):
     _LOGGER.info('Finding files from '+str(self.cfg['inputs']))
     self.findFiles(self.cfg['inputs'])
     self.logDir=None
+    self._mkdirs()
+
+  def _mkdirs(self):
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
-      _LOGGER.info('Making log directory at '+self.logDir)
+      _LOGGER.info('Making slurm log directory at '+self.logDir)
       ChefUtil.mkdir(self.logDir)
+    if self.cfg['claraLogDir'] is not None:
+      logDir = '%s/%s'%(self.cfg['claraLogDir'],self.name)
+      _LOGGER.info('Making clara log directory at '+logDir)
+      ChefUtil.mkdir(logDir)
     if self.cfg['outDir'] is not None:
       _LOGGER.info('Making output directories at  '+self.cfg['outDir'])
     if self.cfg['workDir'] is not None:
       _LOGGER.info('Making staging directories at '+self.cfg['workDir'])
+#    self.setLogDir(self.logDir)
 
   def addJob(self,job):
     job.setLogDir(self.logDir)
@@ -253,33 +261,21 @@ class CLAS12Workflow(SwifWorkflow):
 
     for hipoFileName in hipoFiles:
 
-      basename=hipoFileName.split('/').pop()
-
-      runno = RunFile(hipoFileName).runNumber
-      fileno = RunFile(hipoFileName).fileNumber
-      outDir = '%s/recon/%.6d/'%(self.cfg['outDir'],runno)
-      logDir = '%s/log/%.6d/'%(self.cfg['outDir'],runno)
-
-      reconBaseName = 'rec_'+basename
-      reconFileName = outDir+'/'+reconBaseName
-      reconnedFiles.append(reconFileName)
-
-      ChefUtil.mkdir(outDir)
-      ChefUtil.mkdir(logDir)
-
-      job=CLAS12Jobs.ClaraJob(self.name)
+      job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
       job.setPhase(phase)
-      job.addTag('run','%.6d'%runno)
-      job.addTag('file','%.5d'%fileno)
-      job.addTag('outDir',outDir)
-      job.addInput('clara.yaml','/home/baltzell/calibration.yaml')
-      job.addInput(basename,hipoFileName)
-      job.addOutput(reconBaseName,reconFileName)
+      job.addInputData(hipoFileName)
+
       temphack=job.getJobName()
       temphack=temphack.replace('--00001','-%.5d'%len(reconnedFiles))
-      job.setCmd('./clara.sh -t 16 -l '+logDir+' '+temphack)
+      cmd = './clara.sh -t '+str(job.getCores())
+      if self.cfg['claraLogDir'] is not None:
+        cmd += ' -l '+self.cfg['claraLogDir']+' '
+      cmd += temphack
+      job.setCmd(cmd)
 
       self.addJob(job)
+
+      reconnedFiles.extend(job.outputData)
 
     return reconnedFiles
 

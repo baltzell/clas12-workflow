@@ -66,7 +66,7 @@ def getRunList(data):
         except:
           _LOGGER.error('Run numbers must be integers:  %s (%s)'%(fileName,line))
           return None
-      _LOGGER.info('Read run numbers:  '+','.join(runs))
+      _LOGGER.info('Read run numbers:  '+','.join([str(x) for x in runs]))
     # else it's a string run list:
     else:
       _LOGGER.info('Adding run numbers from command-line: '+data)

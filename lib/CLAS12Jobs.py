@@ -1,25 +1,36 @@
 import os
 
+import ChefUtil
+from RunFileUtil import RunFile
 from SwifJob import SwifJob
 
 class Job(SwifJob):
-  def __init__(self,workflow):
+  def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
     self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
+    self.inputData=[]
+    self.outputData=[]
+    self.cfg=cfg
+  def addInputData(self,filename):
+    self.inputData.append(filename)
+    basename=filename.split('/').pop()
+    runno=RunFile(filename).runNumber
+    fileno=RunFile(filename).fileNumber
+    self.addTag('run','%.6d'%runno)
+    self.addTag('file','%.5d'%fileno)
 
 class DecodingJob(Job):
-  def __init__(self,workflow):
-    Job.__init__(self,workflow)
+  def __init__(self,workflow,cfg):
+    Job.__init__(self,workflow,cfg)
     self.setRam('3GB')
     self.addTag('mode','decode')
 
 class ClaraJob(Job):
-  def __init__(self,workflow):
-    Job.__init__(self,workflow)
-    #self.addEnv('CLARA_HOME','/group/clas12/packages/clara/4.3.11c_6.3.1')
-    self.addEnv('CLARA_HOME','/group/clas12/packages/clara/4.3.11_6c.3.4')
+  def __init__(self,workflow,cfg):
+    Job.__init__(self,workflow,cfg)
+    self.addEnv('CLARA_HOME',cfg['clara'])
     self.addEnv('JAVA_OPTS','-Xmx10g -Xms8g')
     self.addTag('mode','recon')
     self.setRam('12GB')
@@ -27,6 +38,17 @@ class ClaraJob(Job):
     self.setTime('24h')
     self.setCores(16)
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh')
+    self.addInput('clara.yaml',cfg['reconYaml'])
+  def addInputData(self,filename):
+    Job.addInputData(self,filename)
+    basename=filename.split('/').pop()
+    self.addInput(basename,filename)
+    outDir='%s/recon/%s/'%(self.cfg['outDir'],self.getTag('run'))
+    ChefUtil.mkdir(outDir)
+    self.addTag('outDir',outDir)
+    reconFileName = outDir+'/rec_'+basename
+    self.outputData.append(reconFileName)
+    self.addOutput(basename,reconFileName)
 
 if __name__ == '__main__':
 

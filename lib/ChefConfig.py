@@ -47,6 +47,7 @@ CFG={
     'submit'        : False,
     'reconYaml'     : None,
     'trainYaml'     : None,
+    'claraLogDir'   : None
 }
 
 class ChefConfig:
@@ -115,9 +116,9 @@ class ChefConfig:
 
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
-    
-    cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file' type=str,default=None)
-    cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files' type=str,default=None)
+
+    cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file', type=str,default=None)
+    cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files per phase', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
@@ -240,7 +241,7 @@ class ChefConfig:
     # check yaml files:
     if self.cfg['model']==Models.ClaraRecon:
       if self.cfg['reconYaml'] is None:
-        self.cli.error('"claraYaml" must be defined for model='+str(self.cfg['model']))
+        self.cli.error('"reconYaml" must be defined for model='+str(self.cfg['model']))
       elif not os.path.exists(self.cfg['reconYaml']):
         self.cli.error('"reconYaml" does not exist:  '+self.cfg['reconYaml'])
 

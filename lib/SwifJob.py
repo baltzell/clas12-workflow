@@ -31,6 +31,9 @@ class SwifJob:
   def setTrack(self,track):
     self.track=track
 
+  def getCores(self):
+    return self.cores
+
   def setCores(self,cores):
     self.cores=cores
 
