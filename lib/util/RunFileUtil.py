@@ -1,12 +1,13 @@
 import os,re,glob,logging,collections
 
+# The first/second group should match the run/file number:
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
-__DEBUG=False
+
 _LOGGER=logging.getLogger(__name__)
 
 def setFileRegex(regex):
   global __FILEREGEX
-  _LOGGER.info('Changing file regex to '+regex+' ... checking for compilation ...')
+  _LOGGER.info('Changing file regex to '+regex+'. Checking for compilation ...')
   re.compile(regex)
   __FILEREGEX=regex
 

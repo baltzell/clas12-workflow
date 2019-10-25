@@ -10,8 +10,8 @@ endif
 
 # put clas12-workflow/lib in PYTHONPATH:
 set sourced=($_)
-set curdir=`/usr/bin/readlink -f $sourced[2]`
-set curdir=`/usr/bin/dirname $curdir`
-setenv PYTHONPATH ${PYTHONPATH}:${curdir}/lib
-setenv PATH ${PATH}:${curdir}/scripts
+set d=`/usr/bin/readlink -f $sourced[2]`
+set d=`/usr/bin/dirname $d`
+setenv PYTHONPATH ${PYTHONPATH}:${d}/lib/clas12:${d}/lib/util:${d}/lib/swif
+setenv PATH ${PATH}:${d}/scripts
 

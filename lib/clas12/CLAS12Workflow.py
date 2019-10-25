@@ -270,7 +270,7 @@ class CLAS12Workflow(SwifWorkflow):
       cmd = './clara.sh -t '+str(job.getCores())
       if self.cfg['claraLogDir'] is not None:
         cmd += ' -l '+self.cfg['claraLogDir']+' '
-      cmd += temphack
+      cmd += ' '+temphack
       job.setCmd(cmd)
 
       self.addJob(job)

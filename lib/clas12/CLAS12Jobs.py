@@ -39,16 +39,17 @@ class ClaraJob(Job):
     self.setCores(16)
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
+  def addOutputData(self,basename):
+    outDir='%s/recon/%s/'%(self.cfg['outDir'],self.getTag('run'))
+    ChefUtil.mkdir(outDir)
+    self.addTag('outDir',outDir)
+    self.outputData.append(outDir+'/'+basename)
+    self.addOutput(basename,outDir+'/'+basename)
   def addInputData(self,filename):
     Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     self.addInput(basename,filename)
-    outDir='%s/recon/%s/'%(self.cfg['outDir'],self.getTag('run'))
-    ChefUtil.mkdir(outDir)
-    self.addTag('outDir',outDir)
-    reconFileName = outDir+'/rec_'+basename
-    self.outputData.append(reconFileName)
-    self.addOutput(basename,reconFileName)
+    self.addOutputData('rec_'+basename)
 
 if __name__ == '__main__':
 
