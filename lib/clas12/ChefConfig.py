@@ -11,10 +11,11 @@ class Models:
   SinglesDecoding=2
   DecodeAndReconTest=3
   ClaraRecon=4
-  Choices =[0,     1,     2,     3,        4    ]
-  Tasks   =['dec', 'dec', 'dec', 'decrec', 'rec']
-  Clara   =[False, False, False, False,    True ]
-  Coatjava=[True,  True,  True,  True,     False]
+  DecodeClaraRecon=5
+  Choices =[0,     1,     2,     3,        4,     5        ]
+  Tasks   =['dec', 'dec', 'dec', 'decrec', 'rec', 'decrec' ]
+  Clara   =[False, False, False, False,    True,  True     ]
+  Coatjava=[True,  True,  True,  True,     False, True     ]
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
@@ -239,7 +240,7 @@ class ChefConfig:
         self.cli.error('"coatjava" does not exist: '+self.cfg['coatjava'])
 
     # check yaml files:
-    if self.cfg['model']==Models.ClaraRecon:
+    if self.cfg['model']==Models.ClaraRecon or self.cfg['model']==Models.DecodeClaraRecon:
       if self.cfg['reconYaml'] is None:
         self.cli.error('"reconYaml" must be defined for model='+str(self.cfg['model']))
       elif not os.path.exists(self.cfg['reconYaml']):
