@@ -37,7 +37,7 @@ class ClaraJob(Job):
     self.setDisk('20GB')
     self.setTime('24h')
     self.setCores(16)
-    self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh')
+    self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
   def addOutputData(self,basename):
     outDir='%s/recon/%s/'%(self.cfg['outDir'],self.getTag('run'))
