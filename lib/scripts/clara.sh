@@ -8,14 +8,16 @@ export CLARA_MONITOR_FE="129.57.70.24%9000_java"
 export CCDB_CONNECTION=mysql://clas12reader@clasdb-farm.jlab.org/clas12
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
+nevents=
 outprefix=rec_
 logdir=.
 threads=16
-while getopts "p:l:t:" OPTION; do
+while getopts "p:l:t:n:" OPTION; do
     case $OPTION in
         p)  outprefix=$OPTARG ;;
         l)  logdir=$OPTARG ;;
         t)  threads=$OPTARG ;;
+        n)  nevents="-e $OPTARG" ;;
         ?)  exit 1 ;;
     esac
 done
@@ -56,6 +58,7 @@ $CLARA_HOME/lib/clara/run-clara \
         -z $outprefix \
         -x $logdir \
         -t 16 \
+        $nevents \
         -s $jobname \
         ./clara.yaml \
         ./filelist.txt
