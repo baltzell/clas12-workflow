@@ -91,7 +91,7 @@ class ClaraJob(Job):
     self.addEnv('CLARA_HOME',cfg['clara'])
     self.addEnv('JAVA_OPTS','-Xmx10g -Xms8g')
     self.addTag('mode','recon')
-    self.setRam('12GB')
+    self.setRam('11GB')
     self.setDisk('20GB')
     self.setTime('24h')
     self.setCores(16)
