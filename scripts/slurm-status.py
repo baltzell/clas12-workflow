@@ -23,6 +23,7 @@ for user in args.users:
     cli.error('User does not exist:  '+user)
   sq=SlurmQuery(user)
   sq.setDayDelta(args.days)
-  sq.setDayEnd(args.end)
+  if args.end is not None:
+    sq.setDayEnd(args.end)
   print sq.getTable()
 

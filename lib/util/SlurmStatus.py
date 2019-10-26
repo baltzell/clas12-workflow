@@ -61,7 +61,7 @@ class SlurmQuery():
     self.start=self.end+datetime.timedelta(days=-self.dayDelta)
   def setDayDelta(self,days):
     self.dayDelta=days
-    self.start=self.end+datetime.timedelta(days=days)
+    self.start=self.end+datetime.timedelta(days=-self.dayDelta)
   def setDayEnd(self,day):
     self.end=day
     self.start=self.end+datetime.timedelta(days=-self.dayDelta)
