@@ -1,3 +1,5 @@
+import re
+
 from JobErrors import JobErrors
 
 class ClaraErrors(JobErrors):
