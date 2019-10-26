@@ -8,6 +8,8 @@ set d /group/clas12/packages/clas12-workflow/dev
 
 prereq rcdb
 
-prepend-path PYTHONPATH $d/lib
+prepend-path PYTHONPATH $d/lib/util
+prepend-path PYTHONPATH $d/lib/swif
+prepend-path PYTHONPATH $d/lib/clas12
 prepend-path PATH $d/scripts
 
