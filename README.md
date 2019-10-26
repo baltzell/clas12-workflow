@@ -55,9 +55,9 @@ First, setup the environment:
 
 `source ./env.csh`
 
-See `./scripts/gen-decoding.py -h` for usage options, and the `./examples` directory.  This example would generate a Swif workflow and write it to files in `./jobs`, for a single decoding workflow for run 4013 and 4014:
+See `./scripts/clas12-workflow.py -h` for usage options, and the `./examples` directory.  This example would generate a Swif workflow and write it to files in `./jobs`, for a single decoding workflow for run 4013 and 4014:
 
-`./scripts/gen-decoding.py --runGroup rga --tag v0 --runs 4013,4014 --inputs /mss/clas12/rg-a/data --outDir /volatile/clas12/rg-a/test`
+`./scripts/clas12-workflow.py --runGroup rga --tag v0 --runs 4013,4014 --inputs /mss/clas12/rg-a/data --outDir /volatile/clas12/rg-a/test`
 
 You could alternatively specify `--runs 4000-4200` or `--runs filename` to do all runs between 4000 and 4200 or read the runs from a file.  Note, the output directories will be made automatically, so you must have write permissions.
 
