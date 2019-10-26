@@ -19,13 +19,11 @@ class Models:
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
-    'track'   : ['reconstruction','debug'],
     'model'   : Models.Choices,
 }
 
 CFG={
     'project'       : 'clas12',
-    'track'         : 'reconstruction',
     'runGroup'      : None,
     'coatjava'      : None,
     'clara'         : None,
@@ -136,7 +134,6 @@ class ChefConfig:
     cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
-    #  cli.add_argument('--track',   metavar='NAME',help='scicomp batch track name',   type=str, default=None)
 
     cli.add_argument('--version',action='version',version='0.1')
 
