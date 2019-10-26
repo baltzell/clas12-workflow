@@ -18,8 +18,8 @@ import json,requests,datetime
 
 class SlurmStatus():
   _STATES=['timeout','success','failed','over_rlimit']
-  _VARS=['name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode']
-  _LEN=[40,10,3,12,8,8,12,4]
+  _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode']
+  _LEN=[6,30,10,3,12,8,8,12,4]
   def __init__(self,data):
     self.data=data
   def getBytes(self,string):
@@ -43,8 +43,9 @@ class SlurmStatus():
 
 class SlurmQuery():
   _URL='https://scicomp.jlab.org/scicomp/farmCjob'
-  def __init__(self,user):
+  def __init__(self,user,project=None):
     self.user=user
+    self.project=project
     self.start=None
     self.end=None
     self.dayDelta=7
@@ -72,20 +73,37 @@ class SlurmQuery():
     url+='&states='+'+'.join(self.states)
     x=requests.get(url)
     self.data=json.loads(x.content)
+    if self.project is not None:
+      while True:
+        dirty=False
+        for ii,xx in enumerate(self.data):
+          if self.project != xx['project']:
+            self.data.pop(ii)
+            dirty=True
+            break
+        if not dirty:
+          break
     return self.data
   def getJson(self):
-    self.get()
-    return json.dumps(self.data,indent=2,separators=(',',': '))
+    return json.dumps(self.get(),indent=2,separators=(',',': '))
   def getTable(self):
-    self.get()
-    for xx in self.data:
+    ret=''
+    for xx in self.get():
+      ret+='%10s '%self.user
       for ii,yy in enumerate(SlurmStatus._VARS):
         if yy in xx:
-          print ('%'+str(SlurmStatus._LEN[ii])+'s')%str(xx[yy]),
-      print
+          ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%str(xx[yy])
+        else:
+          ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%'N/A'
+      ret+='\n'
+    return ret
       #print ss.getMemRatio()
 #    self.get()
 #    return pandas.DataFrame(, columns=["time", "temperature", "quality"])
+  def showTable(self):
+    t=self.getTable()
+    if len(t)>0:
+      print(t)
 
 if __name__ == '__main__':
   ss=SlurmQuery('clas12')
