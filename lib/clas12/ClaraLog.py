@@ -1,7 +1,7 @@
 import os,sys,re,datetime
 
 from JobSpecs import JobSpecs
-from JobErrors import ClaraErrors
+from ClaraErrors import ClaraErrors
 from LogFinder import LogFinder
 
 _MAXLOGSIZEMB=10

@@ -1,6 +1,6 @@
 
 from JobSpecs import JobSpecs
-from JobErrors import ClaraErrors
+from ClaraErrors import ClaraErrors
 from JobErrors import SlurmErrors
 
 _COLORS =[1       ,2       ,4       ,3       ,94]
