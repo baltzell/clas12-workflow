@@ -1,8 +1,6 @@
 import os,logging
 from SwifJob import SwifJob
 from SwifWorkflow import SwifWorkflow
-from RcdbManager import RcdbManager
-from RunFileUtil import RunFile
 import CLAS12Jobs
 import ChefUtil
 
@@ -12,7 +10,6 @@ class CLAS12Workflow(SwifWorkflow):
 
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
-    self.rcdb=RcdbManager()
     self.cfg=cfg
     self.setPhaseSize(self.cfg['phaseSize'])
     self.setCombineRuns(self.cfg['multiRun'])
