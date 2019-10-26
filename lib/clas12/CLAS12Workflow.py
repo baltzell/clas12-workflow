@@ -1,6 +1,7 @@
 import os,logging
 from SwifJob import SwifJob
 from SwifWorkflow import SwifWorkflow
+from RunFileUtil import RunFile
 import CLAS12Jobs
 import ChefUtil
 
