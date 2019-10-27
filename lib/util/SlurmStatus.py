@@ -1,5 +1,6 @@
-import json,requests,datetime
-#import pandas
+import json,requests,datetime,re
+
+import Matcher
 
 #{
 #    "coreCount": 16,
@@ -17,11 +18,35 @@ import json,requests,datetime
 #}
 
 class SlurmStatus():
+  _DATEFORMAT='^([a-zA-Z]+) (\d+), (\d+) (\d+):(\d+):(\d+) ([a-zA-Z]+)$'
+  _DATEVARS=['submit','finish']
   _STATES=['timeout','success','failed','over_rlimit']
-  _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode']
-  _LEN=[6,30,10,3,12,8,8,12,4]
-  def __init__(self,data):
+  _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode','submit','finish']
+  _LEN=[6,30,10,2,10,8,8,12,3,25,25]
+  def __init__(self,user,data):
+    self.user=user
     self.data=data
+    for x in SlurmStatus._DATEVARS:
+      if x in self.data:
+        self.data[x]=self.convertDate(self.data[x])
+  def convertDate(self,string):
+    # datetime doesn't have non-zero-padded stuff, so we have to do it manually ...
+    ret=string
+    m=re.match(SlurmStatus._DATEFORMAT,string)
+    if m is not None:
+      month=m.group(1)
+      day=int(m.group(2))
+      year=int(m.group(3))
+      hour=int(m.group(4))
+      minute=int(m.group(5))
+      second=int(m.group(6))
+      ampm=m.group(7)
+      if ampm=='PM' and hour<12:
+        hour+=12
+      # put it back into something datetime can do:
+      a='%s %.2d, %.2d %.2d:%.2d:%.2d'%(month,day,year,hour,minute,second)
+      ret=datetime.datetime.strptime(a,'%b %d, %Y %H:%M:%S')
+    return ret
   def getBytes(self,string):
     x=string.strip().split()
     if len(x)!=2: return None
@@ -40,6 +65,24 @@ class SlurmStatus():
     if 'memoryReq' in self.data:
       req=self.getBytes(self.data['memoryReq'])
     return used/req
+  def __str__(self):
+    ret=''
+    ret+='%10s '%self.user
+    for ii,yy in enumerate(SlurmStatus._VARS):
+      if yy in self.data:
+        a=self.data[yy]
+        if isinstance(a,datetime.datetime):
+          ret+=datetime.datetime.strftime(a,'%Y/%m/%d %H:%M:%S ')
+        else:
+          if len(str(a))>30:
+            prefix=a[0:15]
+            suffix=a[len(a)-15:]
+            a=prefix+'*'+suffix
+          ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%str(a)
+      else:
+        ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%'N/A'
+    ret+='\n'
+    return ret
 
 class SlurmQuery():
   _URL='https://scicomp.jlab.org/scicomp/farmCjob'
@@ -53,7 +96,10 @@ class SlurmQuery():
     self.setAllStates()
     self.setDefaultTime()
     self.data={}
+    self.myData=[]
     self.statuses=[]
+    self.matchAny=[]
+    self.matchAll=[]
   def setAllStates(self):
     self.states=SlurmStatus._STATES
   def setDefaultTime(self):
@@ -66,48 +112,69 @@ class SlurmQuery():
   def setDayEnd(self,day):
     self.end=day
     self.start=self.end+datetime.timedelta(days=-self.dayDelta)
+  def pruneProjects(self):
+    if self.data is None or self.project is None:
+      return
+    while True:
+      pruned=False
+      for ii,xx in enumerate(self.data):
+        if 'project' not in xx:
+          continue
+        if self.project != xx['project']:
+          self.data.pop(ii)
+          pruned=True
+          break
+      if not pruned:
+        break
+  def pruneJobNames(self):
+    if self.data is None:
+      return
+    while True:
+      pruned=False
+      for ii,xx in enumerate(self.data):
+        if 'name' not in xx:
+          continue
+        if not Matcher.matchAny(xx['name'],self.matchAny) or not Matcher.matchAll(xx['name'],self.matchAll):
+          self.data.pop(ii)
+          pruned=True
+          break
+      if not pruned:
+        break
   def get(self):
+    self.data=None
     url=SlurmQuery._URL+'?type=query&user='+self.user
     url+='&from='+self.start.strftime('%Y-%m-%d')
     url+='&to='+self.end.strftime('%Y-%m-%d')
     url+='&states='+'+'.join(self.states)
-    x=requests.get(url)
-    self.data=json.loads(x.content)
-    if self.project is not None:
-      while True:
-        dirty=False
-        for ii,xx in enumerate(self.data):
-          if self.project != xx['project']:
-            self.data.pop(ii)
-            dirty=True
-            break
-        if not dirty:
-          break
+    response=requests.get(url)
+    if int(response.status_code)==200:
+      try:
+        self.data=json.loads(response.content)
+      except:
+        pass
+    self.pruneProjects()
+    self.pruneJobNames()
+    for xx in self.data:
+      self.myData.append(SlurmStatus(self.user,xx))
     return self.data
   def getJson(self):
     return json.dumps(self.get(),indent=2,separators=(',',': '))
-  def getTable(self):
+  def __str__(self):
     ret=''
-    for xx in self.get():
-      ret+='%10s '%self.user
-      for ii,yy in enumerate(SlurmStatus._VARS):
-        if yy in xx:
-          ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%str(xx[yy])
-        else:
-          ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%'N/A'
-      ret+='\n'
+    self.get()
+    if len(self.myData)>0:
+      for xx in self.myData:
+        ret+=str(xx)
     return ret
-      #print ss.getMemRatio()
-#    self.get()
-#    return pandas.DataFrame(, columns=["time", "temperature", "quality"])
   def showTable(self):
-    t=self.getTable()
+    t=str(self)
     if len(t)>0:
       print(t)
 
 if __name__ == '__main__':
   ss=SlurmQuery('clas12')
-  ss.getTable()
-#  print ss.getJson()
+  ss.showTable()
 
-
+#    print ss.getMemRatio()
+#    import pandas
+#    return pandas.DataFrame(, columns=["time", "temperature", "quality"])

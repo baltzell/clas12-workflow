@@ -92,7 +92,7 @@ class LogFinder:
           break
         filename=line.strip()
         if filename.find('decode')>=0:
-          continue  
+          continue
         tag=self.getFarmoutTag(filename)
         if tag is None or tag=='decode':
           continue
