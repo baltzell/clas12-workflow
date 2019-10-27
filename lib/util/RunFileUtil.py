@@ -1,6 +1,6 @@
 import os,re,glob,logging,collections
 
-# The first/second group should match the run/file number:
+# The first/second group must match the run/file number:
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
 
 _LOGGER=logging.getLogger(__name__)
@@ -19,14 +19,9 @@ def getRunFileNumber(fileName):
   if mm is None:
     _LOGGER.debug('Failed to find run number in:  '+fileName)
     return None
-  runno=mm.group(1)
-  fileno=mm.group(2)
-  # strip off leading zeroes for conversion to int, leaving '0':
-  while runno.find('0')==0 and not runno=='0':
-    runno=runno[1:]
-  while fileno.find('0')==0 and not fileno=='0':
-    fileno=fileno[1:]
-  return {'run':int(runno),'file':int(fileno)}
+  runno=int(mm.group(1))
+  fileno=int(mm.group(2))
+  return {'run':runno,'file':fileno}
 
 class RunFile:
   def __init__(self,fileName):
