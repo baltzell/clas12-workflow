@@ -20,17 +20,24 @@ import Matcher
 class SlurmStatus():
   _DATEFORMAT='^([a-zA-Z]+) (\d+), (\d+) (\d+):(\d+):(\d+) ([a-zA-Z]+)$'
   _DATEVARS=['submit','finish']
+  _BYTEVARS=['memoryUsed','memoryReq']
   _STATES=['timeout','success','failed','over_rlimit']
   _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode','submit','finish']
   _LEN=[6,30,10,2,10,8,8,12,3,25,25]
   def __init__(self,user,data):
     self.user=user
     self.data=data
+    # convert all dates to datetime objects:
     for x in SlurmStatus._DATEVARS:
       if x in self.data:
         self.data[x]=self.convertDate(self.data[x])
+    # convert all bytes:
+    for x in SlurmStatus._BYTEVARS:
+      if x in self.data:
+        self.data[x]=self.getBytes(self.data[x])
   def convertDate(self,string):
-    # datetime doesn't have non-zero-padded stuff, so we have to do it manually ...
+    # datetime doesn't have non-zero-padded stuff,
+    # so we have to do this manually ...
     ret=string
     m=re.match(SlurmStatus._DATEFORMAT,string)
     if m is not None:
@@ -48,16 +55,24 @@ class SlurmStatus():
       ret=datetime.datetime.strptime(a,'%b %d, %Y %H:%M:%S')
     return ret
   def getBytes(self,string):
-    x=string.strip().split()
-    if len(x)!=2: return None
-    try: b=int(x[0])
-    except: return None
-    scales={'GB':1e9,'MB':1e6,'KB':1e3}
-    for scale in scales.keys():
-      if x[1].find(scale)>=0:
-        b*=scales[scale]
-        break
-    return b
+    ret=string
+    if string is not None:
+      try:
+        # looks like KB doesn't come with units ...
+        ret=float(string)*1000
+      except:
+        x=string.strip().split()
+        if len(x)==2:
+          try:
+            ret=float(x[0])
+            scales={'GB':1e9,'MB':1e6,'KB':1e3}
+            for scale in scales.keys():
+              if x[1].find(scale)>=0:
+                ret*=scales[scale]
+                break
+          except:
+            return ret
+    return ret
   def getMemRatio(self):
     req,used=None,None
     if 'memoryUsed' in self.data:
@@ -73,6 +88,9 @@ class SlurmStatus():
         a=self.data[yy]
         if isinstance(a,datetime.datetime):
           ret+=datetime.datetime.strftime(a,'%Y/%m/%d %H:%M:%S ')
+        elif yy in SlurmStatus._BYTEVARS and isinstance(a,float):
+          if a/1e6>1000: ret+='%4.1f GB '%(a/1e9)
+          else:          ret+='%4.0f MB '%(a/1e6)
         else:
           if len(str(a))>30:
             prefix=a[0:15]
