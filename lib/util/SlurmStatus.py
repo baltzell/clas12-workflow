@@ -35,6 +35,13 @@ class SlurmStatus():
     for x in SlurmStatus._BYTEVARS:
       if x in self.data:
         self.data[x]=self.getBytes(self.data[x])
+  def getHeader(self):
+    ret=''
+    ret+='%10s'%'user'
+    for ii,yy in enumerate(SlurmStatus._VARS):
+      ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%yy
+    ret+='\n'
+    return ret
   def convertDate(self,string):
     # datetime doesn't have non-zero-padded stuff,
     # so we have to do this manually ...
@@ -87,7 +94,7 @@ class SlurmStatus():
       if yy in self.data:
         a=self.data[yy]
         if isinstance(a,datetime.datetime):
-          ret+=datetime.datetime.strftime(a,'%Y/%m/%d %H:%M:%S ')
+          ret+=datetime.datetime.strftime(a,'%Y/%m/%d-%H:%M:%S ')
         elif yy in SlurmStatus._BYTEVARS and isinstance(a,float):
           if a/1e6>=1000: ret+='%4.1f GB '%(a/1e9)
           else:          ret+='%4.0f MB '%(a/1e6)
@@ -165,11 +172,13 @@ class SlurmQuery():
     url+='&to='+self.end.strftime('%Y-%m-%d')
     url+='&states='+'+'.join(self.states)
     response=requests.get(url)
-    if int(response.status_code)==200:
-      try:
-        self.data=json.loads(response.content)
-      except:
-        pass
+    if int(response.status_code)!=200:
+      print('Server error.')
+      return None
+    try:
+      self.data=json.loads(response.content)
+    except:
+      return None
     self.pruneProjects()
     self.pruneJobNames()
     for xx in self.data:
@@ -181,6 +190,7 @@ class SlurmQuery():
     ret=''
     self.get()
     if len(self.myData)>0:
+#      ret+=self.myData[0].getHeader()
       for xx in self.myData:
         ret+=str(xx)
     return ret
