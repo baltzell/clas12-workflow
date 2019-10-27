@@ -89,7 +89,7 @@ class SlurmStatus():
         if isinstance(a,datetime.datetime):
           ret+=datetime.datetime.strftime(a,'%Y/%m/%d %H:%M:%S ')
         elif yy in SlurmStatus._BYTEVARS and isinstance(a,float):
-          if a/1e6>1000: ret+='%4.1f GB '%(a/1e9)
+          if a/1e6>=1000: ret+='%4.1f GB '%(a/1e9)
           else:          ret+='%4.0f MB '%(a/1e6)
         else:
           if len(str(a))>30:
