@@ -10,8 +10,8 @@ cli.add_argument('-u',metavar='user',help='username (repeatable)', type=str, def
 cli.add_argument('-p',metavar='project',help='project name (e.g. clas/clas12/hps)', type=str, default=None, choices=project_groups.keys())
 cli.add_argument('-d',metavar='#',help='Number of days to span', type=int, default=7)
 cli.add_argument('-e',metavar='YYYY-MM-DD',help='End date of query span (at 24:00)', type=str, default=None)
-cli.add_argument('-M',metavar='string',help='match all in job names', type=str, default=[], action='append')
-cli.add_argument('-m',metavar='string',help='match any in job names', type=str, default=[], action='append')
+cli.add_argument('-M',metavar='string',help='match all in job names (repeatable)', type=str, default=[], action='append')
+cli.add_argument('-m',metavar='string',help='match any in job names (repeatable)', type=str, default=[], action='append')
 args=cli.parse_args(sys.argv[1:])
 
 if len(args.u)==0:
