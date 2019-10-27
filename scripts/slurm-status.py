@@ -44,5 +44,5 @@ for user in args.u:
   sq.setDayDelta(args.d)
   if args.e is not None:
     sq.setDayEnd(args.e)
-  sq.showTable()
+  print(sq)
 

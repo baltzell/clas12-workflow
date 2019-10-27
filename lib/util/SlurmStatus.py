@@ -174,6 +174,8 @@ class SlurmQuery():
     response=requests.get(url)
     if int(response.status_code)!=200:
       print('Server error.')
+      #print url
+      #print response.content
       return None
     try:
       self.data=json.loads(response.content)
@@ -194,14 +196,11 @@ class SlurmQuery():
       for xx in self.myData:
         ret+=str(xx)
     return ret
-  def showTable(self):
-    t=str(self)
-    if len(t)>0:
-      print(t)
 
 if __name__ == '__main__':
-  ss=SlurmQuery('clas12')
-  ss.showTable()
+  sq=SlurmQuery('clas12')
+  sq.setDayDelta(12)
+  print(sq)
 
 #    print ss.getMemRatio()
 #    import pandas
