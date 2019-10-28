@@ -23,7 +23,7 @@ class SlurmStatus():
   _BYTEVARS=['memoryUsed','memoryReq']
   _STATES=['timeout','success','failed','over_rlimit']
   _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode','submit','finish']
-  _LEN=[6,30,10,2,10,8,8,12,3,25,25]
+  _LEN=[6,30,10,2,10,7,7,12,3,25,25]
   def __init__(self,user,data):
     self.user=user
     self.data=data
@@ -105,7 +105,7 @@ class SlurmStatus():
             a=prefix+'*'+suffix
           ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%str(a)
       else:
-        ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%'N/A'
+        ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%'N/A'
     ret+='\n'
     return ret
 
