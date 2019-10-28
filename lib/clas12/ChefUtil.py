@@ -64,8 +64,8 @@ def getRunList(data):
         try:
           runs.append(int(run))
         except:
-          _LOGGER.error('Run numbers must be integers:  %s (%s)'%(fileName,line))
-          return None
+          _LOGGER.critical('Run numbers must be integers:  %s (%s)'%(fileName,line))
+          sys.exit()
       _LOGGER.info('Read run numbers:  '+','.join([str(x) for x in runs]))
     # else it's a string run list:
     else:
@@ -75,12 +75,12 @@ def getRunList(data):
           try:
             runs.append(int(run))
           except:
-            _LOGGER.error('Run numbers must be integers:  '+run)
-            return None
+            _LOGGER.critical('Run numbers must be integers:  '+run)
+            sys.exit()
         else:
           if run.count('-') != 1:
-            _LOGGER.error('Invalid run range: '+run)
-            return None
+            _LOGGER.critical('Invalid run range: '+run)
+            sys.exit()
           try:
             start,end=run.split('-')
             start=int(start)
@@ -88,7 +88,7 @@ def getRunList(data):
             for run in range(start,end+1):
               runs.append(run)
           except:
-            _LOGGER.error('Run numbers must be integers:  '+run)
-            return None
+            _LOGGER.critical('Run numbers must be integers:  '+run)
+            sys.exit()
   return runs
 
