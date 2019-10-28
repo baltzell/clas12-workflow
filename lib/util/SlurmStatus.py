@@ -100,7 +100,7 @@ class SlurmStatus():
           else:          ret+='%4.0f MB '%(a/1e6)
         else:
           if len(str(a))>30:
-            prefix=a[0:15]
+            prefix=a[0:14]
             suffix=a[len(a)-15:]
             a=prefix+'*'+suffix
           ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%str(a)
