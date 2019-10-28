@@ -21,12 +21,19 @@ while getopts "p:l:t:n:" OPTION; do
         ?)  exit 1 ;;
     esac
 done
+
 shift $((OPTIND-1))
 if [[ $# -ne 1 ]]; then
     echo "usage: clara.sh [ OPTIONS ] jobname"
     exit 1
 fi
 jobname=$1
+
+# if it's an exclusive job:
+if [ $threads -eq 0 ]
+then
+  threads=`grep -c ^processor /proc/cpuinfo`
+fi
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
@@ -57,7 +64,7 @@ $CLARA_HOME/lib/clara/run-clara \
         -o . \
         -z $outprefix \
         -x $logdir \
-        -t 16 \
+        -t $threads \
         $nevents \
         -s $jobname \
         ./clara.yaml \

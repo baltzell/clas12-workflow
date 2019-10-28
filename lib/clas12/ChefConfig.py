@@ -20,6 +20,7 @@ class Models:
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
     'model'   : Models.Choices,
+    'threads' : [16, 24, 32]
 }
 
 CFG={
@@ -46,7 +47,8 @@ CFG={
     'submit'        : False,
     'reconYaml'     : None,
     'trainYaml'     : None,
-    'claraLogDir'   : None
+    'claraLogDir'   : None,
+    'threads'       : 16
 }
 
 class ChefConfig:
@@ -116,6 +118,7 @@ class ChefConfig:
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
 
+    cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
     cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file', type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
@@ -135,7 +138,7 @@ class ChefConfig:
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
-    cli.add_argument('--version',action='version',version='0.1')
+    cli.add_argument('--version',action='version',version='0.2')
 
     return cli
 

@@ -86,15 +86,19 @@ class DecodingJob(Job):
     Job.setCmd(self,cmd)
 
 class ClaraJob(Job):
+  THRD_MEM_REQ={0:0,   16:11, 24:16, 32:16}
+  THRD_MEM_LIM={0:256, 16:10, 24:14, 32:14}
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
-    self.addEnv('JAVA_OPTS','-Xmx10g -Xms8g')
+    self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ClaraJob.THRD_MEM_LIM[cfg['threads']])
+    self.setRam(str(ClaraJob.THRD_MEM_REQ[cfg['threads']])+'GB')
+    self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
-    self.setRam('11GB')
-    self.setDisk('20GB')
+    # TODO: choose time based on #events:
     self.setTime('24h')
-    self.setCores(16)
+    # TODO: choose disk based on #events:
+    self.setDisk('20GB')
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
   def addInputData(self,filename):

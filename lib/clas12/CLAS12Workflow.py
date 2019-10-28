@@ -33,7 +33,6 @@ class CLAS12Workflow(SwifWorkflow):
       _LOGGER.info('Making output directories at  '+self.cfg['outDir'])
     if self.cfg['workDir'] is not None:
       _LOGGER.info('Making staging directories at '+self.cfg['workDir'])
-#    self.setLogDir(self.logDir)
 
   def addJob(self,job):
     job.setLogDir(self.logDir)
@@ -77,55 +76,16 @@ class CLAS12Workflow(SwifWorkflow):
   # - return list of output merged hipo files
   #
   def merge(self,phase,hipoFiles):
-
     inputs,merged=[],[]
-
     for ii in range(len(hipoFiles)):
-
       inputs.append(hipoFiles[ii])
-
       if len(inputs)>=self.cfg['mergeSize'] or ii>=len(hipoFiles)-1:
-
         job=CLAS12Jobs.MergingJob(self.name,self.cfg)
         job.setPhase(phase)
         job.addInputData(inputs)
         merged.extend(job.outputData)
         inputs=[]
         self.addJob(job)
-
-        #runno = RunFile(inputs[0]).runNumber
-        #fileno1 = RunFile(inputs[0]).fileNumber
-        #fileno2 = RunFile(inputs[len(inputs)-1]).fileNumber
-        #outDir='%s/merged/%.6d/'%(self.cfg['workDir'],runno)
-        #ChefUtil.mkdir(outDir)
-        #outFile=outDir+self.cfg['mergePattern']%(runno,fileno1,fileno2)
-        #merged.append(outFile)
-
-        #job=CLAS12Jobs.Job(self.name)
-        #job.setPhase(phase)
-        #job.setRam('1GB')
-        #job.setTime(ChefUtil.getMergeTimeReq(self.cfg['mergeSize']))
-        #job.setDisk(ChefUtil.getMergeDiskReq(self.cfg['mergeSize']))
-        #job.addTag('run','%.6d'%runno)
-        #job.addTag('file','%.5d-%.5d'%(fileno1,fileno2))
-        #job.addTag('mode','merge')
-        #job.addTag('coatjava',self.cfg['coatjava'])
-        #job.addTag('outDir',outDir)
-        #job.addOutput('out.hipo',outFile)
-
-        #cmd = 'rm -f '+outFile+' ; '
-        #cmd += '%s/bin/hipo-utils -merge -o out.hipo'%self.cfg['coatjava']
-        #for ii in range(len(inputs)):
-        #  job.addInput('in%.4d.hipo'%ii,inputs[ii])
-        #  cmd += ' in%.4d.hipo'%ii
-        #cmd+=' && ls out.hipo && if (`stat -c%s out.hipo` < 100) rm -f out.hipo'
-        #cmd+=' && %s/bin/hipo-utils -test out.hipo'%self.cfg['coatjava']
-        #cmd+=' || rm -f out.hipo ; ls out.hipo'
-        #job.setCmd(cmd)
-
-        #self.addJob(job)
-        #inputs=[]
-
     return merged
 
   #
