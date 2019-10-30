@@ -1,0 +1,178 @@
+io-services:
+  reader:
+    class: org.jlab.jnp.grapes.io.HipoFrameReader
+    name: HipoFrameReader
+  writer:
+    class: org.jlab.jnp.grapes.io.HipoFrameWriter
+    name: HipoFrameWriter
+services:
+#################################################### JPSI/TCS
+  - class: org.jlab.jnp.grapes.services.JpsiTcsWagon
+    name: JPSITCS
+#################################################### MESONEX-VERYSTRANGE
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: PIZERO
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTa
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTb
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTc
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTd
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTe
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTf
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: TwoPionFTg
+#################################################### INCLUSIVE
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: Inclusive
+#################################################### INCLUSIVE Hadron
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CarmanA
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CarmanB
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CarmanC
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CarmanD
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CarmanE
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CarmanF
+#################################################### INCLUSIVE Positron
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: Positron
+#################################################### ePiNCND
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ePiNCND
+#################################################### eProton
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: eProtona
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: eProtonb
+#################################################### Proton-antiProton
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: PantiP
+#################################################### Electron in FT, pip,N in FD
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ElecFTPipN
+#################################################### Electron in FT, Kaon required
+  - class: org.jlab.jnp.grapes.services.ElecFTkaonWagon
+    name: ElecFTKaon
+#################################################### ThreePion protonpi+pi-gammagamma in the FD
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ThreePion
+#################################################### Missing Neutron
+  - class: org.jlab.jnp.grapes.services.MissingNeutronWagon
+    name: MissingNeutron
+####################################################
+configuration:
+  services:
+#################################################### JPSI/TCS
+    JPSITCS:
+      id: 1
+#################################################### MESONEX-VERYSTRANGE
+# Electron and Pi0 in FT
+    PIZERO:
+      id: 2
+      tagger: 11:22:22:X+:X-:Xn
+# Twon pions with Electron in FT
+    TwoPionFTa:
+      id: 3
+      tagger:  11:X+:X-:Xn
+      forward: 1+:1-:X+:X-:Xn
+    TwoPionFTb:
+      id: 3
+      tagger:  11:X+:X-:Xn
+      forward: 2+:X+:X-:Xn
+    TwoPionFTc:
+      id: 3
+      tagger:  11:X+:X-:Xn
+      forward: 1+:X+:X-:Xn
+      central: 1+:X+:X-:Xn
+    TwoPionFTd:
+      id: 3
+      tagger:  11:X+:X-:Xn
+      forward: 1-:X+:X-:Xn
+      central: 1+:X+:X-:Xn
+    TwoPionFTe:
+      id: 3
+      tagger:  11:X+:X-:Xn
+      central: 2+:X+:X-:Xn
+    TwoPionFTf:
+      id: 3   
+      tagger:  11:X+:X-:Xn
+      forward: 1+:X+:X-:Xn
+      central: 1-:X+:X-:Xn
+    TwoPionFTg:
+      id: 3
+      tagger:  11:X+:X-:Xn
+      central: 1+:1-:X+:X-:Xn
+#################################################### INCLUSIVE
+    Inclusive:
+      id: 4
+      forward: 11:X+:X-:Xn
+#################################################### Inclusive Hadron
+    CarmanA:
+      id: 5
+      forward: 11:211:X+:X-:Xn
+    CarmanB:
+      id: 5
+      forward: 11:321:X+:X-:Xn
+    CarmanC:
+      id: 5
+      forward: 11:2212:X+:X-:Xn
+    CarmanD:
+      id: 5
+      forward: 11:X+:X-:Xn
+      central: 211:X+:X-:Xn
+    CarmanE:
+      id: 5
+      forward: 11:X+:X-:Xn
+      central: 321:X+:X-:Xn
+    CarmanF:
+      id: 5
+      forward: 11:X+:X-:Xn
+      central: 2212:X+:X-:Xn
+#################################################### INCLUSIVE Positron
+    Positron:
+      id: 6
+      forward: -11:X+:X-:Xn
+#################################################### ePiNCND    
+    ePiNCND:
+      id: 7
+      forward: 11:211:Xn
+      central: Xn
+#################################################### eProton
+    eProtona:
+      id: 8
+      forward: 11:2212:X+:X-:Xn 
+    eProtonb:
+      id: 8
+      forward: 11:X+:X-:Xn 
+      central: 2212:X+:X-:Xn
+#################################################### Proton-antiProton
+    PantiP:
+      id: 9
+      filter: 2212:-2212:X+:X-:Xn
+#################################################### Electron in FT, pip,N in FD
+    ElecFTPip:
+      id: 10
+      tagger: 11:X+:X-:Xn
+      forward: 211:Xn
+#################################################### Electron in FT, Kaon required
+    ElecFTKaon:
+      id: 11
+#################################################### Three pions
+    ThreePion:
+      id: 12
+      forward: 11:211:-211:22:22:X+:X-:Xn
+#################################################### Electron in FT, Kaon required    
+    MissingNeutron:
+      id: 13
+
+mime-types:
+  - binary/data-hipo-frame

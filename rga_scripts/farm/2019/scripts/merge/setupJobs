@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+if ( !-d "./farmjobs/" ) {
+    mkdir "./farmjobs/" or die "Failed to create path: ./farmjobs/";
+}else{
+     system("rm ./farmjobs/*");
+}
+
+if ( !-d "./farmjobs/\.old_sub" ) {
+    mkdir "./farmjobs/\.old_sub" or die "Failed to create path: ./farmjobs/\.old_sub";
+}else{
+     system("rm ./farmjobs/\.old_sub/*");
+}
+
+if(-e "submitted_jobs.txt"){
+     system("rm submitted_jobs.txt");
+}
+system("touch submitted_jobs.txt");
+
+if(-e "joblist_temp"){
+     system("rm joblist_temp");	
+}

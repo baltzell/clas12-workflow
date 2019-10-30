@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+
+
+$farmworkdir = `pwd`;
+chomp($farmworkdir);
+
+@dirs = split( /\//,$farmworkdir);
+$cwd = @dirs[scalar(@dirs)-2];
+$pass = "pass1";
+@words = split(/_/,$cwd);
+$type = $words[3];
+$rungroup = $words[4];
+$version = $words[5];
+$extra = "";
+if(scalar @words >5){
+	$extra = "_".$words[6];
+}
+
+$indir = "/volatile/clas12/trains/$rungroup/$cwd";
+$outdir_base = "";
+if($type eq "physics"){
+    $outdir_base = "/work/clas12/$rungroup/trains/$pass/$version$extra";
+}else{
+    $outdir_base = "/work/clas12/$rungroup/trains/calibration/$version$extra";
+}
+@skimnumbers;
+@outdirs;
+
+if($type eq "physics"){
+        @skimnumbers = ("1","2","3","4","5","6","7","8","9","10","11","12","13");
+        @outdirs = ($outdir_base."/skim01_jpsi_tcs",$outdir_base."/skim02_ft_pi0",$outdir_base."/skim03_mesonx_vs",$outdir_base."/skim04_inclusive",$outdir_base."/skim05_inclusiveHadron",$outdir_base."/skim06_positron",$outdir_base."/skim07_epiNCND",$outdir_base."/skim08_ep",$outdir_base."/skim09_ppbar",$outdir_base."/skim10_elec_ft_pip",$outdir_base."/skim11_elect_ft_kaon",$outdir_base."/skim12_elec_3pi",$outdir_base."/skim13_missing_neutron");
+}else{
+        @skimnumbers = ("6","7","8");
+        @outdirs = ($outdir_base."/skim6_ftofhtcc",$outdir_base."/skim7_ctofcnd",$outdir_base."/skim8_ft");
+}
+
+system("mkdir $outdir_base");
+
+$date        = `date +%F`;
+chomp($date);
+print "made it here!\n";
+
+@files = `ls $indir`;
+%runslist;
+foreach $file (@files){
+     chomp($file);
+     @words = split(/_00/,$file);
+     $run = int(substr($words[1],0,4));
+     if (! $runslist{$run} && $run > 0) {
+        print($file ." ". $run ."\n");
+         $runslist{$run} = 1;
+     }
+}
+
+@runs = keys %runslist;
+
+foreach $run (@runs){
+        print $run."\n";
+}
+
+for($nskim = 0; $nskim<(scalar @skimnumbers); $nskim++){
+$skimnumber = $skimnumbers[$nskim];
+$outdir = $outdirs[$nskim];
+system("mkdir $outdir");
+$i = 0;
+foreach $run (@runs){
+    print("Run number:".$run."\n");
+    if(!-e  "$outdir/skim$skimnumber\_$run\.hipo"){
+    $run_subset = `ls -1 $indir/\*$run\*_$skimnumber\.hipo`;
+    @run_files = split(/\n/,$run_subset);
+    if((scalar @run_files) > 0){
+    $filename = sprintf( ">farmjobs/job_%s_skim%s_%04d\.jb",$date,$skimnumber,$run);
+    $track  = ($i<10)?"debug":"analysis";
+    open(OUT,$filename) or die("Cannot open file job".$date."_$run\.jb\n");
+    print OUT "PROJECT:          clas12                                           \n";
+    print OUT "TRACK:            $track                                      \n";
+    print OUT "JOBNAME:          merge-$date-$type-$run-$skimnumber                 \n";
+    print OUT "OS:               centos7                                      \n";
+    if($type eq "physics"){
+	print OUT "COMMAND:          source /group/clas12/packages/setup.csh ; module load coatjava/6.3.1_4.3.11 ; module load ccdb/farm ; perl check.pl ; perl helicityFix.pl 1 ; sh merge.sh  1 ; perl check.pl                           \n";
+    }elsif($skimnumber==6){
+	print OUT "COMMAND:          source /group/clas12/packages/setup.csh ; module load coatjava/6.3.1_4.3.11 ; module load ccdb/farm ; perl check.pl ; sh merge.sh  2 ; perl check.pl                          \n";	
+    }elsif($skimnumber==7){
+        print OUT "COMMAND:          source /group/clas12/packages/setup.csh ; module load coatjava/6.3.1_4.3.11 ; module load ccdb/farm ; perl check.pl ; sh merge.sh  3 ; perl check.pl                          \n";
+    }elsif($skimnumber==8){
+	print OUT "COMMAND:          source /group/clas12/packages/setup.csh ; module load coatjava/6.3.1_4.3.11 ; module load ccdb/farm ;  perl check.pl ; sh merge.sh  4 ; perl check.pl                          \n";	
+    }
+    print OUT "INPUT_FILES:                                                    \n"; 
+    print OUT "                  $farmworkdir/merge.sh                    \n";
+    print OUT "                  $farmworkdir/check.pl                    \n";
+    print OUT "                  $farmworkdir/helicityFix_alltags_new.jar \n";
+    print OUT "                  $farmworkdir/helicityFix.pl \n";
+    foreach $file (@run_files){
+         print OUT "                  $file  \n";
+    }
+    print OUT "SINGLE_JOB:       true                                          \n";
+    print OUT "MEMORY:           2 GB                                          \n";
+    print OUT "DISK_SPACE:       350 GB                                          \n";
+    print OUT "TIME:             1200                                            \n";
+    if(($skimnumber != 6 && $skimnumber != 7) || $type eq "physics"){
+       print OUT "OUTPUT_DATA:      output\.hipo                                      \n";
+       print OUT "OUTPUT_TEMPLATE:  $outdir/skim$skimnumber\_$run.hipo                              \n";
+    }elsif($skimnumber==6){
+	print OUT "OUTPUT_DATA:      output1\.hipo                                      \n";
+        print OUT "OUTPUT_TEMPLATE:  $outdir/skim$skimnumber\_ftof\_$run.hipo                              \n";
+        print OUT "OUTPUT_DATA:      output2\.hipo                                      \n";
+        print OUT "OUTPUT_TEMPLATE:  $outdir/skim$skimnumber\_htcc\_$run.hipo                              \n";
+    }elsif($skimnumber==7){
+        print OUT "OUTPUT_DATA:      output1\.hipo                                      \n";
+        print OUT "OUTPUT_TEMPLATE:  $outdir/skim$skimnumber\_ctof\_$run.hipo                              \n";
+        print OUT "OUTPUT_DATA:      output2\.hipo                                      \n";
+        print OUT "OUTPUT_TEMPLATE:  $outdir/skim$skimnumber\_cnd\_$run.hipo                              \n";
+    }	
+    }
+
+    close(OUT);
+    $i++;
+    }
+    }
+    #printf "\r Percent completed: %4.2f%%", ((($i)/($njobs))*100);
+}
+#system("mkdir $outdir");
+
+
+print "\r Percent completed: 100\.00\%\n Done!\n";
