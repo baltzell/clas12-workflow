@@ -1,8 +1,17 @@
 # NOTE:  This is a template.  To make it operational:
-# 1) replace the email address example with your personal one
-# 2) change the path to the lock file to be in the home directory of the account that will be running this cronjob
-# 3) change the path to swif-cron.csh to the one in your clas12-workflow build
+# 1) Assign $MAILTO to your personal email address
+# 2) Assign $LOCKFILE to a full file path in the $HOME of the account that will be running this cronjob
+# 3) Assign $SCRIPT to the full path of cron/swif-cron.sh in clas12-workflow
 # 
 MAILTO="bobcat@jlab.org"
-*/30 * * * * /usr/bin/flock -n /path/to/.clas12workflow-cron.lock /path/to/clas12-workflow/cron/swif-cron.csh || echo "ERROR:  Previous clas12-workflow cronjob still running"
-
+#
+LOCKFILE="/home/bobcat/.clas12workflow-cron.lock"
+#
+SCRIPT="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
+#
+# This will run every 30 minutes (i.e. on the hour and half-hour)
+#*/30 *  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# This will run once every hour, on the hour:
+0    *  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
