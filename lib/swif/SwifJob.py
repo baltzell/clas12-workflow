@@ -22,6 +22,8 @@ class SwifJob:
     self.tags=collections.OrderedDict()
     self.inputs=[]
     self.outputs=[]
+    self.antecedents=[]
+    self.conditions=[]
     self.logDir=None
     self.cmd=''
 
@@ -146,6 +148,9 @@ class SwifJob:
       '-time '+self.time+' -cores '+str(self.cores)+' '
       '-disk '+self.disk+' -ram '+self.ram+' -shell '+self.shell)
 
+    for ant in self.antecedents: job += ' -antecedent '+ant
+    if con in self.conditions: job += ' -condition file:///'+con
+
     if not self.phase is None: job += ' -phase '+str(self.phase)
 
     for key,val in self.tags.iteritems(): job += ' -tag %s %s'   %(key,val)
@@ -173,6 +178,10 @@ class SwifJob:
     jsonData['timeSecs']=self.getSeconds(self.time)
     jsonData['tags']=self.tags
     jsonData['command']=self._createCommand()
+    if len(self.antecedents)>0:
+      jsonData['antecedents']=self.antecedents
+    if len(self.conditions)>0:
+      jsonData['conditions']=self.conditions
     if len(self.inputs)>0:
       jsonData['input']=self.inputs
     if len(self.outputs)>0:
