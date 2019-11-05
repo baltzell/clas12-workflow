@@ -9,6 +9,7 @@ class SwifWorkflow(RunFileGroups):
     self.setPhaseSize(1000)
     self.name=name
     self.jobs=[]
+    self.phase=0
 
   def addJob(self,job):
     if not isinstance(job,SwifJob):
