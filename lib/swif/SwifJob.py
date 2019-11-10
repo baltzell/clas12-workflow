@@ -1,4 +1,4 @@
-import sys,json,logging,collections
+import os,sys,json,logging,collections
 
 class SwifJob:
 
@@ -138,6 +138,8 @@ class SwifJob:
     for xx in self.env.keys():
       cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
     cmd+=self._getCopyInputsCmd()
+    for o in self.outputs:
+      cmd+=' && mkdir -p %s '%(os.path.dirname(o['remote']))
     cmd+=' && '+self.cmd
     return cmd
 
