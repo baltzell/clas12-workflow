@@ -2,7 +2,14 @@ import os,sys,subprocess,logging
 
 _LOGGER=logging.getLogger(__name__)
 
-def mkdir(path):
+_DIRSMADE=[]
+def mkdir(path,tag=None):
+  if path not in _DIRSMADE:
+    if tag is None:
+      _LOGGER.info('Making output directory at '+path)
+    else:
+      _LOGGER.info('Making '+tag+' directory at '+path)
+    _DIRSMADE.append(path)
   if path is not None:
     if os.access(path,os.F_OK):
       if not os.access(path,os.W_OK):
