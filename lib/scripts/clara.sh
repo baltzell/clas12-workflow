@@ -37,7 +37,7 @@ fi
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
-    ( [ -e $1 ] && [ $(stat -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
+    ( [ -e $1 ] && [ $(stat -L -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
         || \
     ( echo "clara.sh:ERROR  Corrupt File: $1" 2>&1 && false )
 }
@@ -49,7 +49,7 @@ mkdir -p $CLARA_USER_DATA/config
 mkdir -p $CLARA_USER_DATA/data/output
 
 # setup filelist:
-find . -maxdepth 1 -type f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
+find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
 ls -lt
 
 # check inputs:
