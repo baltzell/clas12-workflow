@@ -6,20 +6,26 @@ import CLAS12Workflows
 _LOGGER=logging.getLogger(__name__)
 
 class Models:
-  ThreePhaseDecoding=0
-  RollingDecoding=1
-  SinglesDecoding=2
-  DecodeAndReconTest=3
-  ClaraRecon=4
-  DecodeClaraRecon=5
-  Choices =[0,     1,     2,     3,        4,     5        ]
-  Tasks   =['dec', 'dec', 'dec', 'decrec', 'rec', 'decrec' ]
-  Clara   =[False, False, False, False,    True,  True     ]
-  Coatjava=[True,  True,  True,  True,     False, True     ]
+  Decode=1
+  DecodeMerge=2
+  Recon=3
+  Train=4
+  DecodeRecon=13
+  DecodeMergeRecon=23
+  Choices={}
+  Choices[Decode]          ={'task':'dec',   'clara':False,'coatjava':True, 'merging':False, 'name':'Decode'}
+  Choices[DecodeMerge]     ={'task':'dec',   'clara':False,'coatjava':True, 'merging':True,  'name':'DecodeMerge'}
+  Choices[Recon]           ={'task':'rec',   'clara':True, 'coatjava':False,'merging':False, 'name':'Recon'}
+  Choices[Train]           ={'task':'ana',   'clara':True, 'coatjava':False,'merging':False, 'name':'Train'}
+  Choices[DecodeRecon]     ={'task':'decrec','clara':True, 'coatjava':True, 'merging':False, 'name':'DecodeRecon'}
+  Choices[DecodeMergeRecon]={'task':'decrec','clara':True, 'coatjava':True, 'merging':True,  'name':'DecodeMergeRecon'}
+  Description={}
+  for xx in sorted(Choices.keys()):
+    Description[xx]=Choices[xx]['name']
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
-    'model'   : Models.Choices,
+    'model'   : sorted(Models.Choices.keys()),
     'threads' : [16, 24, 32]
 }
 
@@ -34,10 +40,11 @@ CFG={
     'runs'          : [],
     'workDir'       : None,
     'outDir'        : None,
+    'decDir'        : None,
     'logDir'        : '/farm_out/'+getpass.getuser(),
     'phaseSize'     : 0,
     'mergeSize'     : 10,
-    'model'         : 2,
+    'model'         : None,
     'torus'         : None,
     'solenoid'      : None,
     'multiRun'      : False,
@@ -46,7 +53,6 @@ CFG={
     'fileRegex'     : RunFileUtil.getFileRegex(),
     'submit'        : False,
     'reconYaml'     : None,
-    'trainYaml'     : None,
     'claraLogDir'   : None,
     'threads'       : 16
 }
@@ -83,16 +89,16 @@ class ChefConfig:
     if self._workflow is None:
       name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['task'],self.cfg['tag'])
       name+='_R%dx%d'%(self.cfg['runs'][0],len(self.cfg['runs']))
-      if self.cfg['model']==Models.ThreePhaseDecoding:
-        self._workflow = CLAS12Workflows.ThreePhaseDecoding(name,self.cfg)
-      elif self.cfg['model']==Models.RollingDecoding:
+      if self.cfg['model']==Models.DecodeMerge:
         self._workflow = CLAS12Workflows.RollingDecoding(name,self.cfg)
-      elif self.cfg['model']==Models.SinglesDecoding:
+      elif self.cfg['model']==Models.Decode:
         self._workflow = CLAS12Workflows.SinglesOnlyDecoding(name,self.cfg)
-      elif self.cfg['model']==Models.DecodeAndReconTest:
-        self._workflow = CLAS12Workflows.DecodingReconTest(name,self.cfg)
-      elif self.cfg['model']==Models.ClaraRecon:
+      elif self.cfg['model']==Models.Recon:
         self._workflow = CLAS12Workflows.ClaraSingles(name,self.cfg)
+      elif self.cfg['model']==Models.DecodeRecon:
+        self._workflow = CLAS12Workflows.SinglesDecodeAndClara(name,self.cfg)
+      elif self.cfg['model']==Models.DecodeMergeRecon:
+        self._workflow = CLAS12Workflows.RollingDecodeAndClara(name,self.cfg)
       else:
         sys.exit('This should never happen #1.')
     if self._workflow.getFileCount()<1:
@@ -106,12 +112,13 @@ class ChefConfig:
 
     cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=CHOICES['runGroup'], default=None)
     cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
-    cli.add_argument('--model', help='* workflow model (0=ThreePhase, 1=Rolling, 2=SinglesOnly)', type=int, choices=CHOICES['model'],default=None)
+    cli.add_argument('--model', help='* workflow model '+str(Models.Description), type=int, choices=CHOICES['model'],default=None)
 
     cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
     cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
 
     cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
+    cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
@@ -183,23 +190,33 @@ class ChefConfig:
     if len(self.cfg['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
 
-    if self.cfg['outDir'] is None:
-      self.cli.error('"outDir" must be specified.')
-
-    for xx in ['outDir','workDir','logDir']:
+    # cleanup directory definitions:
+    for xx in ['decDir','outDir','workDir','logDir']:
       if self.cfg[xx] is not None:
         if self.cfg[xx]=='None' or self.cfg[xx]=='NULL' or self.cfg[xx]=='null':
           self.cfg[xx]=None
         elif not self.cfg[xx].startswith('/'):
           self.cli.error('"'+xx+'" must be an absolute path, not '+self.cfg[xx])
 
-    # non-merging workflows:
-    if self.cfg['model']==Models.SinglesDecoding or self.cfg['model']==Models.ClaraRecon:
+    # for decoding workflows, assign decDir to outDir if it doesn't exist:
+    if Models.Choices[self.cfg['model']]['task'].find('dec')>=0:
+      if self.cfg['decDir'] is None:
+        if self.cfg['outDir'] is None:
+          self.cli.error('One of "outDir" or "decDir" must be defined for decoding workflows.')
+        else:
+          self.cfg['decDir']=self.cfg['outDir']+'/decoded'
+          _LOGGER.warning('Using "outDir"/decoded for decoding outputs.')
 
+    # for non-decoding workflows, require outDir:
+    if Models.Choices[self.cfg['model']]['task'] != 'dec':
+      if self.cfg['outDir'] is None:
+        self.cli.error('"outDir" must be specified for this workflow.')
+
+    # for non-merging workflows:
+    if not Models.Choices[self.cfg['model']]['merging']:
       if self.cfg['workDir'] is not None:
         _LOGGER.warning('ignoring "workDir" for non-merging workflow.')
         self.cfg['workDir']=None
-
       if self.cfg['fileRegex'] != RunFileUtil.getFileRegex():
         RunFileUtil.setFileRegex(self.cfg['fileRegex'])
 
@@ -219,17 +236,17 @@ class ChefConfig:
         self.cli.error('"multiRun" is not allowed in merging workflows.')
 
     # set the task based on the model:
-    self.cfg['task']=Models.Tasks[self.cfg['model']]
+    self.cfg['task']=Models.Choices[self.cfg['model']]['task']
 
     # check for clara:
-    if Models.Clara[self.cfg['model']]:
+    if Models.Choices[self.cfg['model']]['clara']:
       if self.cfg['clara'] is None:
         self.cli.error('"clara" must be defined for model='+str(self.cfg['model']))
       if not os.path.exists(self.cfg['clara']):
         self.cli.error('"clara" does not exist: '+self.cfg['clara'])
 
     # check for coatjava
-    if Models.Coatjava[self.cfg['model']]:
+    if Models.Choices[self.cfg['model']]['coatjava']:
       if self.cfg['coatjava'] is None:
         if self.cfg['clara'] is not None:
           _LOGGER.warning('Using coatjava from clara: '+self.cfg['clara'])
@@ -240,7 +257,7 @@ class ChefConfig:
         self.cli.error('"coatjava" does not exist: '+self.cfg['coatjava'])
 
     # check yaml files:
-    if self.cfg['model']==Models.ClaraRecon or self.cfg['model']==Models.DecodeClaraRecon:
+    if self.cfg['model']==Models.Recon or self.cfg['model']==Models.DecodeRecon:
       if self.cfg['reconYaml'] is None:
         self.cli.error('"reconYaml" must be defined for model='+str(self.cfg['model']))
       elif not os.path.exists(self.cfg['reconYaml']):

@@ -23,16 +23,10 @@ class CLAS12Workflow(SwifWorkflow):
   def _mkdirs(self):
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
-      _LOGGER.info('Making slurm log directory at '+self.logDir)
-      ChefUtil.mkdir(self.logDir)
+      ChefUtil.mkdir(self.logDir,'slurm log')
     if self.cfg['claraLogDir'] is not None:
       logDir = '%s/%s'%(self.cfg['claraLogDir'],self.name)
-      _LOGGER.info('Making clara log directory at '+logDir)
-      ChefUtil.mkdir(logDir)
-    if self.cfg['outDir'] is not None:
-      _LOGGER.info('Making output directories at  '+self.cfg['outDir'])
-    if self.cfg['workDir'] is not None:
-      _LOGGER.info('Making staging directories at '+self.cfg['workDir'])
+      ChefUtil.mkdir(logDir,'clara log')
 
   def addJob(self,job):
     job.setLogDir(self.logDir)
@@ -43,65 +37,83 @@ class CLAS12Workflow(SwifWorkflow):
   # - one job per file
   # - return list of output hipo files
   #
-  def reconclara(self,phase,hipoFiles):
-    reconnedFiles=[]
-    for hipoFileName in hipoFiles:
-      job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
-      job.setPhase(phase)
-      job.addInputData(hipoFileName)
-      job.setCmd(len(reconnedFiles))
-      self.addJob(job)
-      reconnedFiles.extend(job.outputData)
-    return reconnedFiles
+  def reconclara(self,phase,inputs):
+    jobs=[]
+    for inp in inputs:
+      if isinstance(inp,SwifJob):
+        for x in inp.outputData:
+          job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
+          job.setPhase(phase)
+          job.addInputData(x)
+          job.antecedents.append(inp.getJobName())
+          job.setCmd(len(jobs))
+          jobs.append(job)
+      else:
+        job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
+        job.setPhase(phase)
+        job.addInputData(inp)
+        job.setCmd(len(jobs))
+        jobs.append(job)
+    self.addJob(jobs)
+    return jobs
 
   #
   # decode:  add jobs for decoding evio files
   # - one job per file
   # - return list of output hipo files
   #
-  def decode(self,phase,evioFiles):
-    hipoFiles=[]
-    for evioFileName in evioFiles:
+  def decode(self,phase,inputs):
+    jobs=[]
+    for inp in inputs:
       job=CLAS12Jobs.DecodingJob(self.name,self.cfg)
       job.setPhase(phase)
-      job.addInputData(evioFileName)
+      if isinstance(inp,SwifJob):
+        job.addInputData(inp.outputData[0])
+        job.antecedents.append(inp.getJobName())
+      else:
+        job.addInputData(inp)
       job.setCmd()
       self.addJob(job)
-      hipoFiles.extend(job.outputData)
-    return hipoFiles
+      jobs.append(job)
+    return jobs
 
   #
   # merge:  add jobs for merging hipo files
   # - one job per merge
   # - return list of output merged hipo files
   #
-  def merge(self,phase,hipoFiles):
-    inputs,merged=[],[]
-    for ii in range(len(hipoFiles)):
-      inputs.append(hipoFiles[ii])
-      if len(inputs)>=self.cfg['mergeSize'] or ii>=len(hipoFiles)-1:
+  def merge(self,phase,inputs):
+    inps,jobs=[],[]
+    for ii,inp in enumerate(inputs):
+      inps.append(inp)
+      if len(inps)>=self.cfg['mergeSize'] or ii>=len(inputs)-1:
         job=CLAS12Jobs.MergingJob(self.name,self.cfg)
         job.setPhase(phase)
-        job.addInputData(inputs)
-        merged.extend(job.outputData)
-        inputs=[]
+        if isinstance(inps[0],SwifJob):
+          job.addInputData([x.outputData[0] for x in inps])
+          job.antecedents.extend(inps)
+        else:
+          job.addInputData(inps)
+        jobs.append(job)
         self.addJob(job)
-    return merged
+        inps=[]
+    return jobs
 
   #
   # delete:  add jobs to delete files from disk
   # - one job per 200 files
   #
   def delete(self,phase,deletes):
+    jobs=[]
     files = list(deletes)
     while len(files)>0:
       deletes=[]
       while len(deletes)<200 and len(files)>0:
         deletes.append(files.pop(0))
       if len(deletes)>0:
-        job=SwifJob(self.name)
+        job=CLAS12Jobs.Job(self.name,self.cfg)
         job.setPhase(phase)
-        job.setRam('1GB')
+        job.setRam('512MB')
         job.setTime('%ds'%(60+3*len(deletes)))
         job.setDisk('100MB')
         job.addTag('run','%.6d'%RunFile(deletes[0]).runNumber)
@@ -112,33 +124,39 @@ class CLAS12Workflow(SwifWorkflow):
         cmds = [ '(sleep 0.5 ; rm -f %s)'%delete for delete in deletes ]
         job.setCmd(' ; '.join(cmds))
         self.addJob(job)
+        jobs.append(job)
+    return jobs
 
   #
   # move:  add jobs to move files to final destination
   # - one job per 200 files
   #
   def move(self,phase,moves):
+    jobs=[]
     files = list(moves)
     while len(files)>0:
       moves=[]
       while len(moves)<200 and len(files)>0:
         moves.append(files.pop(0))
       if len(moves)>0:
-        job=SwifJob(self.name)
+        job=CLAS12Jobs.Job(self.name,self.cfg)
         job.setPhase(phase)
-        job.setRam('1GB')
+        job.setRam('512MB')
         job.setTime('%ds'%(600+60*len(moves)))
         job.setDisk('100MB')
         job.addTag('run','%.6d'%RunFile(moves[0]).runNumber)
         job.addTag('mode','move')
-        job.addTag('outDir',self.cfg['outDir'])
-        outDir='%s/%.6d'%(self.cfg['outDir'],int(job.getTag('run')))
+        job.addTag('outDir',self.cfg['decDir'])
+        outDir='%s/%.6d'%(self.cfg['decDir'],int(job.getTag('run')))
         ChefUtil.mkdir(outDir)
         cmd = '(sleep 0.5 ; set d=%s ; touch -c $d ; rsync $d %s/ ; rsync $d %s/ && rm -f $d)'
         cmds = [ cmd%(move,outDir,outDir) for move in moves ]
         job.setCmd(' ; '.join(cmds)+' ; true')
+        for move in moves:
+          job.outputData.append('%s/%s'%(outDir,os.path.basename(move)))
         self.addJob(job)
-
+        jobs.append(job)
+    return jobs
 
   #
   # reconutil:  add jobs for running single-threaded recon

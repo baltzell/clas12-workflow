@@ -17,19 +17,17 @@ class ThreePhaseDecoding(CLAS12Workflow):
 
   def generate(self):
 
-    self.jobs=[]
-    phase=0
     for evioFiles in self.getGroups():
 
-      phase += 1
-      hipoFiles = self.decode(phase,evioFiles)
+      self.phase += 1
+      hipoFiles = [x.outputData[0] for x in self.decode(self.phase,evioFiles)]
 
-      phase += 1
-      mergedFiles = self.merge(phase,hipoFiles)
+      self.phase += 1
+      mergedFiles = [x.outputData[0] for x in self.merge(self.phase,hipoFiles)]
 
-      phase += 1
-      self.move(phase,mergedFiles)
-      self.delete(phase,hipoFiles)
+      self.phase += 1
+      self.move(self.phase,mergedFiles)
+      self.delete(self.phase,hipoFiles)
 
 #
 # DecodingReconTest
@@ -48,19 +46,17 @@ class DecodingReconTest(CLAS12Workflow):
 
   def generate(self):
 
-    self.jobs=[]
-    phase=0
     for evioFiles in self.getGroups():
 
-      phase += 1
-      hipoFiles = self.decode(phase,evioFiles)
+      self.phase += 1
+      decodeJobs = self.decode(self.phase,evioFiles)
 
-      phase += 1
-      mergedFiles = self.merge(phase,hipoFiles)
+      self.phase += 1
+      mergeJobs = self.merge(self.phase,decodeJobs)
 
-      phase += 1
-      self.recon(phase,hipoFiles)
-      self.recon(phase,mergedFiles)
+      self.phase += 1
+      self.reconclara(self.phase,decodeJobs)
+      self.reconclara(self.phase,mergeJobs)
 
 #
 # RollingDecoding
@@ -83,29 +79,26 @@ class RollingDecoding(CLAS12Workflow):
 
   def generate(self):
 
-    self.jobs=[]
-    phase=0
-
     decodeQueue=self.getGroups()
     mergeQueue,deleteQueue,moveQueue=[],[],[]
 
     while True:
 
-      phase += 1
+      self.phase += 1
 
       if len(deleteQueue)>0:
-        self.delete(phase,deleteQueue.pop(0))
-        self.move(phase,moveQueue.pop(0))
+        self.delete(self.phase,deleteQueue.pop(0))
+        self.move(self.phase,moveQueue.pop(0))
 
       if len(mergeQueue)>0:
-        hipoFiles = mergeQueue.pop(0)
-        mergedFiles = self.merge(phase,hipoFiles)
-        deleteQueue.append(hipoFiles)
-        moveQueue.append(mergedFiles)
+        decodedFiles = mergeQueue.pop(0)
+        mergeJobs = self.merge(self.phase,decodedFiles)
+        moveQueue.append([x.outputData[0] for x in mergeJobs])
+        deleteQueue.append(decodedFiles)
 
       if len(decodeQueue)>0:
-        hipoFiles = self.decode(phase,decodeQueue.pop(0))
-        mergeQueue.append(hipoFiles)
+        decodeJobs = self.decode(self.phase,decodeQueue.pop(0))
+        mergeQueue.append([x.outputData[0] for x in decodeJobs])
 
       if len(decodeQueue)==0 and len(mergeQueue)==0 and len(deleteQueue)==0:
         break
@@ -119,35 +112,62 @@ class RollingDecoding(CLAS12Workflow):
 # independent (cron) task to merge and move (and maintain N GB).
 #
 class SinglesOnlyDecoding(CLAS12Workflow):
-
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
-
   def generate(self):
-
-    self.jobs=[]
-    phase=0
-
     for evioFiles in self.getGroups():
-      phase += 1
-      self.decode(phase,evioFiles)
+      self.decode(self.phase,evioFiles)
+      self.phase += 1
 
 class ClaraSingles(CLAS12Workflow):
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+  def generate(self):
+    for hipoFiles in self.getGroups():
+      self.reconclara(self.phase,hipoFiles)
+
+class SinglesDecodeAndClara(CLAS12Workflow):
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+  def generate(self):
+    for evioFiles in self.getGroups():
+      decodeJobs = self.decode(self.phase,evioFiles)
+      reconJobs = self.reconclara(self.phase,decodeJobs)
+
+class RollingDecodeAndClara(CLAS12Workflow):
 
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
 
   def generate(self):
 
-    reconfiles=[]
+    decodeQueue=self.getGroups()
+    mergeQueue,deleteQueue,moveQueue,reconQueue=[],[],[],[]
 
-    self.jobs=[]
-    phase=0
+    while True:
 
-    for hipoFiles in self.getGroups():
-      reconfiles.extend(self.reconclara(phase,hipoFiles))
+      self.phase += 1
 
-    return reconfiles
+      if len(reconQueue)>0:
+        self.reconclara(self.phase-1,[reconQueue.pop(0)])
+
+      if len(deleteQueue)>0:
+        self.delete(self.phase,deleteQueue.pop(0))
+        moveJobs=self.move(self.phase,moveQueue.pop(0))
+        reconQueue.extend(moveJobs)
+
+      if len(mergeQueue)>0:
+        decodedFiles = mergeQueue.pop(0)
+        mergeJobs = self.merge(self.phase,decodedFiles)
+        moveQueue.append([x.outputData[0] for x in mergeJobs])
+        deleteQueue.append(decodedFiles)
+
+      if len(decodeQueue)>0:
+        decodeJobs = self.decode(self.phase,decodeQueue.pop(0))
+        mergeQueue.append([x.outputData[0] for x in decodeJobs])
+
+      if len(decodeQueue)==0 and len(mergeQueue)==0 and len(deleteQueue)==0 and len(reconQueue)==0:
+        break
 
 if __name__ == '__main__':
   import os,sys

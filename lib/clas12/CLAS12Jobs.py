@@ -24,8 +24,8 @@ class Job(SwifJob):
     fileno=RunFile(filename).fileNumber
     self.addTag('run','%.6d'%runno)
     self.addTag('file','%.5d'%fileno)
-  def addOutputData(self,basename,directory):
-    ChefUtil.mkdir(directory)
+  def addOutputData(self,basename,directory,tag=None):
+    ChefUtil.mkdir(directory,tag)
     self.addTag('outDir',directory)
     self.outputData.append(directory+'/'+basename)
     self.addOutput(basename,directory+'/'+basename)
@@ -44,7 +44,7 @@ class MergingJob(Job):
     fileno2 = RunFile(filenames[len(filenames)-1]).fileNumber
     outBasename=self.cfg['mergePattern']%(runno,fileno1,fileno2)
     outDir='%s/merged/%.6d/'%(self.cfg['workDir'],runno)
-    self.addOutputData(outBasename,outDir)
+    self.addOutputData(outBasename,outDir,'staging')
     cmd=' set o=%s ; rm -f $o ; '%outBasename
     cmd+='%s/bin/hipo-utils -merge -o $o'%self.cfg['coatjava']
     for ii in range(len(filenames)):
@@ -66,10 +66,11 @@ class DecodingJob(Job):
     Job.addInputData(self,filename)
     basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
     if self.cfg['workDir'] is None:
-      outDir = '%s/%.6d/'%(self.cfg['outDir'],int(self.getTag('run')))
+      outDir = '%s/%.6d/'%(self.cfg['decDir'],int(self.getTag('run')))
+      Job.addOutputData(self,basename,outDir)
     else:
       outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],int(self.getTag('run')))
-    Job.addOutputData(self,basename,outDir)
+      Job.addOutputData(self,basename,outDir,'staging')
   def setCmd(self):
     s = self.cfg['solenoid']
     t = self.cfg['torus']

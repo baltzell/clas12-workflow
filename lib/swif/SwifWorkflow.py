@@ -12,6 +12,8 @@ class SwifWorkflow(RunFileGroups):
     self.phase=0
 
   def addJob(self,job):
+    if isinstance(job,list):
+      for j in job: self.addJob(j)
     if not isinstance(job,SwifJob):
       raise TypeError('Must be a SwifJob')
     job.setNumber(len(self.jobs)+1)
