@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-import sys
-import os
-import time
-import subprocess
+import sys,os,time,subprocess,logging
 
 # requires hipo-utils to be in $PATH
 
 import ChefUtil
 import ChefConfig
 import RunFile
+
+logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
+logger=logging.getLogger(__name__)
 
 def getDecades(fileOrDir,runs):
   groups={}
