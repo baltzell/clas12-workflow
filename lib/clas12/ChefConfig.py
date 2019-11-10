@@ -117,7 +117,7 @@ class ChefConfig:
     cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
     cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
 
-    cli.add_argument('--outDir', metavar='PATH',help='* final data location', type=str,default=None)
+    cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None)
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging workflows only)', type=str,default=None)
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
