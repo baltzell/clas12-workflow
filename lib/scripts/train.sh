@@ -8,13 +8,14 @@ export CLARA_MONITOR_FE="129.57.70.24%9000_java"
 export CCDB_CONNECTION=mysql://clas12reader@clasdb-farm.jlab.org/clas12
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
+JAVA_OPTS='-Xmx8g -Xms6g'
 nevents=
 logdir=.
-threads=16
+threads=12
 while getopts "p:l:t:n:" OPTION; do
     case $OPTION in
         l)  logdir=$OPTARG ;;
-        t)  threads=$OPTARG ;;
+#        t)  threads=$OPTARG ;;
         n)  nevents="-e $OPTARG" ;;
         ?)  exit 1 ;;
     esac
@@ -35,32 +36,34 @@ fi
 
 # get libraries:
 CLASSPATH="${CLARA_HOME}/lib/*"
-for plugin in "${plugins_dir}"/*/; do
+for plugin in "${CLARA_HOME}/plugins"/*/; do
     plugin=${plugin%*/}
-    if [ "${plugin##*/}" = "grapes" ]; then # COAT has special needs
-        CLASSPATH+=":${plugin}/lib/core/*:${plugin}/lib/services/*"
-    else
-        CLASSPATH+=":${plugin}/services/*:${plugin}/lib/*"
-    fi
+    for subdir in lib/core lib/services services lib
+    do
+      if [ -e ${plugin}/$subdir ]
+      then
+        CLASSPATH+=":${plugin}/$subdir/*"
+      fi
+    done
 done
 export CLASSPATH
 
 # count services:
 nservices=`python - <<'EOF'
-n,go=0,False
-for line in open('train.yaml','r').readlines():
-  line=line.strip()
-  if line.find('services:')==0:
-    go=True
-  elif go:
-    if line.find('- class:')==0:
-      n+=1
-print n  
+n,ids=0,[]
+for line in open('clara.yaml','r').readlines():
+  if line.strip().find('id: ')==0:
+    id=int(line.strip().split()[1])
+    if id not in ids:
+      ids.append(id)
+print len(ids)
 EOF`
+
+echo "#Services: "$nservices
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
-    ( [ -e $1 ] && [ $(stat -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
+    ( [ -e $1 ] && [ $(stat -L -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
         || \
     ( echo "clara.sh:ERROR  Corrupt File: $1" 2>&1 && false )
 }
@@ -72,7 +75,7 @@ mkdir -p $CLARA_USER_DATA/config
 mkdir -p $CLARA_USER_DATA/data/output
 
 # setup filelist:
-find . -maxdepth 1 -type f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
+find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
 ls -lt
 
 # check inputs:
@@ -84,7 +87,7 @@ done
 # run clara:
 $CLARA_HOME/lib/clara/run-clara \
         -i . \
-        -o . \
+        -o ./output \
         -z skim_ \
         -x $logdir \
         -t $threads \
@@ -99,15 +102,12 @@ for xx in `cat filelist.txt`
 do
     for nn in `seq $nservices`
     do
-        yy=skim_${xx}_${nn}.hipo
-        hipocheck $yy || ( rm -f *.hipo && exit 502 )
-        zz=skim${nn}_${xx}
+        yy=./output/skim_${xx}_${nn}.hipo
+        hipocheck $yy || ( rm -f *.hipo output/*.hipo && exit 502 )
+        zz=./output/skim${nn}_${xx}
         mv -f $yy $zz
     done
 done
-
-# remove this later:
-#ls -lt
 
 # if all else is well, use exit code from run-clara:
 exit $claraexit
