@@ -2,6 +2,8 @@ import json,requests,datetime,re
 
 import Matcher
 
+#'https://scicomp.jlab.org/scicomp/farmCjob?type=query&user=baltzell&from=2019-11-01&to=2019-11-10&states=SUCCESS'
+
 #{
 #    "coreCount": 16,
 #    "name": "rga-rec-vRD-6v.3.4_R5038x6-00598",
@@ -14,12 +16,15 @@ import Matcher
 #    "finish": "Oct 26, 2019 9:17:45 AM",
 #    "memoryUsed": "9.4 GB",
 #    "id": "5948277",
-#    "exitCode": 0
+#    "exitCode": 0,
+#    "cputime":"42:15.219",
+#    "walltime":"00:34:02"
 #}
 
 class SlurmStatus():
   _DATEFORMAT='^([a-zA-Z]+) (\d+), (\d+) (\d+):(\d+):(\d+) ([a-zA-Z]+)$'
   _DATEVARS=['submit','finish']
+  _TIMEVARS=['cputime','walltime']
   _BYTEVARS=['memoryUsed','memoryReq']
   _STATES=['timeout','success','failed','over_rlimit']
   _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode','submit','finish']
@@ -35,12 +40,31 @@ class SlurmStatus():
     for x in SlurmStatus._BYTEVARS:
       if x in self.data:
         self.data[x]=self.getBytes(self.data[x])
+    # convert all times to seconds:
+    for x in SlurmStatus._TIMEVARS:
+      if x in self.data:
+        self.data[x]=self.convertTime(self.data[x])
   def getHeader(self):
     ret=''
     ret+='%10s'%'user'
     for ii,yy in enumerate(SlurmStatus._VARS):
       ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%yy
     ret+='\n'
+    return ret
+  def convertTime(self,string):
+    ret=string
+    m=re.match('(\d\d):(\d\d):(\d\d)',string)
+    if m is not None:
+      s=int(m.group(3))
+      h=int(m.group(1))
+      m=int(m.group(2))
+      ret=s+60*m+60*60*h
+    else:
+      m=re.match('(\d+):(\d+)\.(\d+)',string)
+      if m is not None:
+        s=int(m.group(2))
+        m=int(m.group(1))
+        ret=s+60*m
     return ret
   def convertDate(self,string):
     # datetime doesn't have non-zero-padded stuff,
