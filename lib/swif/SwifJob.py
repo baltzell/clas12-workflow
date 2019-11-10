@@ -20,12 +20,16 @@ class SwifJob:
     # this is no longer honored but defaults to login shell (bah, bad!):
     self.shell='/bin/tcsh'
     self.tags=collections.OrderedDict()
-    self.inputs=[]
-    self.outputs=[]
     self.antecedents=[]
     self.conditions=[]
     self.logDir=None
     self.cmd=''
+    # for Auger staging:
+    self.inputs=[]
+    self.outputs=[]
+    # for non-Auger staging:
+    self.inputData=[]
+    self.outputData=[]
 
   def addEnv(self,key,val):
     self.env[key]=val
@@ -133,6 +137,17 @@ class SwifJob:
         cmd += ' && /bin/dd bs=1M if=%s of=%s'%(remote,item['local'])
     return cmd
 
+  def _getJputOutputsCmd(self):
+    files=[]
+    for xx in self.outputData:
+      if xx.startswith('/cache/'):
+        xx=xx.replace('/cache/mss/','/cache/')
+        files.append(xx)
+    if len(files)>0:
+      return '&& jcache put '+' '.join(files)
+    else:
+      return ''
+
   def _createCommand(self):
     cmd='unalias -a ; '
     for xx in self.env.keys():
@@ -141,6 +156,7 @@ class SwifJob:
     for o in self.outputs:
       cmd+=' && mkdir -p %s '%(os.path.dirname(o['remote']))
     cmd+=' && '+self.cmd
+#    cmd+=self._getJputOutputsCmd()
     return cmd
 
   def getShell(self):

@@ -13,8 +13,6 @@ class Job(SwifJob):
     self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
-    self.inputData=[]
-    self.outputData=[]
     self.cfg=cfg
   def addInputData(self,filename):
     basename=filename.split('/').pop()
