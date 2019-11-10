@@ -211,3 +211,45 @@ class RunFileGroups:
     return len(self.getFlatList())
 
 
+# recursive function to generate a run list:
+def getRunList(data):
+
+  runs=[]
+
+  # it's a list, just recurse:
+  if isinstance(data,list):
+    for datum in data:
+      runs.extend(getRunList(datum))
+
+  # it's a directory, walk it:
+  elif os.path.isdir(data):
+    for dirpath,dirnames,filenames in os.walk(data):
+      for filename in filenames:
+        # recurse with the filename:
+        runs.extend(getRunList(dirpath+'/'+filename))
+
+  # it's a file:
+  elif os.path.isfile(data):
+
+    # use suffix to assume it's a file list (ugh):
+    if data.endswith('.txt') or data.endswith('.list'):
+      for line in open(data,'r').readlines():
+        # recurse with the line:
+        runs.extend(getRunList(line.strip()))
+
+    # otherwise, finally, try to extract a run number:
+    else:
+      rf=RunFile(data)
+      if rf.runNumber is not None:
+        runs.append(int(rf.runNumber))
+
+  # else assume it's a glob and keep only files:
+  else:
+    for xx in glob.glob(data):
+      if os.path.isfile(xx):
+        # recurse with the filename:
+        runs.extend(getRunList(xx))
+
+  # return sorted and unique list:
+  return sorted(list(set(runs)))
+
