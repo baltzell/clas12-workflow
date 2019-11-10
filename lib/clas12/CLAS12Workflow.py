@@ -29,8 +29,11 @@ class CLAS12Workflow(SwifWorkflow):
       ChefUtil.mkdir(logDir,'clara log')
 
   def addJob(self,job):
-    job.setLogDir(self.logDir)
-    SwifWorkflow.addJob(self,job)
+    if isinstance(job,list):
+      for j in job: self.addJob(j)
+    else:
+      job.setLogDir(self.logDir)
+      SwifWorkflow.addJob(self,job)
 
   #
   # reconclara:  add jobs for reconstrucing hipo files
