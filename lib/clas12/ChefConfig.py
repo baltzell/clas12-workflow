@@ -145,7 +145,7 @@ class ChefConfig:
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
-    cli.add_argument('--version',action='version',version='0.2')
+    cli.add_argument('--version',action='version',version='0.3-dev')
 
     return cli
 
