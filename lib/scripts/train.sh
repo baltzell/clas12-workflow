@@ -50,7 +50,7 @@ export CLASSPATH
 
 # count services:
 nservices=`python - <<'EOF'
-n,ids=0,[]
+ids=0,[]
 for line in open('clara.yaml','r').readlines():
   if line.strip().find('id: ')==0:
     id=int(line.strip().split()[1])
