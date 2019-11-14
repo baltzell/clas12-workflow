@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-import os,sys,argparse,subprocess,logging
+import os,sys,argparse,subprocess,logging,traceback
 
 from RunFileUtil import getRunList
 from RunFileUtil import RunFileGroups,RunFile
 
 # WARNING:  requires hipo-utils to be in $PATH
 
-logging.basicConfig(level=logging.ERROR,format='%(levelname)-9s[%(name)-14s] %(message)s')
+logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
 logger=logging.getLogger(__name__)
 
 cli=argparse.ArgumentParser(description='Merge a directory of HIPO files by run number.')
@@ -18,9 +18,10 @@ rfgs=RunFileGroups()
 rfgs.addRuns(getRunList(args.i))
 rfgs.findFiles(args.i)
 
+
 for rfg in rfgs.getGroups():
   rf=RunFile(rfg[0])
-  out=args.o+'_%.5d.hipo'%rf.runNumber
+  out=args.o+'_%.6d.hipo'%rf.runNumber
   if os.path.exists(out):
     sys.exit('File already exists:  '+out)
 
@@ -30,8 +31,14 @@ for rfg in rfgs.getGroups():
   cmd=['hipo-utils','-merge','-o',out]
   cmd.extend(rfg)
   try:
-    print(subprocess.check_output(cmd))
+    process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    while True:
+      line = process.stdout.readline().rstrip()
+      if not line:
+        break
+      print(line)
   except:
+    print(traceback.format_exc())
     if os.path.isfile(out):
       os.remove(out)
     sys.exit(1)

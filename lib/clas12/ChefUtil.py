@@ -1,5 +1,8 @@
 import os,sys,subprocess,logging
 
+from RcdbManager import RcdbManager
+
+_RCDB=RcdbManager()
 _LOGGER=logging.getLogger(__name__)
 
 _DIRSMADE=[]
@@ -22,11 +25,53 @@ def mkdir(path,tag=None):
         _LOGGER.critical('Cannot make directory: '+path)
         sys.exit(1)
 
+def getFileSize(path):
+  if os.path.isfile(path):
+    if path.startswith('/mss'):
+      for line in open(path,'r').readlines():
+        cols=line.strip().split('=')
+        if len(cols)==2 and cols[0]=='size':
+          return int(cols[1])
+    else:
+      return os.path.getsize(path)
+
+def getTrainIndices(yamlfile):
+  ids=[]
+  for line in open(yamlfile,'r').readlines():
+    if line.strip().find('id: ')==0:
+      if int(line.strip().split()[1]) not in ids:
+        ids.append(int(line.strip().split()[1]))
+  return sorted(ids)
+
+def getTrainDiskReq(filenames):
+  s=0
+  for f in filenames:
+    s+=getFileSize(f)
+  return '%.0fGB'%(1.5*s/1e9+1)
+
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'
 
 def getMergeTimeReq(nfiles):
   return str(int(2*nfiles/10)+1)+'h'
+
+def getDecoderOpts(run,cfg):
+  s,t=None,None
+  if 'solenoid' in cfg:
+    s=cfg['solenoid']
+  if 'torus' in cfg:
+    t=cfg['torus']
+  if s is None:
+    s = _RCDB.getSolenoidScale(int(run))
+    if s is None:
+      _LOGGER.critical('Unknown solenoid scale for '+str(run))
+      sys.exit()
+  if t is None:
+    t = _RCDB.getTorusScale(int(run))
+    if t is None:
+      _LOGGER.critical('Unknown torus scale for '+str(run))
+      sys.exit()
+  return '-c 2 -s %.4f -t %.4f'%(s,t)
 
 def getFileList(fileOrDir):
   fileList=[]

@@ -8,14 +8,13 @@ export CLARA_MONITOR_FE="129.57.70.24%9000_java"
 export CCDB_CONNECTION=mysql://clas12reader@clasdb-farm.jlab.org/clas12
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
-JAVA_OPTS='-Xmx8g -Xms6g'
 nevents=
 logdir=.
 threads=12
 while getopts "p:l:t:n:" OPTION; do
     case $OPTION in
         l)  logdir=$OPTARG ;;
-#        t)  threads=$OPTARG ;;
+        t)  threads=$OPTARG ;;
         n)  nevents="-e $OPTARG" ;;
         ?)  exit 1 ;;
     esac
@@ -49,8 +48,9 @@ done
 export CLASSPATH
 
 # count services:
+# to identify the expected output files
 nservices=`python - <<'EOF'
-ids=0,[]
+ids=[]
 for line in open('clara.yaml','r').readlines():
   if line.strip().find('id: ')==0:
     id=int(line.strip().split()[1])
@@ -87,7 +87,7 @@ done
 # run clara:
 $CLARA_HOME/lib/clara/run-clara \
         -i . \
-        -o ./output \
+        -o . \
         -z skim_ \
         -x $logdir \
         -t $threads \
@@ -100,11 +100,12 @@ claraexit=$?
 # check and rename outputs:
 for xx in `cat filelist.txt`
 do
+    # FIXME: this requires service ids are sequential, no skips
     for nn in `seq $nservices`
     do
-        yy=./output/skim_${xx}_${nn}.hipo
-        hipocheck $yy || ( rm -f *.hipo output/*.hipo && exit 502 )
-        zz=./output/skim${nn}_${xx}
+        yy=./skim_${xx}_${nn}.hipo
+        zz=./skim${nn}_${xx}
+        hipocheck $yy || ( rm -f *.hipo && exit 502 )
         mv -f $yy $zz
     done
 done

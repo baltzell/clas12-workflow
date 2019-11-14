@@ -8,17 +8,21 @@ _LOGGER=logging.getLogger(__name__)
 class Models:
   Decode=1
   DecodeMerge=2
-  Recon=3
-  Train=4
-  DecodeRecon=13
-  DecodeMergeRecon=23
+  DecodeMergeInline=3
+  Recon=4
+  Train=5
+  DecodeRecon=14
+  DecodeMergeRecon=24
+  DecodeMergeInlineRecon=34
   Choices={}
   Choices[Decode]          ={'task':'dec',   'clara':False,'coatjava':True, 'merging':False, 'name':'Decode'}
   Choices[DecodeMerge]     ={'task':'dec',   'clara':False,'coatjava':True, 'merging':True,  'name':'DecodeMerge'}
+  Choices[DecodeMergeInline]={'task':'dec',   'clara':False,'coatjava':True, 'merging':False,  'name':'DecodeMergeInline'}
   Choices[Recon]           ={'task':'rec',   'clara':True, 'coatjava':False,'merging':False, 'name':'Recon'}
   Choices[Train]           ={'task':'ana',   'clara':True, 'coatjava':False,'merging':False, 'name':'Train'}
   Choices[DecodeRecon]     ={'task':'decrec','clara':True, 'coatjava':True, 'merging':False, 'name':'DecodeRecon'}
   Choices[DecodeMergeRecon]={'task':'decrec','clara':True, 'coatjava':True, 'merging':True,  'name':'DecodeMergeRecon'}
+  Choices[DecodeMergeInlineRecon]={'task':'decrec','clara':True, 'coatjava':True, 'merging':False,  'name':'DecodeMergeInlineRecon'}
   Description={}
   for xx in sorted(Choices.keys()):
     Description[xx]=Choices[xx]['name']
@@ -53,6 +57,8 @@ CFG={
     'fileRegex'     : RunFileUtil.getFileRegex(),
     'submit'        : False,
     'reconYaml'     : None,
+    'trainYaml'     : None,
+    'trainSize'     : 30,
     'claraLogDir'   : None,
     'threads'       : 16
 }
@@ -99,6 +105,12 @@ class ChefConfig:
         self._workflow = CLAS12Workflows.SinglesDecodeAndClara(name,self.cfg)
       elif self.cfg['model']==Models.DecodeMergeRecon:
         self._workflow = CLAS12Workflows.RollingDecodeAndClara(name,self.cfg)
+      elif self.cfg['model']==Models.DecodeMergeInlineRecon:
+        self._workflow = CLAS12Workflows.InlineDecodeMergeClara(name,self.cfg)
+      elif self.cfg['model']==Models.DecodeMergeInline:
+        self._workflow = CLAS12Workflows.InlineDecodeMerge(name,self.cfg)
+      elif self.cfg['model']==Models.Train:
+        self._workflow = CLAS12Workflows.Train(name,self.cfg)
       else:
         sys.exit('This should never happen #1.')
     if self._workflow.getFileCount()<1:
@@ -127,10 +139,12 @@ class ChefConfig:
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
     cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file', type=str,default=None)
+    cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file', type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files per phase', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
+    cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
@@ -257,7 +271,12 @@ class ChefConfig:
         self.cli.error('"coatjava" does not exist: '+self.cfg['coatjava'])
 
     # check yaml files:
-    if self.cfg['model']==Models.Recon or self.cfg['model']==Models.DecodeRecon:
+    if Models.Choices[self.cfg['model']]['name'].find('Train')>=0:
+      if self.cfg['trainYaml'] is None:
+        self.cli.error('"trainYaml" must be defined for model='+str(self.cfg['model']))
+      elif not os.path.exists(self.cfg['trainYaml']):
+        self.cli.error('"trainYaml" does not exist:  '+self.cfg['trainYaml'])
+    if Models.Choices[self.cfg['model']]['name'].find('Recon')>=0:
       if self.cfg['reconYaml'] is None:
         self.cli.error('"reconYaml" must be defined for model='+str(self.cfg['model']))
       elif not os.path.exists(self.cfg['reconYaml']):

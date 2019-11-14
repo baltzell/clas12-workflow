@@ -3,7 +3,6 @@ import os,sys,json,logging,collections
 class SwifJob:
 
   __JSONFORMAT={'indent':2,'separators':(',',': ')}
-  #__JSONFORMAT={}
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
@@ -47,7 +46,16 @@ class SwifJob:
     self.number=number
 
   def addTag(self,key,val):
-    self.tags[key]=val
+    if key in self.tags:
+      if isinstance(self.tags[key],set):
+        self.tags[key].add(val)
+      elif self.tags[key]!=val:
+        s=set()
+        s.add(self.tags[key])
+        s.add(val)
+        self.tags[key]=s
+    else:
+      self.tags[key]=val
 
   def getTag(self,key):
     if key in self.tags: return self.tags[key]
@@ -128,6 +136,7 @@ class SwifJob:
         prefix+='_'+key+val
     return prefix
 
+  # copy Auger symlinked inputs:
   def _getCopyInputsCmd(self):
     cmd='ls -l'
     for item in self.inputs:
@@ -137,14 +146,29 @@ class SwifJob:
         cmd += ' && /bin/dd bs=1M if=%s of=%s'%(remote,item['local'])
     return cmd
 
+  # rsync non-Auger outputs:
+  def _getCopyOutputsCmd(self):
+    files=[]
+    for xx in self.outputData:
+      if xx.startswith('/mss/'):
+        xx=xx.replace('/mss/','/cache/',1)
+      if xx not in files:
+        files.append(xx)
+    cmd=''
+    for file in files:
+      cmd+= ' && rsync %s %s/'%(os.path.basename(file),os.path.dirname(file))
+    return cmd
+
+  # jput non-Auger outputs, if there's on /cache:
   def _getJputOutputsCmd(self):
     files=[]
     for xx in self.outputData:
       if xx.startswith('/cache/'):
         xx=xx.replace('/cache/mss/','/cache/')
-        files.append(xx)
+        if xx not in files:
+          files.append(xx)
     if len(files)>0:
-      return '&& jcache put '+' '.join(files)
+      return ' && jcache put '+' '.join(files)
     else:
       return ''
 
@@ -153,10 +177,14 @@ class SwifJob:
     for xx in self.env.keys():
       cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
     cmd+=self._getCopyInputsCmd()
+    d=[]
     for o in self.outputs:
-      cmd+=' && mkdir -p %s '%(os.path.dirname(o['remote']))
+      if os.path.dirname(o['remote'].replace('file:/','/',1)) not in d:
+        d.append(os.path.dirname(o['remote'].replace('file:/','/',1)))
+    if len(d)>0:
+      cmd+=' && mkdir -p %s '%(' '.join(d))
     cmd+=' && '+self.cmd
-#    cmd+=self._getJputOutputsCmd()
+    #cmd+=self._getJputOutputsCmd()
     return cmd
 
   def getShell(self):

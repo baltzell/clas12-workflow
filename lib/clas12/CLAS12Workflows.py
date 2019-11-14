@@ -126,12 +126,34 @@ class ClaraSingles(CLAS12Workflow):
     for hipoFiles in self.getGroups():
       self.reconclara(self.phase,hipoFiles)
 
+class Train(CLAS12Workflow):
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+  def generate(self):
+    for hipoFiles in self.getGroups():
+      self.train(self.phase,hipoFiles)
+
 class SinglesDecodeAndClara(CLAS12Workflow):
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
   def generate(self):
     for evioFiles in self.getGroups():
       decodeJobs = self.decode(self.phase,evioFiles)
+      reconJobs = self.reconclara(self.phase,decodeJobs)
+
+class InlineDecodeMerge(CLAS12Workflow):
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+  def generate(self):
+    for evioFiles in self.getGroups():
+      decodeJobs = self.decodemerge(self.phase,evioFiles)
+
+class InlineDecodeMergeClara(CLAS12Workflow):
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+  def generate(self):
+    for evioFiles in self.getGroups():
+      decodeJobs = self.decodemerge(self.phase,evioFiles)
       reconJobs = self.reconclara(self.phase,decodeJobs)
 
 class RollingDecodeAndClara(CLAS12Workflow):

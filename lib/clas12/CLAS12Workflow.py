@@ -50,15 +50,56 @@ class CLAS12Workflow(SwifWorkflow):
           job.setPhase(phase)
           job.addInputData(x)
           job.antecedents.append(inp.getJobName())
-          job.setCmd(len(jobs))
+          job.setCmd(len(self.jobs))
           jobs.append(job)
       else:
         job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
         job.setPhase(phase)
         job.addInputData(inp)
-        job.setCmd(len(jobs))
+        job.setCmd(len(self.jobs))
         jobs.append(job)
     self.addJob(jobs)
+    return jobs
+
+  def train(self,phase,inputs):
+    inps,jobs=[],[]
+    for ii,inp in enumerate(inputs):
+      inps.append(inp)
+      if len(inps)>=self.cfg['trainSize'] or ii>=len(inputs)-1:
+        job=CLAS12Jobs.TrainJob(self.name,self.cfg)
+        job.setPhase(phase)
+        if isinstance(inps[0],SwifJob):
+          job.addInputData([x.outputData[0] for x in inps])
+          job.antecedents.extend(inps)
+        else:
+          job.addInputData(inps)
+        job.setCmd(len(self.jobs))
+        jobs.append(job)
+        self.addJob(job)
+        inps=[]
+    return jobs
+
+  #
+  # decodemerge:  add jobs for decode+merge hipo files
+  # - one job per merge
+  # - return list of output merged hipo files
+  #
+  def decodemerge(self,phase,inputs):
+    inps,jobs=[],[]
+    for ii,inp in enumerate(inputs):
+      inps.append(inp)
+      if len(inps)>=self.cfg['mergeSize'] or ii>=len(inputs)-1:
+        job=CLAS12Jobs.DecodeAndMergeJob(self.name,self.cfg)
+        job.setPhase(phase)
+        if isinstance(inps[0],SwifJob):
+          raise NotImplementedError('asdf')
+          job.addInputData([x.outputData[0] for x in inps])
+          job.antecedents.extend(inps)
+        else:
+          job.addInputData(inps)
+        jobs.append(job)
+        self.addJob(job)
+        inps=[]
     return jobs
 
   #

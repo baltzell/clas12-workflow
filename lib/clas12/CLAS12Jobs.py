@@ -21,7 +21,8 @@ class Job(SwifJob):
     runno=RunFile(filename).runNumber
     fileno=RunFile(filename).fileNumber
     self.addTag('run','%.6d'%runno)
-    self.addTag('file','%.5d'%fileno)
+    if self.getTag('file') is None:
+      self.addTag('file','%.5d'%fileno)
   def addOutputData(self,basename,directory,tag=None):
     ChefUtil.mkdir(directory,tag)
     self.addTag('outDir',directory)
@@ -54,6 +55,44 @@ class MergingJob(Job):
     cmd+=' || rm -f $o ; ls $o'
     Job.setCmd(self,cmd)
 
+class DecodeAndMergeJob(Job):
+  def __init__(self,workflow,cfg):
+    Job.__init__(self,workflow,cfg)
+    self.setRam('3GB')
+    self.addTag('mode','decmrg')
+    self.addTag('coatjava',cfg['coatjava'])
+  def addInputData(self,eviofiles):
+    # FIXME:  this assume 2 GB EVIO file
+    self.setDisk('%.0fMB'%(1000*(2.1*(1+0.3)*len(eviofiles)+1)))
+    decodedfiles=[]
+    for eviofile in eviofiles:
+      Job.addInputData(self,eviofile)
+#      print self.getTag('file')
+      basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
+      decodedfiles.append(basename)
+    runno = RunFile(eviofiles[0]).runNumber
+    fileno1 = RunFile(eviofiles[0]).fileNumber
+    fileno2 = RunFile(eviofiles[len(eviofiles)-1]).fileNumber
+    mergedfile=self.cfg['mergePattern']%(runno,fileno1,fileno2)
+    outDir='%s/%.6d/'%(self.cfg['decDir'],runno)
+    self.addOutputData(mergedfile,outDir)
+    # decode:
+    decoderOpts = ChefUtil.getDecoderOpts(runno,self.cfg)
+    cmd='true'
+    for decodedfile,eviofile in zip(decodedfiles,eviofiles):
+      cmd+=' && (set o=%s && set i=%s'%(decodedfile,os.path.basename(eviofile))
+      cmd+=' && %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
+      cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
+      cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
+      cmd+=' || rm -f $o && ls $o )'
+    # merge:
+    cmd+=' && set o=%s && rm -f $o && '%mergedfile
+    cmd+='%s/bin/hipo-utils -merge -o $o %s'%(self.cfg['coatjava'],' '.join(decodedfiles))
+    cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
+    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
+    cmd+=' || rm -f $o && ls $o'
+    Job.setCmd(self,cmd)
+
 class DecodingJob(Job):
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
@@ -70,13 +109,7 @@ class DecodingJob(Job):
       outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],int(self.getTag('run')))
       Job.addOutputData(self,basename,outDir,'staging')
   def setCmd(self):
-    s = self.cfg['solenoid']
-    t = self.cfg['torus']
-    if s is None: s = _RCDB.getSolenoidScale(int(self.getTag('run')))
-    if t is None: t = _RCDB.getTorusScale(int(self.getTag('run')))
-    if s is None: sys.exit('[CLAS12Workflow] ERROR:  Unknown solenoid scale for '+str(runno))
-    if t is None: sys.exit('[CLAS12Workflow] ERROR:  Unknown torus scale for '+str(runno))
-    decoderOpts = '-c 2 -s %.4f -t %.4f'%(s,t)
+    ChefUtil.getDecoderOpts(self.getTag('run'),self.cfg)
     cmd =' set o=%s ; set i=%s'%(os.path.basename(self.outputData[0]),os.path.basename(self.inputData[0]))
     cmd+=' ; %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
@@ -112,6 +145,34 @@ class ClaraJob(Job):
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
     Job.setCmd(self,cmd)
 
+class TrainJob(Job):
+  def __init__(self,workflow,cfg):
+    Job.__init__(self,workflow,cfg)
+    self.addEnv('CLARA_HOME',cfg['clara'])
+    self.addEnv('JAVA_OPTS','-Xmx8g -Xms6g')
+    self.setRam('10GB')
+    self.setCores(12)
+    self.addTag('mode','ana')
+    # TODO: choose time based on #events:
+    self.setTime('24h')
+    self.addInput('train.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh')
+    self.addInput('clara.yaml',cfg['trainYaml'])
+  def addInputData(self,filenames):
+    self.setDisk(ChefUtil.getTrainDiskReq(filenames))
+    for x in filenames:
+      Job.addInputData(self,x)
+    outDir='%s/train/%s/'%(self.cfg['outDir'],self.getTag('run'))
+    for x in filenames:
+      basename=os.path.basename(x)
+      for y in ChefUtil.getTrainIndices(self.cfg['trainYaml']):
+        Job.addOutputData(self,'skim%d_%s'%(y,basename),outDir)
+  def setCmd(self,hack):
+    cmd = './train.sh -t 12 '
+    if self.cfg['claraLogDir'] is not None:
+      cmd += ' -l '+self.cfg['claraLogDir']+' '
+    cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
+    cmd += ' && ls -lhtr'
+    Job.setCmd(self,cmd)
 
 if __name__ == '__main__':
 

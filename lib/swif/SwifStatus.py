@@ -2,6 +2,7 @@ import subprocess
 import json
 import getpass
 import datetime
+import sys
 
 SWIF='/site/bin/swif'
 
@@ -67,6 +68,17 @@ class SwifStatus():
   def loadDetails(self):
     cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
     self.details=json.loads(subprocess.check_output(cmd))
+
+  def getTagValues(self,tag):
+    vals=[]
+    if self.details is None:
+      self.loadDetails()
+    if 'jobs' in self.details:
+      for job in self.details['jobs']:
+        if 'tags' in job and tag in job['tags']:
+          if job['tags'][tag] not in vals:
+            vals.append(job['tags'][tag])
+    return sorted(vals)
 
   # pull user-defined swif tags from all jobs into the global status
   def mergeTags(self):
@@ -248,10 +260,11 @@ class SwifStatus():
       print(json.dumps(job,indent=2,separators=(',',': '),sort_keys=True))
 
 if __name__ == '__main__':
-  s=SwifStatus('rga-decode9_R3135x178_x1300')
-  s.setUser('clas12')
+  s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
+#  s.setUser('clas12-4')
 #  s.mergeTags()
 #  print(s.getPrettyStatus())
 #  print(s.getPrettyJsonStatus())
-  s.showPersistentProblems();
+#  s.showPersistentProblems();
+  print('\n'.join(s.getTagValues('run')))
 
