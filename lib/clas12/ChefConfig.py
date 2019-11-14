@@ -14,15 +14,17 @@ class Models:
   DecodeRecon=14
   DecodeMergeRecon=24
   DecodeMergeInlineRecon=34
+  DecodeMergeInlineReconTrain=345
   Choices={}
-  Choices[Decode]          ={'task':'dec',   'clara':False,'coatjava':True, 'merging':False, 'name':'Decode'}
-  Choices[DecodeMerge]     ={'task':'dec',   'clara':False,'coatjava':True, 'merging':True,  'name':'DecodeMerge'}
-  Choices[DecodeMergeInline]={'task':'dec',   'clara':False,'coatjava':True, 'merging':False,  'name':'DecodeMergeInline'}
-  Choices[Recon]           ={'task':'rec',   'clara':True, 'coatjava':False,'merging':False, 'name':'Recon'}
-  Choices[Train]           ={'task':'ana',   'clara':True, 'coatjava':False,'merging':False, 'name':'Train'}
-  Choices[DecodeRecon]     ={'task':'decrec','clara':True, 'coatjava':True, 'merging':False, 'name':'DecodeRecon'}
-  Choices[DecodeMergeRecon]={'task':'decrec','clara':True, 'coatjava':True, 'merging':True,  'name':'DecodeMergeRecon'}
-  Choices[DecodeMergeInlineRecon]={'task':'decrec','clara':True, 'coatjava':True, 'merging':False,  'name':'DecodeMergeInlineRecon'}
+  Choices[Decode]           ={'task':'dec',   'clara':False,'coatjava':True, 'merging':False, 'name':'Decode'}
+  Choices[DecodeMerge]      ={'task':'dec',   'clara':False,'coatjava':True, 'merging':True,  'name':'DecodeMerge'}
+  Choices[DecodeMergeInline]={'task':'dec',   'clara':False,'coatjava':True, 'merging':False, 'name':'DecodeMergeInline'}
+  Choices[Recon]            ={'task':'rec',   'clara':True, 'coatjava':False,'merging':False, 'name':'Recon'}
+  Choices[Train]            ={'task':'ana',   'clara':True, 'coatjava':False,'merging':False, 'name':'Train'}
+  Choices[DecodeRecon]      ={'task':'decrec','clara':True, 'coatjava':True, 'merging':False, 'name':'DecodeRecon'}
+  Choices[DecodeMergeRecon] ={'task':'decrec','clara':True, 'coatjava':True, 'merging':True,  'name':'DecodeMergeRecon'}
+  Choices[DecodeMergeInlineRecon]     ={'task':'decrec',   'clara':True,'coatjava':True,'merging':False,'name':'DecodeMergeInlineRecon'}
+  Choices[DecodeMergeInlineReconTrain]={'task':'decrecana','clara':True,'coatjava':True,'merging':False,'name':'DecodeMergeInlineReconTrain'}
   Description={}
   for xx in sorted(Choices.keys()):
     Description[xx]=Choices[xx]['name']
@@ -107,6 +109,9 @@ class ChefConfig:
         self._workflow = CLAS12Workflows.RollingDecodeAndClara(name,self.cfg)
       elif self.cfg['model']==Models.DecodeMergeInlineRecon:
         self._workflow = CLAS12Workflows.InlineDecodeMergeClara(name,self.cfg)
+      elif self.cfg['model']==Models.DecodeMergeInlineReconTrain:
+        raise NotImplementedError()
+        self._workflow = CLAS12Workflows.InlineDecodeMergeClaraTrain(name,self.cfg)
       elif self.cfg['model']==Models.DecodeMergeInline:
         self._workflow = CLAS12Workflows.InlineDecodeMerge(name,self.cfg)
       elif self.cfg['model']==Models.Train:
