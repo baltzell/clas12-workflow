@@ -3,9 +3,6 @@ import os
 import ChefUtil
 from RunFileUtil import RunFile
 from SwifJob import SwifJob
-from RcdbManager import RcdbManager
-
-_RCDB=RcdbManager()
 
 class Job(SwifJob):
   def __init__(self,workflow,cfg):
