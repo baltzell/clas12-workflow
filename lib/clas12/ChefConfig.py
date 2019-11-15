@@ -131,7 +131,7 @@ class ChefConfig:
     cli.add_argument('--model', help='* workflow model '+str(Models.Description), type=int, choices=CHOICES['model'],default=None)
 
     cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
-    cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable and not allowed in config file.', action='append', default=[], type=str)
+    cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str)
 
     cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None)
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
@@ -157,7 +157,7 @@ class ChefConfig:
 
     cli.add_argument('--multiRun', help='allow multiple runs per phase (non-merging workflow only)', action='store_true', default=None)
 
-    cli.add_argument('--config',metavar='PATH',help='load config file (contents superceded by command line arguments)', type=str,default=None)
+    cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
     cli.add_argument('--defaults',help='print default config and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
 
@@ -202,8 +202,9 @@ class ChefConfig:
     if self.cfg['tag'] is None:
       self.cli.error('"tag" must be specified.')
 
-    if len(self.args.runs)==0:
-      self.cli.error('"runs" must be specified via --runs.')
+# no, let it be in config file ...
+#    if len(self.args.runs)==0:
+#      self.cli.error('"runs" must be specified via --runs.')
 
     if len(self.cfg['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
@@ -287,7 +288,7 @@ class ChefConfig:
         self.cli.error('"reconYaml" does not exist:  '+self.cfg['reconYaml'])
 
     # parse run list:
-    self.cfg['runs'] = ChefUtil.getRunList(self.args.runs)
+    self.cfg['runs'] = ChefUtil.getRunList(self.cfg['runs'])
     if self.cfg['runs'] is None or len(self.cfg['runs'])==0:
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
 
