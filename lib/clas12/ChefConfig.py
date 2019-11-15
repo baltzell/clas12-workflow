@@ -110,7 +110,6 @@ class ChefConfig:
       elif self.cfg['model']==Models.DecodeMergeInlineRecon:
         self._workflow = CLAS12Workflows.InlineDecodeMergeClara(name,self.cfg)
       elif self.cfg['model']==Models.DecodeMergeInlineReconTrain:
-        raise NotImplementedError()
         self._workflow = CLAS12Workflows.InlineDecodeMergeClaraTrain(name,self.cfg)
       elif self.cfg['model']==Models.DecodeMergeInline:
         self._workflow = CLAS12Workflows.InlineDecodeMerge(name,self.cfg)

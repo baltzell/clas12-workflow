@@ -156,6 +156,16 @@ class InlineDecodeMergeClara(CLAS12Workflow):
       decodeJobs = self.decodemerge(self.phase,evioFiles)
       reconJobs = self.reconclara(self.phase,decodeJobs)
 
+class InlineDecodeMergeClaraTrain(CLAS12Workflow):
+  def __init__(self,name,cfg):
+    CLAS12Workflow.__init__(self,name,cfg)
+  def generate(self):
+    for evioFiles in self.getGroups():
+      decodeJobs = self.decodemerge(self.phase,evioFiles)
+      reconJobs = self.reconclara(self.phase,decodeJobs)
+      trainJobs = self.train(self.phase,reconJobs)
+
+
 class RollingDecodeAndClara(CLAS12Workflow):
 
   def __init__(self,name,cfg):

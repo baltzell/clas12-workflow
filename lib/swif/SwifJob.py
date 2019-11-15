@@ -13,6 +13,7 @@ class SwifJob:
     self.project='clas12'
     self.track='reconstruction'
     self.cores=1
+    self.os='centos7'
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
@@ -190,7 +191,7 @@ class SwifJob:
   def getShell(self):
 
     job=('swif add-job -create -workflow '+self.workflow+' -slurm '
-      '-project '+self.project+' -track '+self.track+' '
+      '-project '+self.project+' -track '+self.track+' '+' -os '+self.os+' '
       '-time '+self.time+' -cores '+str(self.cores)+' '
       '-disk '+self.disk+' -ram '+self.ram+' -shell '+self.shell)
 
@@ -213,6 +214,7 @@ class SwifJob:
 
   def getJson(self):
     jsonData = collections.OrderedDict()
+    jsonData['os']=self.os
     jsonData['name']=self.getJobName()
     jsonData['phase']=self.phase
     jsonData['project']=self.project

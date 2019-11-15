@@ -46,7 +46,11 @@ def getTrainIndices(yamlfile):
 def getTrainDiskReq(filenames):
   s=0
   for f in filenames:
-    s+=getFileSize(f)
+    # FIXME:
+    if not os.path.isfile(f):
+      s+=3e9
+    else:
+      s+=getFileSize(f)
   return '%.0fGB'%(1.5*s/1e9+1)
 
 def getMergeDiskReq(nfiles):

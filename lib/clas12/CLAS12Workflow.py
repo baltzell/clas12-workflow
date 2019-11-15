@@ -70,7 +70,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.setPhase(phase)
         if isinstance(inps[0],SwifJob):
           job.addInputData([x.outputData[0] for x in inps])
-          job.antecedents.extend(inps)
+          job.antecedents.extend([inp.getJobName() for inp in inps])
         else:
           job.addInputData(inps)
         job.setCmd(len(self.jobs))
