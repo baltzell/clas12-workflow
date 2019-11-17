@@ -49,7 +49,7 @@ CFG={
     'decDir'        : None,
     'logDir'        : '/farm_out/'+getpass.getuser(),
     'phaseSize'     : 0,
-    'mergeSize'     : 10,
+    'mergeSize'     : 5,
     'model'         : None,
     'torus'         : None,
     'solenoid'      : None,

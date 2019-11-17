@@ -61,6 +61,7 @@ class DecodeAndMergeJob(Job):
   def addInputData(self,eviofiles):
     # FIXME:  this assume 2 GB EVIO file
     self.setDisk('%.0fMB'%(1000*(2.1*(1+0.3)*len(eviofiles)+1)))
+    self.setTime('%.0fh'%(len(eviofiles))))
     decodedfiles=[]
     for eviofile in eviofiles:
       Job.addInputData(self,eviofile)
