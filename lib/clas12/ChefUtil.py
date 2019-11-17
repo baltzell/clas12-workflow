@@ -125,7 +125,7 @@ def getRunList(data):
       _LOGGER.info('Read run numbers:  '+','.join([str(x) for x in runs]))
     # else it's a string run list:
     else:
-      _LOGGER.info('Adding run numbers from command-line: '+data)
+      _LOGGER.info('Adding run numbers: '+data)
       for run in data.split(','):
         if run.find('-')<0:
           try:
