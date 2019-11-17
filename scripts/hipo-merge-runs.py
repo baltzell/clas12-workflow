@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os,sys,argparse,subprocess,logging,traceback
 
+import ChefUtil
 from RunFileUtil import getRunList
 from RunFileUtil import RunFileGroups,RunFile
 
@@ -18,6 +19,7 @@ rfgs=RunFileGroups()
 rfgs.addRuns(getRunList(args.i))
 rfgs.findFiles(args.i)
 
+ChefUtil.mkdir(os.path.dirname(args.o))
 
 for rfg in rfgs.getGroups():
   rf=RunFile(rfg[0])

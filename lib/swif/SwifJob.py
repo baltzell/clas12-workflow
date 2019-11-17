@@ -160,7 +160,7 @@ class SwifJob:
       cmd+= ' && rsync %s %s/'%(os.path.basename(file),os.path.dirname(file))
     return cmd
 
-  # jput non-Auger outputs, if there's on /cache:
+  # jput non-Auger outputs, if on /cache:
   def _getJputOutputsCmd(self):
     files=[]
     for xx in self.outputData:

@@ -47,19 +47,17 @@ for plugin in "${CLARA_HOME}/plugins"/*/; do
 done
 export CLASSPATH
 
-# count services:
-# to identify the expected output files
-nservices=`python - <<'EOF'
+# get train ids for expected output files:
+trainids=`python - <<'EOF'
 ids=[]
 for line in open('clara.yaml','r').readlines():
   if line.strip().find('id: ')==0:
-    id=int(line.strip().split()[1])
-    if id not in ids:
-      ids.append(id)
-print len(ids)
+    ids.append(int(line.strip().split()[1]))
+print(' '.join(sorted(set(map(str,ids)))))
 EOF`
 
-echo "#Services: "$nservices
+echo "Train IDs:  "$trainids
+exit
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
@@ -100,8 +98,7 @@ claraexit=$?
 # check and rename outputs:
 for xx in `cat filelist.txt`
 do
-    # FIXME: this requires service ids are sequential, no skips
-    for nn in `seq $nservices`
+    for nn in $trainids
     do
         yy=./skim_${xx}_${nn}.hipo
         zz=./skim${nn}_${xx}
