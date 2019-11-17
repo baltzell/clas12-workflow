@@ -14,7 +14,7 @@ logger.info('Generating workflow ...')
 workflow.generate()
 
 logger.info('Created workflow with %d jobs based on %d runs with %d total input files.'%\
-    (len(workflow.jobs),len(workflow.getRunList(1)),workflow.getFileCount()))
+    (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount()))
 
 if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')

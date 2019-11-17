@@ -97,7 +97,6 @@ class ChefConfig:
   def getWorkflow(self):
     if self._workflow is None:
       name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['task'],self.cfg['tag'])
-      name+='_R%dx%d'%(self.cfg['runs'][0],len(self.cfg['runs']))
       if self.cfg['model']==Models.DecodeMerge:
         self._workflow = CLAS12Workflows.RollingDecoding(name,self.cfg)
       elif self.cfg['model']==Models.Decode:
@@ -120,6 +119,8 @@ class ChefConfig:
         sys.exit('This should never happen #1.')
     if self._workflow.getFileCount()<1:
       sys.exit('FATAL ERROR:  found no applicable input files.  Check "inputs" and "run".')
+    name+='_R%dx%d'%(self.cfg['runs'][0],len(self._workflow.getRunList()))
+    self._workflow.name=name
     return self._workflow
 
   def getCli(self):

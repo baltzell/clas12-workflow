@@ -193,7 +193,7 @@ class RunFileGroups:
         flatList.append(rf.fileName)
     return flatList
 
-  def getRunList(self,minFileCount=-1):
+  def getRunList(self,minFileCount=1):
     runs=[]
     for run,rfg in self.rfgs.items():
       if minFileCount>0 and rfg.size()<minFileCount: continue
