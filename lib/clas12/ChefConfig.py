@@ -78,7 +78,8 @@ class ChefConfig:
     self.args = self.cli.parse_args(args)
 
     if self.args.defaults:
-      sys.exit(str(self))
+      print(str(self))
+      sys.exit()
 
     if self.args.config is not None:
       self._loadConfigFile(self.args.config)

@@ -138,9 +138,16 @@ def getRunList(data):
             _LOGGER.critical('Invalid run range: '+run)
             sys.exit()
           try:
-            start,end=run.split('-')
-            start=int(start)
-            end=int(end)
+            if run.startswith('-'):
+              start=0
+              end=int(run.lstrip('-'))
+            elif run.endswith('-'):
+              start=int(run.rstrip('-'))
+              end=99999
+            else:
+              start,end=run.split('-')
+              start=int(start)
+              end=int(end)
             for run in range(start,end+1):
               runs.append(run)
           except:
