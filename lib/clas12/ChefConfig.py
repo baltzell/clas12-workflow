@@ -125,14 +125,14 @@ class ChefConfig:
   def getCli(self):
 
     cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
-        epilog='* = required option, from command-line or config file')
+        epilog='(*) = required option, from command-line or config file')
 
-    cli.add_argument('--runGroup',metavar='NAME',help='* run group name', type=str, choices=CHOICES['runGroup'], default=None)
-    cli.add_argument('--tag',     metavar='NAME',help='* workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
-    cli.add_argument('--model', help='* workflow model '+str(Models.Description), type=int, choices=CHOICES['model'],default=None)
+    cli.add_argument('--runGroup',metavar='NAME',help='(*) run group name', type=str, choices=CHOICES['runGroup'], default=None)
+    cli.add_argument('--tag',     metavar='NAME',help='(*) workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
+    cli.add_argument('--model', help='(*) workflow model '+str(Models.Description), type=int, choices=CHOICES['model'],default=None)
 
-    cli.add_argument('--inputs', metavar='PATH',help='* name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
-    cli.add_argument('--runs',   metavar='RUN/PATH',help='* run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str)
+    cli.add_argument('--inputs', metavar='PATH',help='(*) name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
+    cli.add_argument('--runs',   metavar='RUN/PATH',help='(*) run numbers (e.g. 4013 or 4013,4015 or 3980,4000-4999), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str)
 
     cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None)
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
@@ -159,12 +159,12 @@ class ChefConfig:
     cli.add_argument('--multiRun', help='allow multiple runs per phase (non-merging workflow only)', action='store_true', default=None)
 
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
-    cli.add_argument('--defaults',help='print default config and exit', action='store_true', default=False)
-    cli.add_argument('--show',    help='print config and exit', action='store_true', default=False)
+    cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
+    cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
-    cli.add_argument('--version',action='version',version='0.3-dev')
+    cli.add_argument('--version',action='version',version='0.4')
 
     return cli
 
@@ -179,7 +179,7 @@ class ChefConfig:
       print(traceback.format_exc())
       sys.exit('FATAL ERROR: Config file '+filename+' has invalid JSON format.')
 
-    for key,val in cfg.iteritems():
+    for key,val in cfg.items():
       if key not in self.cfg:
         sys.exit('FATAL ERROR:  Config file contains invalid key:  '+key)
       if key in CHOICES and val not in CHOICES[key]:
@@ -187,7 +187,7 @@ class ChefConfig:
       self.cfg[key]=val
 
   def _loadCliArgs(self):
-    for key,val in vars(self.args).iteritems():
+    for key,val in vars(self.args).items():
       if key in self.cfg:
         if val is None:
           continue
@@ -197,15 +197,14 @@ class ChefConfig:
 
   def _verifyConfig(self):
 
+    if self.cfg['model'] is None:
+      self.cli.error('"model" must be defined.')
+
     if self.cfg['runGroup'] is None:
       self.cli.error('"runGroup" must be defined.')
 
     if self.cfg['tag'] is None:
       self.cli.error('"tag" must be specified.')
-
-# no, let it be in config file ...
-#    if len(self.args.runs)==0:
-#      self.cli.error('"runs" must be specified via --runs.')
 
     if len(self.cfg['inputs'])==0:
       self.cli.error('"inputs" must be specified.')

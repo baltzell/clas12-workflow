@@ -1,4 +1,4 @@
-import os,re,glob,logging,collections
+import os,re,sys,glob,logging,collections
 
 # The first/second group must match the run/file number:
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
@@ -76,9 +76,11 @@ class RunFileGroup():
       self.runNumber = rf.runNumber
       self.runFileList.append(rf)
     elif self.runNumber != rf.runNumber:
-      raise ValueError('multiple run nubmers ',rf.runNumber)
+      _LOGGER.critical('Run number mismatch: '+str(self.runNumber)+'/'+str(rf.runNumber))
+      sys.exit()
     elif rf in self.runFileList:
-      raise ValueError('duplicate: ',str(rf))
+      _LOGGER.critical('Found duplicate run/file numbers: '+str(rf))
+      sys.exit()
     else:
       inserted=False
       for ii in range(len(self.runFileList)):
@@ -166,7 +168,7 @@ class RunFileGroups:
   def getGroups(self):
     groups=[]
     phaseList=[]
-    for run,rfg in self.rfgs.iteritems():
+    for run,rfg in self.rfgs.items():
       # make a new group unless we're allowed to combine runs:
       if not self.combineRuns:
         if len(phaseList)>0:
@@ -186,14 +188,14 @@ class RunFileGroups:
 
   def getFlatList(self):
     flatList=[]
-    for run,rfg in self.rfgs.iteritems():
+    for run,rfg in self.rfgs.items():
       for rf in rfg.runFileList:
         flatList.append(rf.fileName)
     return flatList
 
   def getRunList(self,minFileCount=-1):
     runs=[]
-    for run,rfg in self.rfgs.iteritems():
+    for run,rfg in self.rfgs.items():
       if minFileCount>0 and rfg.size()<minFileCount: continue
       runs.append(run)
     return runs
@@ -203,7 +205,7 @@ class RunFileGroups:
       print(group)
 
   def showFlatList(self):
-    for key,val in self.rfgs.iteritems():
+    for key,val in self.rfgs.items():
       print(key,)
       val.show()
 

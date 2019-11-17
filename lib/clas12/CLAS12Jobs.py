@@ -107,7 +107,7 @@ class DecodingJob(Job):
       outDir = '%s/singles/%.6d/'%(self.cfg['workDir'],int(self.getTag('run')))
       Job.addOutputData(self,basename,outDir,'staging')
   def setCmd(self):
-    ChefUtil.getDecoderOpts(self.getTag('run'),self.cfg)
+    decoderOpts=ChefUtil.getDecoderOpts(self.getTag('run'),self.cfg)
     cmd =' set o=%s ; set i=%s'%(os.path.basename(self.outputData[0]),os.path.basename(self.inputData[0]))
     cmd+=' ; %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'

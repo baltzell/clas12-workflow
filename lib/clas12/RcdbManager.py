@@ -84,6 +84,7 @@ if __name__ == '__main__':
   if len(sys.argv)<2:
     sys.exit(usage)
   for run in sys.argv[1:]:
-    print(r.getSolenoidScale(run))
+    r.getSolenoidScale(run)
+#    print(r.getSolenoidScale(run))
   print (r)
 

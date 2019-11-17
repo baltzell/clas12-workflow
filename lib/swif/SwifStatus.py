@@ -92,7 +92,7 @@ class SwifStatus():
     for job in self.details['jobs']:
       if 'tags' not in job:
         continue
-      for key,val in job['tags'].iteritems():
+      for key,val in job['tags'].items():
         if key=='file': continue
         idx=-1
         for ii in range(len(tags)):
@@ -117,7 +117,7 @@ class SwifStatus():
       modified = True
       while modified:
         modified = False
-        for key,val in stat.iteritems():
+        for key,val in stat.items():
           if val==None:
             del stat[key]
             modified = True
@@ -175,7 +175,7 @@ class SwifStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
-        for key,val in atag.iteritems():
+        for key,val in atag.items():
           if key==tag:
             if type(val) is list:
               return val[0]
@@ -190,7 +190,7 @@ class SwifStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
-        for key,val in atag.iteritems():
+        for key,val in atag.items():
           if key==tag:
             status['tags'].remove(atag)
             if type(val) is list:

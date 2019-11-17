@@ -122,7 +122,7 @@ class SwifJob:
 
   def getLogPrefix(self):
     prefix='%s/%s_p%d'%(self.logDir,self.getJobName(),self.phase)
-    for key,val in self.tags.iteritems():
+    for key,val in self.tags.items():
       if key=='mode':
         prefix+='_'+val
       elif key=='run':
@@ -200,7 +200,7 @@ class SwifJob:
 
     if not self.phase is None: job += ' -phase '+str(self.phase)
 
-    for key,val in self.tags.iteritems(): job += ' -tag %s %s'   %(key,val)
+    for key,val in self.tags.items(): job += ' -tag %s %s'   %(key,val)
     for xx in self.inputs:  job += ' -input %s %s' %(xx['local'],xx['remote'])
     for xx in self.outputs: job += ' -output %s %s'%(xx['local'],xx['remote'])
 
