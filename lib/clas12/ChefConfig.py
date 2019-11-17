@@ -88,7 +88,8 @@ class ChefConfig:
     self._verifyConfig()
 
     if self.args.show:
-      sys.exit(str(self))
+      print(str(self))
+      sys.exit()
 
   def get(self,key):
     return self.cfg[key]
