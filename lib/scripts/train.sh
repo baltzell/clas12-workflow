@@ -57,7 +57,6 @@ print(' '.join(sorted(set(map(str,ids)))))
 EOF`
 
 echo "Train IDs:  "$trainids
-exit
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
