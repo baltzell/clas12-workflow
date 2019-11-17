@@ -116,11 +116,10 @@ class ChefConfig:
       elif self.cfg['model']==Models.Train:
         self._workflow = CLAS12Workflows.Train(name,self.cfg)
       else:
-        sys.exit('This should never happen #1.')
+        _LOGGER.critical('Invalid Model: '+str(self.cfg['model']))
+        sys.exit()
     if self._workflow.getFileCount()<1:
       sys.exit('FATAL ERROR:  found no applicable input files.  Check "inputs" and "run".')
-    name+='_R%dx%d'%(self.cfg['runs'][0],len(self._workflow.getRunList()))
-    self._workflow.name=name
     return self._workflow
 
   def getCli(self):

@@ -17,6 +17,11 @@ class CLAS12Workflow(SwifWorkflow):
     self.addRuns(self.cfg['runs'])
     _LOGGER.info('Finding files from '+str(self.cfg['inputs']))
     self.findFiles(self.cfg['inputs'])
+    r=self.getRunList()
+    if len(r)>0:
+      self.name+='_R%d'%(r[0])
+      if len(r)>1:
+        self.name+='x%d'%(len(r))
     self.logDir=None
     self._mkdirs()
 

@@ -198,7 +198,7 @@ class RunFileGroups:
     for run,rfg in self.rfgs.items():
       if minFileCount>0 and rfg.size()<minFileCount: continue
       runs.append(run)
-    return runs
+    return sorted(runs)
 
   def showGroups(self):
     for group in self.getGroups():
