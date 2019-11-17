@@ -48,7 +48,7 @@ def getTrainDiskReq(filenames):
   for f in filenames:
     # FIXME:
     if not os.path.isfile(f):
-      s+=3e9
+      s+=1.5e9
     else:
       s+=getFileSize(f)
   return '%.0fGB'%(1.5*s/1e9+1)
