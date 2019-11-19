@@ -117,8 +117,10 @@ def getRunList(data):
       _LOGGER.info('Reading run numbers from file: '+data)
       for line in open(data,'r').readlines():
         run=line.strip().split()[0]
+        if len(run)<1:
+          continue
         try:
-          runs.append(int(run))
+          runs.append(int(run[0]))
         except:
           _LOGGER.critical('Run numbers must be integers:  %s (%s)'%(fileName,line))
           sys.exit()
