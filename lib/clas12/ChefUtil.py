@@ -116,7 +116,7 @@ def getRunList(data):
     if os.access(data,os.R_OK):
       _LOGGER.info('Reading run numbers from file: '+data)
       for line in open(data,'r').readlines():
-        run=line.strip().split()[0]
+        run=line.strip().split()
         if len(run)<1:
           continue
         try:
