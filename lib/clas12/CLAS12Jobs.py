@@ -25,6 +25,11 @@ class Job(SwifJob):
     self.addTag('outDir',directory)
     self.outputData.append(directory+'/'+basename)
     self.addOutput(basename,directory+'/'+basename)
+  def getFileCheck(file,minsize=100):
+    cmd=self.cfg['coatjava']+'/bin/hipo-utils -test'}
+    c=SwifJob.getFileCheck(file,minsize)
+    c+=' || %(c) %(f) || ( rm -f %(f) && false )'%(f)'%{'f':file,'c':cmd}
+    return c
 
 class MergingJob(Job):
   def __init__(self,workflow,cfg):
@@ -47,9 +52,7 @@ class MergingJob(Job):
       Job.addInputData(self,filenames[ii])
       basename=filenames[ii].split('/').pop()
       cmd+=' '+basename
-    cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
-    cmd+=' || rm -f $o ; ls $o'
+    cmd+=self.getFileCheck(file='$o')
     Job.setCmd(self,cmd)
 
 class DecodeAndMergeJob(Job):
@@ -65,7 +68,6 @@ class DecodeAndMergeJob(Job):
     decodedfiles=[]
     for eviofile in eviofiles:
       Job.addInputData(self,eviofile)
-#      print self.getTag('file')
       basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
       decodedfiles.append(basename)
     runno = RunFile(eviofiles[0]).runNumber
@@ -78,17 +80,13 @@ class DecodeAndMergeJob(Job):
     decoderOpts = ChefUtil.getDecoderOpts(runno,self.cfg)
     cmd='true'
     for decodedfile,eviofile in zip(decodedfiles,eviofiles):
-      cmd+=' && (set o=%s && set i=%s'%(decodedfile,os.path.basename(eviofile))
+      cmd+=' && (o=%s && i=%s'%(decodedfile,os.path.basename(eviofile))
       cmd+=' && %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
-      cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-      cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
-      cmd+=' || rm -f $o && ls $o )'
+      cmd+=self.getFileCheck(file='$o')
     # merge:
-    cmd+=' && set o=%s && rm -f $o && '%mergedfile
+    cmd+=' && o=%s && rm -f $o && '%mergedfile
     cmd+='%s/bin/hipo-utils -merge -o $o %s'%(self.cfg['coatjava'],' '.join(decodedfiles))
-    cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
-    cmd+=' || rm -f $o && ls $o'
+    cmd+=self.getFileCheck(file='$o')
     Job.setCmd(self,cmd)
 
 class DecodingJob(Job):
@@ -108,11 +106,9 @@ class DecodingJob(Job):
       Job.addOutputData(self,basename,outDir,'staging')
   def setCmd(self):
     decoderOpts=ChefUtil.getDecoderOpts(self.getTag('run'),self.cfg)
-    cmd =' set o=%s ; set i=%s'%(os.path.basename(self.outputData[0]),os.path.basename(self.inputData[0]))
+    cmd =' o=%s ; i=%s'%(os.path.basename(self.outputData[0]),os.path.basename(self.inputData[0]))
     cmd+=' ; %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
-    cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
-    cmd+=' || rm -f $o ; ls $o'
+    cmd+=self.getFileCheck(file='$o')
     Job.setCmd(self,cmd)
 
 class ClaraJob(Job):

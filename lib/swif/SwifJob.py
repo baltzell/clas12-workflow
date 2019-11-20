@@ -17,8 +17,7 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    # this is no longer honored but defaults to login shell (bah, bad!):
-    self.shell='/bin/tcsh'
+    self.shell='/bin/bash'
     self.tags=collections.OrderedDict()
     self.antecedents=[]
     self.conditions=[]
@@ -30,6 +29,17 @@ class SwifJob:
     # for non-Auger staging:
     self.inputData=[]
     self.outputData=[]
+
+  def getFileCheck(file,minsize):
+    cmd='ls -l %(f) && '%{'f'=file}
+    if self.shell.find('bash')>=0:
+      cmd+='[ -e %(f) ] && [ $(stat -c%s %(f)) -gt %(s) ]'%{'f':file,'s':minsize}
+    elif self.shell.find('tcsh')>=0:
+      cmd+='if (`stat -c%s %(f)` < %(s)) rm -f %(f) && ls -l %(f)'%{'f':file,'s':minsize}
+    else:
+      logging.getLogger(__name__).critical('Unknown shell:  '+self.shell)
+      sys.exit()
+    cmd+=' || rm -f %(f) && false'%{'f'=file}
 
   def addEnv(self,key,val):
     self.env[key]=val
@@ -176,7 +186,7 @@ class SwifJob:
   def _createCommand(self):
     cmd='unalias -a ; '
     for xx in self.env.keys():
-      cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
+      cmd+='export '+xx+'="'+self.env[xx]+'" ; '
     cmd+=self._getCopyInputsCmd()
     d=[]
     for o in self.outputs:
