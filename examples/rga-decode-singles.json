@@ -1,9 +1,8 @@
 {
   "runGroup": "rga",
   "coatjava": "/group/clas12/packages/coatjava-6b.0.0",
-  "model": 2,
-  "multiRun": true,
+  "model": "dec",
+  "phaseSize": -1,
   "outDir": "/scratch/baltzell/test",
-  "task": "decode",
   "inputs": ["/mss/clas12/rg-a/data"]
 }

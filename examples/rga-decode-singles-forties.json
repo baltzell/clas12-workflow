@@ -2,9 +2,8 @@
   "runGroup": "test",
   "coatjava": "/group/clas12/packages/coatjava-6b.0.0",
   "fileRegex": ".*clas[_A-Za-z]*_(\\d+)\\.evio\\.(0*4\\d$)",
-  "model": 2,
-  "multiRun": true,
+  "model": "dec",
+  "phaseSize": -1,
   "outDir": "/volatile/clas12/baltzell/test",
-  "task": "decode",
   "inputs": ["/mss/clas12/rg-a/data"]
 }

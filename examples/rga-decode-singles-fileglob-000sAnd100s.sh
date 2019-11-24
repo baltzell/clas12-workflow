@@ -1,4 +1,4 @@
-./scripts/gen-decoding.py \
+./scripts/clas12-workflow.py \
     --config examples/rga-decode-singles.json \
     --tag v1 \
     --run 6688,6689 \
