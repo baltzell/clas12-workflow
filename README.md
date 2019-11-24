@@ -3,80 +3,85 @@
 ## Overview
 Wrapper tools for [JLab's Swif](https://scicomp.jlab.org/docs/swif).
 
-Initially motivated by mass-decoding of CLAS12 Spring RGA data, whose requirements include:
+Initially use was decoding of CLAS12 Spring RGA data, where the requirements included:
 * Decode single EVIO files, independently (to optimize tape access)
 * Merge M sequential HIPO files into 1 HIPO file
 * Write merged HIPO files to tape, in sequence (unlike the raw EVIO files)
 * Maintain a fixed and available disk space requirement
 
-## CLAS12 Decoding Workflows
-
-Note, Swif phase `i+1` doesn't start until phase `i` has succesfully finished.  Each phase's decoding jobs are automatically limited to a single run number.  These workflows are subclasses of a generic SwifWorkflow.
-
-### _3-phase_:
-Requires N GB of temporary disk space.  Only every third phase reads from tape. 
-* Phase 1
-  * N jobs
-  * decode N EVIO files into N HIPO files
-* Phase 2
-  * N/M jobs
-  * merge N HIPO files into N/M HIPO files (M->1)
-* Phase 3
-  * 2 jobs
-  * delete N HIPO files
-  * move N/M HIPO files to destination
-* Repeat phases 1+2+3 until all requested runs/files are exhausted ...
-
-### _Rolling_:
-Requires 3N GB of temporary disk space.  Every phase reads from tape.
-* Phase 0
-  * N jobs
-  * decode N EVIO files
-* Phase 1
-  * N + N/M jobs
-  * decode next N EVIO files
-  * merge previous phase's N HIPO files into N/M HIPO files
-* Phase 2
-  * N + N/M + 2 jobs
-  * decode next N EVIO files
-  * merge previous phase's N HIPO files into N/M HIPO files
-  * delete previous-previous phase's N HIPO files
-  * move previous-previous phase's N/M HIPO files to destination
-* Repeat phase 2 until all requested runs/files are exhausted ...
-
-### _SinglesOnly_:
-Just decodes single files, with independent cronjob to merge and move.
-
 ## Usage
+
+`clas12-workflow -h` will print the help information:
+
+```
+  -h, --help          show this help message and exit
+  --runGroup NAME     (*) run group name
+  --tag NAME          (*) workflow name suffix/tag, e.g. v0, automatically
+                      prefixed with runGroup and task to define workflow name
+  --model NAME        (*) workflow model set(['decmrgrec', 'decrec', 'ana',
+                      'recana', 'decmrgrecana', 'decmrg', 'rec', 'decrecana',
+                      'dec'])
+  --inputs PATH       (*) name of file containing a list of input files, or a
+                      directory to be searched recursively for input files, or
+                      a shell glob of either. This option is repeatable.
+  --runs RUN/PATH     (*) run numbers (e.g. "4013" or "4013,4015" or
+                      "3980,4000-4999"), or a file containing a list of run
+                      numbers. This option is repeatable.
+  --outDir PATH       final data location
+  --decDir PATH       overrides outDir for decoding
+  --workDir PATH      temporary data location (for merging and phased
+                      workflows only)
+  --logDir PATH       log location (otherwise the SLURM default)
+  --coatjava PATH     coatjava install location
+  --clara PATH        clara install location
+  --threads #         number of Clara threads
+  --reconYaml PATH    recon yaml file
+  --trainYaml PATH    train yaml file
+  --claraLogDir PATH  location for clara log files
+  --phaseSize #       number of files per phase
+  --mergeSize #       number of files per merge
+  --trainSize #       number of files per train
+  --torus #.#         override RCDB torus scale
+  --solenoid #.#      override RCDB solenoid scale
+  --fileRegex REGEX   input filename format (for matching run and file
+                      numbers)
+  --config PATH       load config file (overriden by command line arguments)
+  --defaults          print default config file and exit
+  --show              print config file and exit
+  --submit            submit and run jobs immediately
+  --version           show program's version number and exit
+
+(*) = required option, from command-line or config file
+```
 
 ### Generating CLAS12 workflows
 
 First, setup the environment:
 
-`source ./env.csh`
+`module load workflow`
 
-See `./scripts/clas12-workflow.py -h` for usage options, and the `./examples` directory.  This example would generate a Swif workflow and write it to files in `./jobs`, for a single decoding workflow for run 4013 and 4014:
+See `clas12-workflow.py -h` for usage options, and the `$CLAS12WFLOW/examples` directory.  This example would generate a workflow and write its JSON file to the current working directory, for a single decoding workflow for run 4013 and 4014:
 
-`./scripts/clas12-workflow.py --runGroup rga --tag v0 --runs 4013,4014 --inputs /mss/clas12/rg-a/data --outDir /volatile/clas12/rg-a/test`
+`clas12-workflow.py --runGroup rga --model dec --runs 4013,4014 --inputs /mss/clas12/rg-a/data --outDir /volatile/clas12/rg-a/test`
 
-You could alternatively specify `--runs 4000-4200` or `--runs filename` to do all runs between 4000 and 4200 or read the runs from a file.  Note, the output directories will be made automatically, so you must have write permissions.
+You could alternatively specify `--runs 4000-4200` or `--runs filename` to do all runs between 4000 and 4200 or read the runs from a file.
 
-After importing the resulting file in `./jobs` (via `swif import -slurm -file filename`, currently the default is PBS without the -slurm option), you would `swif run` it to start the workflow.
+After importing the resulting file in `./jobs` (via `swif import -file filename`), you would `swif run` it to start the workflow.
 
 * All necessary settings are available from the command line, run it with the `-h` option to see.
 * You can also use a configuration file, overridden by additional command line options.
-* For merging workflows (the default is non-merging):
+* For merging workflows:
   * N (`phaseSize`) should be significantly larger than M (`mergeSize`) to allow Swif to optimize tape access
   * N should be evenly divisible by M, else you'll always get one smaller merge file per phase and irregular merged file numberings
 
 ### Monitoring / Control
 
-`./scripts/swif-status.py` wraps various Swif commands.  By default just prints all current workflows' statuses, with command-line options to:
-* save the current status, accumulating log, and full job details to log files, and publish to web directory
+`swif-status.py` wraps various Swif commands.  By default just prints all current workflows' statuses, with command-line options to:
 * automatically retry any problem jobs, and increase resource requests if necessary
-* relocate `~/.farm_out` logs at end of workflow
+* push status to clas12mon for timelines
+* save the current status, accumulating log, and full job details to log files, and publish to web directory
 
-See `./cron/swif.cron` for an example cron job, where retry attempts will cause cron to generate an automatic email.
+See `$CLAS12WFLOW/cron/swif.cron` for an example cron job, where retry attempts will cause cron to generate an automatic email.
 
 ## Details
 
@@ -84,11 +89,7 @@ See `./cron/swif.cron` for an example cron job, where retry attempts will cause 
 * intended to be reusable in the future (see `lib/Swif*` classes)
 * automatically overrides Swif/Auger's symlinking `/cache` files to the batch node with a `dd bs=1M` copy.
 * uses JSON Swif configs
-  * much faster to create workflows and provides a bit more control (e.g. job names) than `swif add-job`
-* log files
-  * named as job name appended with job tags (for easier association)
-  * write job logs to configureable directory path (i.e. not `~/.farm_out`)
-  * automatically move remaining `~/.farm_out` log files at end of workflow
+  * faster to create workflows and provides more control (e.g. job names) than `swif add-job`
 * CLAS12 workflows
   * file integrity checks during the jobs, based on return value of `hipo-utils -test`
   * retrieve torus/solenoid scales from RCDB during workflow generation (overridable from command line)
@@ -97,18 +98,7 @@ See `./cron/swif.cron` for an example cron job, where retry attempts will cause 
   * periodically write workflow status to clas12mon, for timeline plots and easy global status
     * https://clas12mon.jlab.org/status/decoding/
 
-### CLAS12 Decoding Lessons Learned
-* the single, largest, and consistent bottleneck is reading from tape silo
-* _Rolling_ workflow averages around 7500 files per day for RGA Spring 2018, seen up to 12K/day
-* normal failure rate due to batch system is up to 10% (instantaneous, average is much lower)
-  * inisignificant effect on throughput due to tape bottleneck
-  * all recoverable with a retry, or in rare cases increase job ram/time (all automated)
-    * ultimately, so far, success rate is 100% without human intervention
-  * common problems with nodes
-    * no space available on local filesystem 
-    * cannot find input files (lustre or /work filesystems)
-    * cannot find basic system commands (e.g. rm!)
-  * flurry of corrupt hipo files
-    * presumably due to system problems (since irreproducible) 
-    * added integrity checks before allowing output files to be written
+### TODO
+* write outputs to `/cache` with a `jcache -put` inside the job, pointing dependencies to the `/mss` location
+
 
