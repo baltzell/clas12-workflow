@@ -104,13 +104,9 @@ class RunFileGroup():
 class RunFileGroups:
 
   def __init__(self):
-    self.combineRuns=False
     self.groupSize=0
     # maintain user's run insertion order:
     self.rfgs=collections.OrderedDict()
-
-  def setCombineRuns(self,val):
-    self.combineRuns=val
 
   def hasRun(self,run):
     return run in self.rfgs
@@ -169,11 +165,10 @@ class RunFileGroups:
     groups=[]
     phaseList=[]
     for run,rfg in self.rfgs.items():
-      # make a new group unless we're allowed to combine runs:
-      if not self.combineRuns:
-        if len(phaseList)>0:
-          groups.append(phaseList)
-        phaseList=[]
+      # make a new group for the next run:
+      if len(phaseList)>0:
+        groups.append(phaseList)
+      phaseList=[]
       # loop over the files in this run:
       for rf in rfg.runFileList:
         phaseList.append(rf.fileName)

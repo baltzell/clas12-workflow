@@ -1,205 +1,105 @@
+import logging
+
+import ChefConfig
 from CLAS12Workflow import CLAS12Workflow
 
-#
-# ThreePhaseDecoding
-#
-# Requires N GB of temporary disk space
-#
-# 0 = decode N
-# 1 = merge N
-# 2 = delete+move N
-# 3 ...
-#
-class ThreePhaseDecoding(CLAS12Workflow):
+_LOGGER=logging.getLogger(__name__)
 
+class MinimalDependency(CLAS12Workflow):
+#
+# Minimal job-job dependencies, and no phases.  No staging/temporary
+# disk space is used.  Maximal batch farm footprint, limited only by
+# single job dependencies.
+#
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
 
   def generate(self):
 
-    for evioFiles in self.getGroups():
+    _LOGGER.info('Generating a MinimalDependency workflow ...')
 
-      self.phase += 1
-      hipoFiles = [x.outputData[0] for x in self.decode(self.phase,evioFiles)]
+    for xx in self.getGroups():
 
-      self.phase += 1
-      mergedFiles = [x.outputData[0] for x in self.merge(self.phase,hipoFiles)]
+      if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('dec')>=0:
 
-      self.phase += 1
-      self.move(self.phase,mergedFiles)
-      self.delete(self.phase,hipoFiles)
+        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('mrg')>=0:
+          xx = self.decodemerge(self.phase,xx)
+        else:
+          xx = self.decode(self.phase,xx)
 
+      if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+        xx = self.reconclara(self.phase,xx)
+
+      if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('ana')>=0:
+        xx = self.train(self.phase,xx)
+
+
+class RollingRuns(CLAS12Workflow):
 #
-# DecodingReconTest
+# Phased, with N runs per phase, where N is the number of tasks
+# (i.e. decode/merge/recon/train).  No explicit job-job depenedencies.
+# Staging disk space is used if merging, in which case 3*M GB is
+# required, where M is the number of files per run (or phaseSize).
 #
-# WARNING:  Does NOT delete anything!
+# This workflow has the benefit of putting files back on tape ordered
+# by run, at the cost of potential bottlenecks of stuck tapes for
+# inputs.  Similarly, its batch farm footprint is throttled by run
+# sizes, allowing other workflows to run in parallel.
 #
-# 0 = decode
-# 1 = merge
-# 2 = recon
-# 4 ...
-#
-class DecodingReconTest(CLAS12Workflow):
-
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
 
   def generate(self):
 
-    for evioFiles in self.getGroups():
+    _LOGGER.info('Generating a RollingRuns workflow ...')
 
-      self.phase += 1
-      decodeJobs = self.decode(self.phase,evioFiles)
+    # master-queue:
+    queue=self.getGroups()
 
-      self.phase += 1
-      mergeJobs = self.merge(self.phase,decodeJobs)
-
-      self.phase += 1
-      self.reconclara(self.phase,decodeJobs)
-      self.reconclara(self.phase,mergeJobs)
-
-#
-# RollingDecoding
-#
-# Requires 3*N GB of temporary disk space
-#
-# 0 = decode N0
-# 1 = decode N1, merge N0
-# 2 = decode N2, merge N1, delete+move N0
-# 3 = decode N3, merge N2, delete+move N1
-# ...
-# i   = decode N(i), merge N(i-1), delete+move N(i-2),
-# i+1 = merge N(i), delete+move N(i-1)
-# i+2 = delete+move N(i)
-#
-class RollingDecoding(CLAS12Workflow):
-
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-
-  def generate(self):
-
-    decodeQueue=self.getGroups()
-    mergeQueue,deleteQueue,moveQueue=[],[],[]
+    # sub-queues:
+    decodeQ,mergeQ,deleteQ,moveQ,reconQ,trainQ=[],[],[],[],[],[]
 
     while True:
 
       self.phase += 1
 
-      if len(deleteQueue)>0:
-        self.delete(self.phase,deleteQueue.pop(0))
-        self.move(self.phase,moveQueue.pop(0))
+      if len(trainQ)>0:
+        self.train(self.phase,trainQ.pop(0))
 
-      if len(mergeQueue)>0:
-        decodedFiles = mergeQueue.pop(0)
+      if len(reconQ)>0:
+        reconJobs=self.reconclara(self.phase-1,[reconQ.pop(0)])
+        trainQ.append(reconJobs)
+
+      if len(deleteQ)>0:
+        self.delete(self.phase,deleteQ.pop(0))
+        moveJobs=self.move(self.phase,moveQ.pop(0))
+        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+          reconQ.extend(moveJobs)
+
+      if len(mergeQ)>0:
+        decodedFiles = mergeQ.pop(0)
         mergeJobs = self.merge(self.phase,decodedFiles)
-        moveQueue.append([x.outputData[0] for x in mergeJobs])
-        deleteQueue.append(decodedFiles)
+        moveQ.append([x.outputData[0] for x in mergeJobs])
+        deleteQ.append(decodedFiles)
 
-      if len(decodeQueue)>0:
-        decodeJobs = self.decode(self.phase,decodeQueue.pop(0))
-        mergeQueue.append([x.outputData[0] for x in decodeJobs])
+      if len(decodeQ)>0:
+        decodeJobs = self.decode(self.phase,decodeQ.pop(0))
+        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('mrg')>=0:
+          mergeQ.append([x.outputData[0] for x in decodeJobs])
+        elif ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+          reconQ.extend(decodeJobs)
 
-      if len(decodeQueue)==0 and len(mergeQueue)==0 and len(deleteQueue)==0:
+      if len(queue)>0:
+        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('dec')>=0:
+          decodeQ.append(queue.pop())
+        elif ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+          reconQ.extend(queue.pop())
+        elif ChefConfig.Models.Choices[self.cfg['model']]['task'].find('ana')>=0:
+          trainQ.append(queue.pop())
+
+      if len(decodeQ)==0 and len(mergeQ)==0 and len(deleteQ)==0 and len(reconQ)==0 and len(trainQ)==0:
         break
 
-#
-# SinglesOnlyDecoding
-#
-# Requires at least N GB of temporary disk space.
-#
-# Just writes decoded HIPO files to disk, no merging, and requires an
-# independent (cron) task to merge and move (and maintain N GB).
-#
-class SinglesOnlyDecoding(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for evioFiles in self.getGroups():
-      self.decode(self.phase,evioFiles)
-      self.phase += 1
-
-class ClaraSingles(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for hipoFiles in self.getGroups():
-      self.reconclara(self.phase,hipoFiles)
-
-class Train(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for hipoFiles in self.getGroups():
-      self.train(self.phase,hipoFiles)
-
-class SinglesDecodeAndClara(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for evioFiles in self.getGroups():
-      decodeJobs = self.decode(self.phase,evioFiles)
-      reconJobs = self.reconclara(self.phase,decodeJobs)
-
-class InlineDecodeMerge(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for evioFiles in self.getGroups():
-      decodeJobs = self.decodemerge(self.phase,evioFiles)
-
-class InlineDecodeMergeClara(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for evioFiles in self.getGroups():
-      decodeJobs = self.decodemerge(self.phase,evioFiles)
-      reconJobs = self.reconclara(self.phase,decodeJobs)
-
-class InlineDecodeMergeClaraTrain(CLAS12Workflow):
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-  def generate(self):
-    for evioFiles in self.getGroups():
-      decodeJobs = self.decodemerge(self.phase,evioFiles)
-      reconJobs = self.reconclara(self.phase,decodeJobs)
-      trainJobs = self.train(self.phase,reconJobs)
-
-
-class RollingDecodeAndClara(CLAS12Workflow):
-
-  def __init__(self,name,cfg):
-    CLAS12Workflow.__init__(self,name,cfg)
-
-  def generate(self):
-
-    decodeQueue=self.getGroups()
-    mergeQueue,deleteQueue,moveQueue,reconQueue=[],[],[],[]
-
-    while True:
-
-      self.phase += 1
-
-      if len(reconQueue)>0:
-        self.reconclara(self.phase-1,[reconQueue.pop(0)])
-
-      if len(deleteQueue)>0:
-        self.delete(self.phase,deleteQueue.pop(0))
-        moveJobs=self.move(self.phase,moveQueue.pop(0))
-        reconQueue.extend(moveJobs)
-
-      if len(mergeQueue)>0:
-        decodedFiles = mergeQueue.pop(0)
-        mergeJobs = self.merge(self.phase,decodedFiles)
-        moveQueue.append([x.outputData[0] for x in mergeJobs])
-        deleteQueue.append(decodedFiles)
-
-      if len(decodeQueue)>0:
-        decodeJobs = self.decode(self.phase,decodeQueue.pop(0))
-        mergeQueue.append([x.outputData[0] for x in decodeJobs])
-
-      if len(decodeQueue)==0 and len(mergeQueue)==0 and len(deleteQueue)==0 and len(reconQueue)==0:
-        break
 
 if __name__ == '__main__':
   import os,sys

@@ -3,18 +3,17 @@ import sys,os,logging
 from ChefConfig import ChefConfig
 
 #logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s %(lineno).3d] %(message)s')
-logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
+logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')
 logger=logging.getLogger(__name__)
 
 print('')
 cc=ChefConfig(sys.argv[1:])
 workflow=cc.getWorkflow()
 
-logger.info('Generating workflow ...')
 workflow.generate()
 
-logger.info('Created workflow with %d jobs based on %d runs with %d total input files.'%\
-    (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount()))
+logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases.'%\
+    (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))
 
 if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')
