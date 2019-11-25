@@ -86,20 +86,21 @@ class RollingRuns(CLAS12Workflow):
       if len(decodeQ)>0:
         if self.cfg['workDir'] is None:
           decodeJobs = self.decodemerge(self.phase,decodeQ.pop(0))
-          reconQ.extend(decodeJobs)
+          if self.cfg['model'].find('rec')>=0:
+            reconQ.extend(decodeJobs)
         else:
           decodeJobs = self.decode(self.phase,decodeQ.pop(0))
-          if self.cfg['model'].find('mrg')>=0: 
+          if self.cfg['model'].find('mrg')>=0:
             mergeQ.append([x.outputData[0] for x in decodeJobs])
-          elif self.cfg['model'].find('rec')>=0: 
+          elif self.cfg['model'].find('rec')>=0:
             reconQ.extend(decodeJobs)
 
       if len(queue)>0:
-        if self.cfg['model'].find('dec')>=0: 
+        if self.cfg['model'].find('dec')>=0:
           decodeQ.append(queue.pop())
-        elif self.cfg['model'].find('rec')>=0: 
+        elif self.cfg['model'].find('rec')>=0:
           reconQ.extend(queue.pop())
-        elif self.cfg['model'].find('ana')>=0: 
+        elif self.cfg['model'].find('ana')>=0:
           trainQ.append(queue.pop())
 
       if len(decodeQ)==0 and len(mergeQ)==0 and len(deleteQ)==0 and len(reconQ)==0 and len(trainQ)==0:
