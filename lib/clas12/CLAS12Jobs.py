@@ -116,8 +116,8 @@ class DecodingJob(Job):
     Job.setCmd(self,cmd)
 
 class ClaraJob(Job):
-  THRD_MEM_REQ={0:0,   16:12, 24:16, 32:16}
-  THRD_MEM_LIM={0:256, 16:10, 24:14, 32:14}
+  THRD_MEM_REQ={0:0,   16:12, 20:14, 24:16, 32:16}
+  THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])

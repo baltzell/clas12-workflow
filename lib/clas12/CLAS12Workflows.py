@@ -20,17 +20,17 @@ class MinimalDependency(CLAS12Workflow):
 
     for xx in self.getGroups():
 
-      if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('dec')>=0:
+      if self.cfg['model'].find('dec')>=0: 
 
-        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('mrg')>=0:
+        if self.cfg['model'].find('mrg')>=0: 
           xx = self.decodemerge(self.phase,xx)
         else:
           xx = self.decode(self.phase,xx)
 
-      if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+      if self.cfg['model'].find('rec')>=0: 
         xx = self.reconclara(self.phase,xx)
 
-      if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('ana')>=0:
+      if self.cfg['model'].find('ana')>=0: 
         xx = self.train(self.phase,xx)
 
 
@@ -67,13 +67,14 @@ class RollingRuns(CLAS12Workflow):
         self.train(self.phase,trainQ.pop(0))
 
       if len(reconQ)>0:
-        reconJobs=self.reconclara(self.phase-1,[reconQ.pop(0)])
-        trainQ.append(reconJobs)
+        reconJobs=self.reconclara(self.phase,[reconQ.pop(0)])
+        if self.cfg['model'].find('ana')>=0:
+          trainQ.append(reconJobs)
 
       if len(deleteQ)>0:
         self.delete(self.phase,deleteQ.pop(0))
         moveJobs=self.move(self.phase,moveQ.pop(0))
-        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+        if self.cfg['model'].find('rec')>=0:
           reconQ.extend(moveJobs)
 
       if len(mergeQ)>0:
@@ -83,18 +84,22 @@ class RollingRuns(CLAS12Workflow):
         deleteQ.append(decodedFiles)
 
       if len(decodeQ)>0:
-        decodeJobs = self.decode(self.phase,decodeQ.pop(0))
-        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('mrg')>=0:
-          mergeQ.append([x.outputData[0] for x in decodeJobs])
-        elif ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+        if self.cfg['workDir'] is None:
+          decodeJobs = self.decodemerge(self.phase,decodeQ.pop(0))
           reconQ.extend(decodeJobs)
+        else:
+          decodeJobs = self.decode(self.phase,decodeQ.pop(0))
+          if self.cfg['model'].find('mrg')>=0: 
+            mergeQ.append([x.outputData[0] for x in decodeJobs])
+          elif self.cfg['model'].find('rec')>=0: 
+            reconQ.extend(decodeJobs)
 
       if len(queue)>0:
-        if ChefConfig.Models.Choices[self.cfg['model']]['task'].find('dec')>=0:
+        if self.cfg['model'].find('dec')>=0: 
           decodeQ.append(queue.pop())
-        elif ChefConfig.Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+        elif self.cfg['model'].find('rec')>=0: 
           reconQ.extend(queue.pop())
-        elif ChefConfig.Models.Choices[self.cfg['model']]['task'].find('ana')>=0:
+        elif self.cfg['model'].find('ana')>=0: 
           trainQ.append(queue.pop())
 
       if len(decodeQ)==0 and len(mergeQ)==0 and len(deleteQ)==0 and len(reconQ)==0 and len(trainQ)==0:

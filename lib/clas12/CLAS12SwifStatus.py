@@ -66,7 +66,7 @@ class CLAS12SwifStatus(SwifStatus):
       tags=self.name.split('-')
       run_group=tags[0]
       task=tags[1]
-      if runGroup not in CHOICES['runGroup'] or task not in CHOICES['task']:
+      if runGroup not in CHOICES['runGroup'] or task not in CHOICES['model']:
         print 'Invalid workflow name for clas12mon:  '+self.name
         return
       status=self.getPrunedStatus()

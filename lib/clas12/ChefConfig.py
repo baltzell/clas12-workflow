@@ -5,34 +5,12 @@ import CLAS12Workflows
 
 _LOGGER=logging.getLogger(__name__)
 
-class Models:
-  Decode=1
-  DecodeMerge=2
-  Recon=3
-  Train=4
-  DecodeRecon=13
-  DecodeMergeRecon=23
-  ReconTrain=34
-  DecodeReconTrain=134
-  DecodeMergeReconTrain=234
-  Choices={}
-  Choices[Decode]               ={'task':'dec',         'clara':False,'coatjava':True, 'name':'Decode'}
-  Choices[Recon]                ={'task':'rec',         'clara':True, 'coatjava':False,'name':'Recon'}
-  Choices[Train]                ={'task':'ana',         'clara':True, 'coatjava':False,'name':'Train'}
-  Choices[DecodeMerge]          ={'task':'decmrg',      'clara':False,'coatjava':True, 'name':'DecodeMerge'}
-  Choices[DecodeRecon]          ={'task':'decrec',      'clara':True, 'coatjava':True, 'name':'DecodeRecon'}
-  Choices[ReconTrain]           ={'task':'recana',      'clara':True, 'coatjava':False,'name':'ReconTrain'}
-  Choices[DecodeReconTrain]     ={'task':'decrecana',   'clara':True, 'coatjava':True, 'name':'DecodeReconTrain'}
-  Choices[DecodeMergeRecon]     ={'task':'decmrgrec',   'clara':True, 'coatjava':True, 'name':'DecodeMergeRecon'}
-  Choices[DecodeMergeReconTrain]={'task':'decmrgrecana','clara':True, 'coatjava':True, 'name':'DecodeMergeReconTrain'}
-  Description={}
-  for xx in sorted(Choices.keys()):
-    Description[xx]=Choices[xx]['name']
+MODELS=['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana']
 
 CHOICES={
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
-    'model'   : sorted(Models.Choices.keys()),
-    'threads' : [16, 24, 32]
+    'model'   : MODELS,
+    'threads' : [16, 20, 24, 32]
 }
 
 CFG={
@@ -41,7 +19,6 @@ CFG={
     'coatjava'      : None,
     'clara'         : None,
     'tag'           : None,
-    'task'          : None,
     'inputs'        : [],
     'runs'          : [],
     'workDir'       : None,
@@ -96,7 +73,7 @@ class ChefConfig:
 
   def getWorkflow(self):
     if self._workflow is None:
-      name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['task'],self.cfg['tag'])
+      name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['model'],self.cfg['tag'])
       if self.cfg['phaseSize'] >= 0:
         self._workflow = CLAS12Workflows.RollingRuns(name,self.cfg)
       else:
@@ -109,11 +86,11 @@ class ChefConfig:
   def getCli(self):
 
     cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
-        epilog='(*) = required option, from command-line or config file')
+        epilog='(*) = required option for all models, from command-line or config file')
 
     cli.add_argument('--runGroup',metavar='NAME',help='(*) run group name', type=str, choices=CHOICES['runGroup'], default=None)
     cli.add_argument('--tag',     metavar='NAME',help='(*) workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
-    cli.add_argument('--model', help='(*) workflow model '+str(Models.Description), type=int, choices=CHOICES['model'],default=None)
+    cli.add_argument('--model', metavar='NAME', help='(*) workflow model ('+'/'.join(MODELS)+')', type=str, choices=CHOICES['model'],default=None)
 
     cli.add_argument('--inputs', metavar='PATH',help='(*) name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
     cli.add_argument('--runs',   metavar='RUN/PATH',help='(*) run numbers (e.g. "4013" or "4013,4015" or "3980,4000-4999"), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str)
@@ -131,7 +108,7 @@ class ChefConfig:
     cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file', type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
-    cli.add_argument('--phaseSize', metavar='#',help='number of files per phase (non-negative is phased)', type=int, default=None)
+    cli.add_argument('--phaseSize', metavar='#',help='number of files per phase (negative is unphased)', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
@@ -179,9 +156,6 @@ class ChefConfig:
 
   def _verifyConfig(self):
 
-    if self.cfg['runs'] is None or len(self.cfg['runs'])<1:
-      self.cli.error('"runs" must be defined.')
-
     if self.cfg['model'] is None:
       self.cli.error('"model" must be defined.')
 
@@ -190,6 +164,9 @@ class ChefConfig:
 
     if self.cfg['tag'] is None:
       self.cli.error('"tag" must be specified.')
+
+    if self.cfg['runs'] is None or len(self.cfg['runs'])<1:
+      self.cli.error('"runs" must be defined.')
 
     if len(self.cfg['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
@@ -203,7 +180,7 @@ class ChefConfig:
           self.cli.error('"'+xx+'" must be an absolute path, not '+self.cfg[xx])
 
     # for decoding workflows, assign decDir to outDir if it doesn't exist:
-    if Models.Choices[self.cfg['model']]['task'].find('dec')>=0:
+    if self.cfg['model'].find('dec')>=0: 
       if self.cfg['decDir'] is None:
         if self.cfg['outDir'] is None:
           self.cli.error('One of "outDir" or "decDir" must be defined for decoding workflows.')
@@ -212,12 +189,12 @@ class ChefConfig:
           _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self.cfg['outDir']+')')
 
     # for non-decoding workflows, require outDir:
-    if Models.Choices[self.cfg['model']]['task'] != 'dec':
+    if self.cfg['model']!='dec' and self.cfg['model']!='decmrg': 
       if self.cfg['outDir'] is None:
         self.cli.error('"outDir" must be specified for this workflow.')
 
     # merging+phased workflows have additional constraints:
-    if self.cfg['phaseSize']>=0 and Models.Choices[self.cfg['model']]['task'].find('mrg')>=0:
+    if self.cfg['phaseSize']>=0 and self.cfg['model'].find('mrg')>=0: 
 
       if self.cfg['workDir'] is None:
         self.cli.error('"workDir" must be defined for phased, merging workflows.')
@@ -230,25 +207,22 @@ class ChefConfig:
 
     else:
       if self.cfg['workDir'] is not None:
-        _LOGGER.warning('Ignoring --workDir for non-merging workflow.')
+        _LOGGER.warning('Ignoring --workDir for non-merging, non-phased workflow.')
         self.cfg['workDir']=None
 
     # set user-defined regex for input files:
     if self.cfg['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self.cfg['fileRegex'])
 
-    # set the task based on the model:
-    self.cfg['task']=Models.Choices[self.cfg['model']]['task']
-
     # check for clara:
-    if Models.Choices[self.cfg['model']]['clara']:
+    if self.cfg['model'].find('rec')>=0 or self.cfg['model'].find('ana')>=0:
       if self.cfg['clara'] is None:
         self.cli.error('"clara" must be defined for model='+str(self.cfg['model']))
       if not os.path.exists(self.cfg['clara']):
         self.cli.error('"clara" does not exist: '+self.cfg['clara'])
 
     # check for coatjava
-    if Models.Choices[self.cfg['model']]['coatjava']:
+    if self.cfg['model'].find('dec')>=0 or self.cfg['model'].find('mrg')>=0: 
       if self.cfg['coatjava'] is None:
         if self.cfg['clara'] is not None:
           _LOGGER.warning('Using coatjava from clara: '+self.cfg['clara'])
@@ -259,12 +233,12 @@ class ChefConfig:
         self.cli.error('"coatjava" does not exist: '+self.cfg['coatjava'])
 
     # check yaml files:
-    if Models.Choices[self.cfg['model']]['task'].find('ana')>=0:
+    if self.cfg['model'].find('ana')>=0: 
       if self.cfg['trainYaml'] is None:
         self.cli.error('"trainYaml" must be defined for model='+str(self.cfg['model']))
       elif not os.path.exists(self.cfg['trainYaml']):
         self.cli.error('"trainYaml" does not exist:  '+self.cfg['trainYaml'])
-    if Models.Choices[self.cfg['model']]['task'].find('rec')>=0:
+    if self.cfg['model'].find('rec')>=0: 
       if self.cfg['reconYaml'] is None:
         self.cli.error('"reconYaml" must be defined for model='+str(self.cfg['model']))
       elif not os.path.exists(self.cfg['reconYaml']):

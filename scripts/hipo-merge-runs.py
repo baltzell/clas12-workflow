@@ -13,6 +13,7 @@ logger=logging.getLogger(__name__)
 cli=argparse.ArgumentParser(description='Merge a directory of HIPO files by run number.')
 cli.add_argument('-i',metavar='string',help='input files specification (directory, glob, file containing list of files), repeatable',type=str,default=[],action='append',required=True)
 cli.add_argument('-o',metavar='path',help='output prefix (automatically suffixed with "_run#.hipo")',type=str,required=True)
+#cli.add_argument('-d',help='dry run',default=False,action='store_true')
 args=cli.parse_args(sys.argv[1:])
 
 rfgs=RunFileGroups()

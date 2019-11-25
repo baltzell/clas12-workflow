@@ -13,7 +13,7 @@ class SwifJob:
     self.project='clas12'
     self.track='reconstruction'
     self.cores=1
-    self.os='centos7'
+    self.os='centos77'
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
