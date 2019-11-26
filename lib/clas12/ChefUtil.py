@@ -45,14 +45,22 @@ def getTrainIndices(yamlfile):
         ids.append(int(line.strip().split()[1]))
   return sorted(ids)
 
+def getSchemaName(yamlfile):
+  for line in open(yamlfile,'r').readlines():
+    if line.strip().find('schema_dir: ')==0:
+      return line.strip().strip('/').split('/').pop()
+  return None
+
 def getTrainDiskReq(filenames):
   s=0
   for f in filenames:
-    # FIXME:
+    # FIXME: use schema to estimate expected file size
     if not os.path.isfile(f):
+      # this assumes 1.5 GB input recon file:
       s+=1.5e9
     else:
       s+=getFileSize(f)
+  # this 1.5 assumes trains will be at most half of recon:
   return '%.0fGB'%(1.5*s/1e9+1)
 
 def getMergeDiskReq(nfiles):
