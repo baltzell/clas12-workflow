@@ -256,6 +256,19 @@ class ChefConfig:
   def __dict__(self):
     return self.cfg
 
+def isEquals(cfg1,cfg2):
+  for k in ['clara','coatjava','reconYaml','trainYaml','outDir','mergeSize']:
+    if cfg1[k] != None and cfg2[k] != None:
+      if cfg1[k] != cfg2[k]:
+        return False
+  return True
+
+def getReadme(cfg):
+  c=copy.deepcopy(cfg)
+  c.pop('inputs')
+  c.pop('runs')
+  return json.dumps(c,indent=2,separators=(',',': '),sort_keys=True)
+
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])
   print(str(cc))

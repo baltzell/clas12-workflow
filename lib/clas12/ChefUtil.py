@@ -8,15 +8,17 @@ _LOGGER=logging.getLogger(__name__)
 _DIRSMADE=[]
 def mkdir(path,tag=None):
   if path not in _DIRSMADE:
-    if tag is None:
-      _LOGGER.info('Making output directory at '+path)
+    if path.startswith('/mss'):
+      _LOGGER.info('Not making output directory: '+path)
+    elif tag is None:
+      _LOGGER.info('Making output directory: '+path)
     else:
-      _LOGGER.info('Making '+tag+' directory at '+path)
+      _LOGGER.info('Making '+tag+' directory: '+path)
     _DIRSMADE.append(path)
-  if path is not None:
+  if path is not None and not path.startswith('/mss'):
     if os.access(path,os.F_OK):
       if not os.access(path,os.W_OK):
-        _LOGGER.critical('You do not have write permissions on '+path)
+        _LOGGER.critical('You do not have write permissions: '+path)
         sys.exit(1)
     else:
       try:

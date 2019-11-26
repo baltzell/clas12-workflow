@@ -1,8 +1,10 @@
-import os
+import os,re,sys,json,logging
 
-import ChefUtil
+import ChefUtil,ChefConfig
 from RunFileUtil import RunFile
 from SwifJob import SwifJob
+
+_LOGGER=logging.getLogger(__name__)
 
 class Job(SwifJob):
   def __init__(self,workflow,cfg):
@@ -20,8 +22,27 @@ class Job(SwifJob):
     self.addTag('run','%.6d'%runno)
     if self.getTag('file') is None:
       self.addTag('file','%.5d'%fileno)
+  def doReadme(self,directory):
+    # if the last dir is just a number, go up one:
+    cfgdir=directory.strip('/').split('/')
+    if len(cfgdir)<1: return
+    if re.match('^\d+$',cfgdir[len(cfgdir)-1]) is not None: cfgdir.pop()
+    cfgdir='/'+('/'.join(cfgdir))
+    cfgfile=cfgdir+'/config.json'
+    if os.path.isfile(cfgfile):
+      # check for conflict with pre-existing config file:
+      with open(cfgfile,'r') as f:
+        if not ChefConfig.isEquals(self.cfg,json.load(f)):
+          _LOGGER.critical('Configuration conflicts with '+cfgfile)
+          sys.exit()
+    elif os.access(cfgdir,os.W_OK):
+      # write new config file:
+      with open(cfgfile,'w') as f:
+        f.write(ChefConfig.getReadme(self.cfg))
+        f.close()
   def addOutputData(self,basename,directory,tag=None):
     ChefUtil.mkdir(directory,tag)
+    self.doReadme(directory)
     self.addTag('outDir',directory)
     self.outputData.append(directory+'/'+basename)
     self.addOutput(basename,directory+'/'+basename)
