@@ -5,12 +5,16 @@ from RcdbManager import RcdbManager
 _RCDB=RcdbManager()
 _LOGGER=logging.getLogger(__name__)
 
+DEFAULT_EVIO_BYTES=2e9    # 
+DEFAULT_DECODED_BYTES=4e9 # from five 2GB EVIO files
+DEFAULT_DST_BYTES=1.5e9   # from five 2GB EVIO files
+
 _DIRSMADE=[]
 def mkdir(path,tag=None):
   if path not in _DIRSMADE:
-    if path.startswith('/mss'):
-      _LOGGER.info('Not making output directory: '+path)
-    elif tag is None:
+    if path.startswith('/mss/'):
+      path=path.replace('/mss/','/cache/',1)
+    if tag is None:
       _LOGGER.info('Making output directory: '+path)
     else:
       _LOGGER.info('Making '+tag+' directory: '+path)
@@ -27,7 +31,7 @@ def mkdir(path,tag=None):
         _LOGGER.critical('Cannot make directory: '+path)
         sys.exit(1)
 
-def getFileSize(path):
+def getFileBytes(path):
   if os.path.isfile(path):
     if path.startswith('/mss'):
       for line in open(path,'r').readlines():
@@ -36,6 +40,7 @@ def getFileSize(path):
           return int(cols[1])
     else:
       return os.path.getsize(path)
+  return None
 
 def getTrainIndices(yamlfile):
   ids=[]
@@ -48,18 +53,40 @@ def getTrainIndices(yamlfile):
 def getSchemaName(yamlfile):
   for line in open(yamlfile,'r').readlines():
     if line.strip().find('schema_dir: ')==0:
-      return line.strip().strip('/').split('/').pop()
+      s=line.strip().strip('/').split('/').pop()
+      if   s=='monitoring':  s='mon'
+      elif s=='calibration': s='calib'
+      return s
   return None
 
-def getTrainDiskReq(filenames):
-  s=0
-  for f in filenames:
-    # FIXME: use schema to estimate expected file size
+def getReconFileBytes(schema,decodedfile):
+  if schema is not None and schema.startswith('/'):
+    schema=getSchemaName(schema)
+  s = DEFAULT_DECODED_BYTES
+  if decodedfile is not None and os.path.isfile(decodedfile):
+    s = getFileBytes(decodedfile)
+  if   schema=='dst':   s *= 0.5
+  elif schema=='calib': s *= 1.3
+  elif schema=='mon':   s *= 1.6
+  else:                 s *= 4.0
+  return s
+
+def getReconDiskReq(schema,decodedfile):
+  s = 0
+  if os.path.isfile(decodedfile):
+    s += getFileBytes(decodedfile)
+  else:
+    s += DEFAULT_DECODED_BYTES
+  s += getReconFileBytes(schema,decodedfile)
+  return str(int(s/1e9)+1)+'GB'
+
+def getTrainDiskReq(schema,reconfiles):
+  s = 0
+  for f in reconfiles:
     if not os.path.isfile(f):
-      # this assumes 1.5 GB input recon file:
-      s+=1.5e9
+      s += getReconFileBytes(schema,None)
     else:
-      s+=getFileSize(f)
+      s += getFileBytes(f)
   # this 1.5 assumes trains will be at most half of recon:
   return '%.0fGB'%(1.5*s/1e9+1)
 

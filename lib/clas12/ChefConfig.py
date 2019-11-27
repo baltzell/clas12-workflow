@@ -5,11 +5,9 @@ import CLAS12Workflows
 
 _LOGGER=logging.getLogger(__name__)
 
-MODELS=['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana']
-
 CHOICES={
+    'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
-    'model'   : MODELS,
     'threads' : [16, 20, 24, 32]
 }
 
@@ -38,46 +36,70 @@ CFG={
     'trainYaml'     : None,
     'trainSize'     : 30,
     'claraLogDir'   : None,
-    'threads'       : 16
+    'threads'       : 16,
+    'ignored'       : {}
 }
 
-class ChefConfig:
+class ChefConfig(dict):
+
+  def __str__(self):
+    return json.dumps(self,indent=2,separators=(',',': '),sort_keys=True)
 
   def __init__(self,args):
+    if isinstance(args,dict):
+      dict.__init__(self,args)
+    else:
+      dict.__init__(self,copy.deepcopy(CFG))
+      self._workflow=None
+      self.cli = self.getCli()
+      self.args = self.cli.parse_args(args)
+      if self.args.defaults:
+        print(str(self))
+        sys.exit()
+      if self.args.config is not None:
+        self._loadConfigFile(self.args.config)
+      self._loadCliArgs()
+      self._verifyConfig()
+      self._storeYamls()
+      if self.args.show:
+        print(str(self))
+        sys.exit()
 
-    self._workflow=None
+  def __eq__(self,cfg):
+    # equality is based only on things that would change the output data
+    for k in ['clara','coatjava','reconYaml','trainYaml','outDir','mergeSize']:
+      if self[k] != None and cfg[k] != None:
+        if self[k] != cfg[k]:
+          return False
+    return True
 
-    self.cfg = copy.deepcopy(CFG)
+  def __ne__(self,cfg):
+    return not self.__eq__(cfg)
 
-    self.cli = self.getCli()
+  def getReadme(self):
+    c=copy.deepcopy(dict(self))
+    c.pop('inputs')
+    c.pop('runs')
+    return json.dumps(c,indent=2,separators=(',',': '),sort_keys=True)
 
-    self.args = self.cli.parse_args(args)
+#  def append(self,cfg):
+#    for k,v in cfg.items():
+#      if k not in self or self[k] is None:
+#        self[k]=v
 
-    if self.args.defaults:
-      print(str(self))
-      sys.exit()
-
-    if self.args.config is not None:
-      self._loadConfigFile(self.args.config)
-
-    self._loadCliArgs()
-
-    self._verifyConfig()
-
-    if self.args.show:
-      print(str(self))
-      sys.exit()
-
-  def get(self,key):
-    return self.cfg[key]
+  def _storeYamls(self):
+    for x in ['reconYaml','trainYaml']:
+      if self[x] is not None:
+        with open(self[x],'r') as f:
+          self['ignored'][x+'Data']=[x.strip('\n') for x in f.readlines()]
 
   def getWorkflow(self):
     if self._workflow is None:
-      name='%s-%s-%s'%(self.cfg['runGroup'],self.cfg['model'],self.cfg['tag'])
-      if self.cfg['phaseSize'] >= 0:
-        self._workflow = CLAS12Workflows.RollingRuns(name,self.cfg)
+      name='%s-%s-%s'%(self['runGroup'],self['model'],self['tag'])
+      if self['phaseSize'] >= 0:
+        self._workflow = CLAS12Workflows.RollingRuns(name,self)
       else:
-        self._workflow = CLAS12Workflows.MinimalDependency(name,self.cfg)
+        self._workflow = CLAS12Workflows.MinimalDependency(name,self)
     if self._workflow.getFileCount()<1:
       _LOGGER.critical('Found no applicable input files.  Check "inputs" and "run".')
       sys.exit()
@@ -90,7 +112,7 @@ class ChefConfig:
 
     cli.add_argument('--runGroup',metavar='NAME',help='(*) run group name', type=str, choices=CHOICES['runGroup'], default=None)
     cli.add_argument('--tag',     metavar='NAME',help='(*) workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
-    cli.add_argument('--model', metavar='NAME', help='(*) workflow model ('+'/'.join(MODELS)+')', type=str, choices=CHOICES['model'],default=None)
+    cli.add_argument('--model', metavar='NAME', help='(*) workflow model ('+'/'.join(CHOICES['model'])+')', type=str, choices=CHOICES['model'],default=None)
 
     cli.add_argument('--inputs', metavar='PATH',help='(*) name of file containing a list of input files, or a directory to be searched recursively for input files, or a shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
     cli.add_argument('--runs',   metavar='RUN/PATH',help='(*) run numbers (e.g. "4013" or "4013,4015" or "3980,4000-4999"), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str)
@@ -130,144 +152,128 @@ class ChefConfig:
   def _loadConfigFile(self,filename):
 
     if not os.access(filename,os.R_OK):
-      sys.exit('FATAL ERROR:  Config file is not readable:  '+filename)
+      _LOGGER.critical('Config file is not readable:  '+filename)
+      sys.exit()
 
     try:
       cfg = json.load(open(filename,'r'))
     except:
       print(traceback.format_exc())
-      sys.exit('FATAL ERROR: Config file '+filename+' has invalid JSON format.')
+      _LOGGER.critical('Config file has invalid JSON format:  '+filename)
+      sys.exit()
 
     for key,val in cfg.items():
-      if key not in self.cfg:
-        sys.exit('FATAL ERROR:  Config file contains invalid key:  '+key)
+      if key not in self:
+        _LOGGER.critical('Config file contains invalid key:  '+key)
+        sys.exit()
       if key in CHOICES and val not in CHOICES[key]:
-        sys.exit('FATAL ERROR:  Config file\'s "%s" must be one of %s'%(key,str(CHOICES[key])))
-      self.cfg[key]=val
+        _LOGGER.critical('Config file\'s "%s" must be one of %s'%(key,str(CHOICES[key])))
+        sys.exit()
+      self[key]=val
 
   def _loadCliArgs(self):
     for key,val in vars(self.args).items():
-      if key in self.cfg:
+      if key in self:
         if val is None:
           continue
         if type(val) is list and len(val)==0:
           continue
-        self.cfg[key]=val
+        self[key]=val
 
   def _verifyConfig(self):
 
-    if self.cfg['model'] is None:
+    if self['model'] is None:
       self.cli.error('"model" must be defined.')
 
-    if self.cfg['runGroup'] is None:
+    if self['runGroup'] is None:
       self.cli.error('"runGroup" must be defined.')
 
-    if self.cfg['tag'] is None:
+    if self['tag'] is None:
       self.cli.error('"tag" must be specified.')
 
-    if self.cfg['runs'] is None or len(self.cfg['runs'])<1:
+    if self['runs'] is None or len(self['runs'])<1:
       self.cli.error('"runs" must be defined.')
 
-    if len(self.cfg['inputs'])==0:
+    if len(self['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
 
     # cleanup directory definitions:
     for xx in ['decDir','outDir','workDir','logDir']:
-      if self.cfg[xx] is not None:
-        if self.cfg[xx]=='None' or self.cfg[xx]=='NULL' or self.cfg[xx]=='null':
-          self.cfg[xx]=None
-        elif not self.cfg[xx].startswith('/'):
-          self.cli.error('"'+xx+'" must be an absolute path, not '+self.cfg[xx])
+      if self[xx] is not None:
+        if self[xx]=='None' or self[xx]=='NULL' or self[xx]=='null':
+          self[xx]=None
+        elif not self[xx].startswith('/'):
+          self.cli.error('"'+xx+'" must be an absolute path, not '+self[xx])
 
     # for decoding workflows, assign decDir to outDir if it doesn't exist:
-    if self.cfg['model'].find('dec')>=0: 
-      if self.cfg['decDir'] is None:
-        if self.cfg['outDir'] is None:
+    if self['model'].find('dec')>=0: 
+      if self['decDir'] is None:
+        if self['outDir'] is None:
           self.cli.error('One of "outDir" or "decDir" must be defined for decoding workflows.')
         else:
-          self.cfg['decDir']=self.cfg['outDir']+'/decoded'
-          _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self.cfg['outDir']+')')
+          self['decDir']=self['outDir']+'/decoded'
+          _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self['outDir']+')')
 
     # for non-decoding workflows, require outDir:
-    if self.cfg['model']!='dec' and self.cfg['model']!='decmrg': 
-      if self.cfg['outDir'] is None:
+    if self['model']!='dec' and self['model']!='decmrg': 
+      if self['outDir'] is None:
         self.cli.error('"outDir" must be specified for this workflow.')
 
     # merging+phased workflows have additional constraints:
-    if self.cfg['phaseSize']>=0 and self.cfg['model'].find('mrg')>=0: 
+    if self['phaseSize']>=0 and self['model'].find('mrg')>=0: 
 
-      if self.cfg['workDir'] is None:
+      if self['workDir'] is None:
         self.cli.error('"workDir" must be defined for phased, merging workflows.')
 
-      if self.cfg['phaseSize']>0 and self.cfg['phaseSize']%self.cfg['mergeSize']!=0:
+      if self['phaseSize']>0 and self['phaseSize']%self['mergeSize']!=0:
         self.cli.error('"phaseSize" must be a multiple of "mergeSize".')
 
-      if self.cfg['fileRegex'] != RunFileUtil.getFileRegex():
+      if self['fileRegex'] != RunFileUtil.getFileRegex():
         self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
 
     else:
-      if self.cfg['workDir'] is not None:
+      if self['workDir'] is not None:
         _LOGGER.warning('Ignoring --workDir for non-merging, non-phased workflow.')
-        self.cfg['workDir']=None
+        self['workDir']=None
 
     # set user-defined regex for input files:
-    if self.cfg['fileRegex'] != RunFileUtil.getFileRegex():
-      RunFileUtil.setFileRegex(self.cfg['fileRegex'])
+    if self['fileRegex'] != RunFileUtil.getFileRegex():
+      RunFileUtil.setFileRegex(self['fileRegex'])
 
     # check for clara:
-    if self.cfg['model'].find('rec')>=0 or self.cfg['model'].find('ana')>=0:
-      if self.cfg['clara'] is None:
-        self.cli.error('"clara" must be defined for model='+str(self.cfg['model']))
-      if not os.path.exists(self.cfg['clara']):
-        self.cli.error('"clara" does not exist: '+self.cfg['clara'])
+    if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
+      if self['clara'] is None:
+        self.cli.error('"clara" must be defined for model='+str(self['model']))
+      if not os.path.exists(self['clara']):
+        self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check for coatjava
-    if self.cfg['model'].find('dec')>=0 or self.cfg['model'].find('mrg')>=0: 
-      if self.cfg['coatjava'] is None:
-        if self.cfg['clara'] is not None:
-          _LOGGER.warning('Using coatjava from clara: '+self.cfg['clara'])
-          self.cfg['coatjava']=self.cfg['clara']+'/plugins/clas12'
+    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0: 
+      if self['coatjava'] is None:
+        if self['clara'] is not None:
+          _LOGGER.warning('Using coatjava from clara: '+self['clara'])
+          self['coatjava']=self['clara']+'/plugins/clas12'
         else:
-          self.cli.error('"coatjava" must be defined for model='+str(self.cfg['model']))
-      if not os.path.exists(self.cfg['coatjava']):
-        self.cli.error('"coatjava" does not exist: '+self.cfg['coatjava'])
+          self.cli.error('"coatjava" must be defined for model='+str(self['model']))
+      if not os.path.exists(self['coatjava']):
+        self.cli.error('"coatjava" does not exist: '+self['coatjava'])
 
     # check yaml files:
-    if self.cfg['model'].find('ana')>=0: 
-      if self.cfg['trainYaml'] is None:
-        self.cli.error('"trainYaml" must be defined for model='+str(self.cfg['model']))
-      elif not os.path.exists(self.cfg['trainYaml']):
-        self.cli.error('"trainYaml" does not exist:  '+self.cfg['trainYaml'])
-    if self.cfg['model'].find('rec')>=0: 
-      if self.cfg['reconYaml'] is None:
-        self.cli.error('"reconYaml" must be defined for model='+str(self.cfg['model']))
-      elif not os.path.exists(self.cfg['reconYaml']):
-        self.cli.error('"reconYaml" does not exist:  '+self.cfg['reconYaml'])
+    if self['model'].find('ana')>=0: 
+      if self['trainYaml'] is None:
+        self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
+      elif not os.path.exists(self['trainYaml']):
+        self.cli.error('"trainYaml" does not exist:  '+self['trainYaml'])
+    if self['model'].find('rec')>=0: 
+      if self['reconYaml'] is None:
+        self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
+      elif not os.path.exists(self['reconYaml']):
+        self.cli.error('"reconYaml" does not exist:  '+self['reconYaml'])
 
     # parse run list:
-    self.cfg['runs'] = ChefUtil.getRunList(self.cfg['runs'])
-    if self.cfg['runs'] is None or len(self.cfg['runs'])==0:
+    self['runs'] = ChefUtil.getRunList(self['runs'])
+    if self['runs'] is None or len(self['runs'])==0:
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
-
-
-  def __str__(self):
-    return json.dumps(self.cfg,indent=2,separators=(',',': '),sort_keys=True)
-
-  def __dict__(self):
-    return self.cfg
-
-def isEquals(cfg1,cfg2):
-  for k in ['clara','coatjava','reconYaml','trainYaml','outDir','mergeSize']:
-    if cfg1[k] != None and cfg2[k] != None:
-      if cfg1[k] != cfg2[k]:
-        return False
-  return True
-
-def getReadme(cfg):
-  c=copy.deepcopy(cfg)
-  c.pop('inputs')
-  c.pop('runs')
-  return json.dumps(c,indent=2,separators=(',',': '),sort_keys=True)
 
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])

@@ -1,6 +1,5 @@
 import logging
 
-import ChefConfig
 from CLAS12Workflow import CLAS12Workflow
 
 _LOGGER=logging.getLogger(__name__)
@@ -20,17 +19,17 @@ class MinimalDependency(CLAS12Workflow):
 
     for xx in self.getGroups():
 
-      if self.cfg['model'].find('dec')>=0: 
+      if self.cfg['model'].find('dec')>=0:
 
-        if self.cfg['model'].find('mrg')>=0: 
+        if self.cfg['model'].find('mrg')>=0:
           xx = self.decodemerge(self.phase,xx)
         else:
           xx = self.decode(self.phase,xx)
 
-      if self.cfg['model'].find('rec')>=0: 
+      if self.cfg['model'].find('rec')>=0:
         xx = self.reconclara(self.phase,xx)
 
-      if self.cfg['model'].find('ana')>=0: 
+      if self.cfg['model'].find('ana')>=0:
         xx = self.train(self.phase,xx)
 
 
@@ -107,17 +106,17 @@ class RollingRuns(CLAS12Workflow):
         break
 
 
-if __name__ == '__main__':
-  import os,sys
-  from ChefConfig import getConfig
-  cli,cfg = getConfig(sys.argv[1:])
-  cfg['outDir']=os.getenv('HOME')+'/tmp/clas12-workflow/outDir'
-  cfg['workDir']=os.getenv('HOME')+'/tmp/clas12-workflow/workDir'
-  workflow = RollingDecoding('test',cfg)
-  workflow.setPhaseSize(1000)
-  workflow.addRun(4013)
-  workflow.addFiles(open('/home/baltzell/clas12/rga/rga-spring-files.txt','r').readlines())
-  workflow.generate()
-  print(workflow.getShell())
-  print(workflow.getJson())
+#if __name__ == '__main__':
+#  import os,sys
+#  from ChefConfig import getConfig
+#  cli,cfg = getConfig(sys.argv[1:])
+#  cfg['outDir']=os.getenv('HOME')+'/tmp/clas12-workflow/outDir'
+#  cfg['workDir']=os.getenv('HOME')+'/tmp/clas12-workflow/workDir'
+#  workflow = RollingDecoding('test',cfg)
+#  workflow.setPhaseSize(1000)
+#  workflow.addRun(4013)
+#  workflow.addFiles(open('/home/baltzell/clas12/rga/rga-spring-files.txt','r').readlines())
+#  workflow.generate()
+#  print(workflow.getShell())
+#  print(workflow.getJson())
 

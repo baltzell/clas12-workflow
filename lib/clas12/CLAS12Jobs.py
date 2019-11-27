@@ -23,6 +23,9 @@ class Job(SwifJob):
     if self.getTag('file') is None:
       self.addTag('file','%.5d'%fileno)
   def doReadme(self,directory):
+    # put it on /cache if it's /mss:
+    if directory.startswith('/mss/'):
+      directory=directory.replace('/mss/','/cache/',1)
     # if the last dir is just a number, go up one:
     cfgdir=directory.strip('/').split('/')
     if len(cfgdir)<1: return
@@ -32,13 +35,13 @@ class Job(SwifJob):
     if os.path.isfile(cfgfile):
       # check for conflict with pre-existing config file:
       with open(cfgfile,'r') as f:
-        if not ChefConfig.isEquals(self.cfg,json.load(f)):
+        if self.cfg != ChefConfig.ChefConfig(json.load(f)):
           _LOGGER.critical('Configuration conflicts with '+cfgfile)
           sys.exit()
     elif os.access(cfgdir,os.W_OK):
       # write new config file:
       with open(cfgfile,'w') as f:
-        f.write(ChefConfig.getReadme(self.cfg))
+        f.write(self.cfg.getReadme())
         f.close()
   def addOutputData(self,basename,directory,tag=None):
     ChefUtil.mkdir(directory,tag)
@@ -81,7 +84,7 @@ class DecodeAndMergeJob(Job):
     self.addTag('coatjava',cfg['coatjava'])
   def addInputData(self,eviofiles):
     # FIXME:  this assume 2 GB EVIO file
-    self.setDisk('%.0fMB'%(1000*(2.1*(1+0.3)*len(eviofiles)+1)))
+    self.setDisk('%.0fGB'%(int(ChefUtil.DEFAULT_EVIO_BYTES*1.4)/1e9*len(eviofiles)+1))
     self.setTime('%.0fh'%(len(eviofiles)))
     decodedfiles=[]
     for eviofile in eviofiles:
@@ -136,23 +139,23 @@ class DecodingJob(Job):
     cmd+=' || rm -f $o ; ls $o'
     Job.setCmd(self,cmd)
 
-class ClaraJob(Job):
+class ReconJob(Job):
   THRD_MEM_REQ={0:0,   16:12, 20:14, 24:16, 32:16}
   THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
-    self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ClaraJob.THRD_MEM_LIM[cfg['threads']])
-    self.setRam(str(ClaraJob.THRD_MEM_REQ[cfg['threads']])+'GB')
+    self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
+    self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
     self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
     # TODO: choose time based on #events:
     self.setTime('24h')
-    # TODO: choose disk based on #events:
     self.setDisk('20GB')
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
   def addInputData(self,filename):
+    self.setDisk(ChefUtil.getReconDiskReq(self.cfg['reconYaml'],filename))
     Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/recon/%s/'%(self.cfg['outDir'],self.getTag('run'))
@@ -177,7 +180,7 @@ class TrainJob(Job):
     self.addInput('train.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh')
     self.addInput('clara.yaml',cfg['trainYaml'])
   def addInputData(self,filenames):
-    self.setDisk(ChefUtil.getTrainDiskReq(filenames))
+    self.setDisk(ChefUtil.getTrainDiskReq(self.cfg['reconYaml'],filenames))
     for x in filenames:
       Job.addInputData(self,x)
     outDir='%s/train/%s/'%(self.cfg['outDir'],self.getTag('run'))
@@ -195,7 +198,7 @@ class TrainJob(Job):
 
 if __name__ == '__main__':
 
-  job=ClaraJob('wflow')
+  job=ReconJob('wflow')
   job.setTrack('debug')
   job.setCmd('./clara.sh -t %d -l /volatile/clas12/users/baltzell/clara-test/nostage %s'%(16,job.getJobName()))
   job.addInput('clara.yaml','/volatile/clas12/users/baltzell/clara-test/data.yaml')

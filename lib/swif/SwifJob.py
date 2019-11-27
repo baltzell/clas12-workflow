@@ -17,7 +17,6 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    # this is no longer honored but defaults to login shell (bah, bad!):
     self.shell='/bin/tcsh'
     self.tags=collections.OrderedDict()
     self.antecedents=[]

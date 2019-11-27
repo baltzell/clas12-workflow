@@ -50,14 +50,14 @@ class CLAS12Workflow(SwifWorkflow):
     for inp in inputs:
       if isinstance(inp,SwifJob):
         for x in inp.outputData:
-          job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
+          job=CLAS12Jobs.ReconJob(self.name,self.cfg)
           job.setPhase(phase)
           job.addInputData(x)
           job.antecedents.append(inp.getJobName())
           job.setCmd(len(self.jobs))
           jobs.append(job)
       else:
-        job=CLAS12Jobs.ClaraJob(self.name,self.cfg)
+        job=CLAS12Jobs.ReconJob(self.name,self.cfg)
         job.setPhase(phase)
         job.addInputData(inp)
         job.setCmd(len(self.jobs))
