@@ -1,4 +1,4 @@
-import os,sys,json,copy,logging,getpass,argparse,traceback
+import os,sys,json,copy,logging,getpass,argparse,traceback,collections
 import ChefUtil
 import RunFileUtil
 import CLAS12Workflows
@@ -11,45 +11,44 @@ CHOICES={
     'threads' : [16, 20, 24, 32]
 }
 
-CFG={
-    'project'       : 'clas12',
-    'runGroup'      : None,
-    'coatjava'      : None,
-    'clara'         : None,
-    'tag'           : None,
-    'inputs'        : [],
-    'runs'          : [],
-    'workDir'       : None,
-    'outDir'        : None,
-    'decDir'        : None,
-    'logDir'        : '/farm_out/'+getpass.getuser(),
-    'phaseSize'     : -1,
-    'mergeSize'     : 5,
-    'model'         : None,
-    'torus'         : None,
-    'solenoid'      : None,
-    'mergePattern'  : 'clas_%.6d.evio.%.5d-%.5d.hipo',
-    'singlePattern' : 'clas_%.6d.evio.%.5d.hipo',
-    'fileRegex'     : RunFileUtil.getFileRegex(),
-    'submit'        : False,
-    'reconYaml'     : None,
-    'trainYaml'     : None,
-    'trainSize'     : 30,
-    'claraLogDir'   : None,
-    'threads'       : 16,
-    'ignored'       : {}
-}
+CFG=collections.OrderedDict()
+CFG['project']      = 'clas12'
+CFG['runGroup']     = None
+CFG['tag']          = None
+CFG['model']        = None
+CFG['reconYaml']    = None
+CFG['trainYaml']    = None
+CFG['coatjava']     = None
+CFG['clara']        = None
+CFG['inputs']       = []
+CFG['runs']         = []
+CFG['workDir']      = None
+CFG['outDir']       = None
+CFG['decDir']       = None
+CFG['phaseSize']    = -1
+CFG['mergeSize']    = 5
+CFG['trainSize']    = 30
+CFG['threads']      = 16
+CFG['torus']        = None
+CFG['solenoid']     = None
+CFG['claraLogDir']  = None
+CFG['logDir']       = '/farm_out/'+getpass.getuser()
+CFG['submit']       = False
+CFG['fileRegex']    = RunFileUtil.getFileRegex()
+CFG['mergePattern'] = 'clas_%.6d.evio.%.5d-%.5d.hipo'
+CFG['singlePattern']= 'clas_%.6d.evio.%.5d.hipo'
+CFG['ignored']      = {}
 
-class ChefConfig(dict):
+class ChefConfig(collections.OrderedDict):
 
   def __str__(self):
-    return json.dumps(self,indent=2,separators=(',',': '),sort_keys=True)
+    return json.dumps(self,indent=2,separators=(',',': '),sort_keys=False)
 
   def __init__(self,args):
     if isinstance(args,dict):
-      dict.__init__(self,args)
+      collections.OrderedDict.__init__(self,args)
     else:
-      dict.__init__(self,copy.deepcopy(CFG))
+      collections.OrderedDict.__init__(self,copy.deepcopy(CFG))
       self._workflow=None
       self.cli = self.getCli()
       self.args = self.cli.parse_args(args)
@@ -62,7 +61,9 @@ class ChefConfig(dict):
       self._verifyConfig()
       self._storeYamls()
       if self.args.show:
-        print(str(self))
+        c=copy.deepcopy(collections.OrderedDict(self))
+        c.pop('ignored')
+        print(json.dumps(c,indent=2,separators=(',',': '),sort_keys=False))
         sys.exit()
 
   def __eq__(self,cfg):
@@ -77,21 +78,21 @@ class ChefConfig(dict):
     return not self.__eq__(cfg)
 
   def getReadme(self):
-    c=copy.deepcopy(dict(self))
+    c=copy.deepcopy(collections.OrderedDict(self))
     c.pop('inputs')
     c.pop('runs')
-    return json.dumps(c,indent=2,separators=(',',': '),sort_keys=True)
+    return json.dumps(c,indent=2,separators=(',',': '),sort_keys=False)
 
-#  def append(self,cfg):
-#    for k,v in cfg.items():
-#      if k not in self or self[k] is None:
-#        self[k]=v
+  def append(self,cfg):
+    for k,v in cfg.items():
+      if k not in self or self[k] is None:
+        self[k]=v
 
   def _storeYamls(self):
     for x in ['reconYaml','trainYaml']:
       if self[x] is not None:
         with open(self[x],'r') as f:
-          self['ignored'][x+'Data']=[x.strip('\n') for x in f.readlines()]
+          self['ignored'][x]=[y.strip('\n') for y in f.readlines()]
 
   def getWorkflow(self):
     if self._workflow is None:
