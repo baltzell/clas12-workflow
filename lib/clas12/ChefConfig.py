@@ -94,6 +94,33 @@ class ChefConfig(collections.OrderedDict):
         with open(self[x],'r') as f:
           self['ignored'][x]=[y.strip('\n') for y in f.readlines()]
 
+  def _checkYamls(self):
+    for x in ['reconYaml','trainYaml']:
+      if self[x] is not None:
+        if os.path.isfile(self[x]):
+          if x=='reconYaml':
+            good=False
+            with open(self[x],'r') as f:
+              for line in f.readlines():
+                if line.strip().find('schema_dir: ')==0:
+                  cols=line.strip().split()
+                  if len(cols)<2:
+                    _LOGGER.critical('Undefined schema_dir in '+self[x])
+                    sys.exit()
+                  elif os.path.isdir(cols[1]):
+                    good=True
+                  else:
+                    _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
+                    _LOGGER.critical('  '+cols[1])
+                    sys.exit()
+            if not good:
+              _LOGGER.critical('No schema_dir defined in '+self[x])
+              sys.exit()
+        else:
+          _LOGGER.critical('Nonexistent yaml: '+self[x])
+          sys.exit()
+
+
   def getWorkflow(self):
     if self._workflow is None:
       name='%s-%s-%s'%(self['runGroup'],self['model'],self['tag'])
@@ -207,7 +234,7 @@ class ChefConfig(collections.OrderedDict):
           self.cli.error('"'+xx+'" must be an absolute path, not '+self[xx])
 
     # for decoding workflows, assign decDir to outDir if it doesn't exist:
-    if self['model'].find('dec')>=0: 
+    if self['model'].find('dec')>=0:
       if self['decDir'] is None:
         if self['outDir'] is None:
           self.cli.error('One of "outDir" or "decDir" must be defined for decoding workflows.')
@@ -216,12 +243,12 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self['outDir']+')')
 
     # for non-decoding workflows, require outDir:
-    if self['model']!='dec' and self['model']!='decmrg': 
+    if self['model']!='dec' and self['model']!='decmrg':
       if self['outDir'] is None:
         self.cli.error('"outDir" must be specified for this workflow.')
 
     # merging+phased workflows have additional constraints:
-    if self['phaseSize']>=0 and self['model'].find('mrg')>=0: 
+    if self['phaseSize']>=0 and self['model'].find('mrg')>=0:
 
       if self['workDir'] is None:
         self.cli.error('"workDir" must be defined for phased, merging workflows.')
@@ -249,7 +276,7 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check for coatjava
-    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0: 
+    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0:
       if self['coatjava'] is None:
         if self['clara'] is not None:
           _LOGGER.warning('Using coatjava from clara: '+self['clara'])
@@ -260,16 +287,11 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"coatjava" does not exist: '+self['coatjava'])
 
     # check yaml files:
-    if self['model'].find('ana')>=0: 
-      if self['trainYaml'] is None:
-        self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
-      elif not os.path.exists(self['trainYaml']):
-        self.cli.error('"trainYaml" does not exist:  '+self['trainYaml'])
-    if self['model'].find('rec')>=0: 
-      if self['reconYaml'] is None:
-        self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
-      elif not os.path.exists(self['reconYaml']):
-        self.cli.error('"reconYaml" does not exist:  '+self['reconYaml'])
+    if self['model'].find('ana')>=0 and self['trainYaml'] is None:
+      self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
+    if self['model'].find('rec')>=0 and self['reconYaml'] is None:
+      self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
+    self._checkYamls()
 
     # parse run list:
     self['runs'] = ChefUtil.getRunList(self['runs'])
