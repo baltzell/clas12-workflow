@@ -94,6 +94,8 @@ $CLARA_HOME/lib/clara/run-clara \
         ./filelist.txt
 claraexit=$?
 
+ls -lt
+
 # check and rename outputs:
 for xx in `cat filelist.txt`
 do
@@ -105,6 +107,8 @@ do
         mv -f $yy $zz
     done
 done
+
+ls -lt
 
 # if all else is well, use exit code from run-clara:
 exit $claraexit
