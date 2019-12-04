@@ -53,7 +53,7 @@ def getTrainIndices(yamlfile):
 def getSchemaName(yamlfile):
   for line in open(yamlfile,'r').readlines():
     if line.strip().find('schema_dir: ')==0:
-      s=line.strip().strip('/').split('/').pop()
+      s=line.strip().strip('/').split('/').pop().strip('"')
       if   s=='monitoring':  s='mon'
       elif s=='calibration': s='calib'
       return s

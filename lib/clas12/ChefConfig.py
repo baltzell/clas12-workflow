@@ -107,11 +107,11 @@ class ChefConfig(collections.OrderedDict):
                   if len(cols)<2:
                     _LOGGER.critical('Undefined schema_dir in '+self[x])
                     sys.exit()
-                  elif os.path.isdir(cols[1]):
+                  elif os.path.isdir(cols[1].strip('"')):
                     good=True
                   else:
                     _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
-                    _LOGGER.critical('  '+cols[1])
+                    _LOGGER.critical('  '+cols[1].strip('"'))
                     sys.exit()
             if not good:
               _LOGGER.critical('No schema_dir defined in '+self[x])
