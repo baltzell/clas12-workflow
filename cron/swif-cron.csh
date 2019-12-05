@@ -21,7 +21,7 @@ setenv PATH /apps/python/2.7.12/bin:$PATH
 set d=`/usr/bin/readlink -f $0`
 set d=`/usr/bin/dirname $d`/..
 
-setenv PYTHONPATH ${PYTHONPATH}:${d}/lib
+setenv PYTHONPATH ${PYTHONPATH}:${d}/lib/swif:${d}/lib/util:${d}/lib/clas12
 
 $d/scripts/swif-status.py --retry
 
