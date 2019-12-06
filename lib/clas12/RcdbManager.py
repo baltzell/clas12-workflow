@@ -13,8 +13,8 @@ class RcdbManager():
     self.uri=self._URI
 
     # let environment override database connection:
-    if os.getenv('RCDB_CONNECTION') is not None:
-      self.uri=os.getenv('RCDB_CONNECTION')
+    #if os.getenv('RCDB_CONNECTION') is not None:
+    #  self.uri=os.getenv('RCDB_CONNECTION')
 
     # try to import RCDB python module:
     try:
