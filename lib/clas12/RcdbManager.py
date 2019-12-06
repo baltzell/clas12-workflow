@@ -79,6 +79,8 @@ class RcdbManager():
     return self.get(run).get('run_start_time')
 
 if __name__ == '__main__':
+  logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')
+  logger=logging.getLogger(__name__)
   usage = 'python RcdbManager.py run# [run# [run# [...]]]'
   r=RcdbManager()
   if len(sys.argv)<2:
