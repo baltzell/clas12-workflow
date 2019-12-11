@@ -91,9 +91,9 @@ class RcdbManager():
 
   def get(self,run,key):
     self.load(run)
-    if int(run) in self.data and key in self.data[int(run)]:
+    if int(run) in self.data and self.data[int(run)] is not None and key in self.data[int(run)]:
       return self.data[int(run)][key]
-    return None
+    raise ValueError('Cannot find %s for run %d in RCDB'%(key,int(run)))
 
   def getSolenoidScale(self,run):
     return self.get(run,'solenoid_scale')
