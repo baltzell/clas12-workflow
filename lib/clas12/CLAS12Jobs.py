@@ -165,6 +165,13 @@ class ReconJob(Job):
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
+    if self.cfg['postproc']:
+      for x in self.outputData:
+        x=os.path.basename(x)
+        cmd += ' && %s/bin/.postprocess pp.hipo %s'%(self.cfg['coatjava'],x)
+        cmd += ' && rm -f %s && mv -f pp.hipo %s'(x,x)
+        cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(x,self.cfg['coatjava'],x)
+        cmd += ' && ls %s'%(x)
     Job.setCmd(self,cmd)
 
 class TrainJob(Job):

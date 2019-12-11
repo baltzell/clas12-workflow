@@ -32,6 +32,7 @@ CFG['threads']      = 16
 CFG['torus']        = None
 CFG['solenoid']     = None
 CFG['claraLogDir']  = None
+CFG['postproc']     = False
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
 CFG['submit']       = False
 CFG['fileRegex']    = RunFileUtil.getFileRegex()
@@ -153,6 +154,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
 
+    cli.add_argument('--postproc', help='run post-processing of tag-1 events', action='store_true', default=False)
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
     cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file', type=str,default=None)
     cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file', type=str,default=None)
@@ -267,6 +269,9 @@ class ChefConfig(collections.OrderedDict):
     # set user-defined regex for input files:
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
+
+    if self['model'].find('rec')<0 and self['postproc']:
+      self.cli.warning('Ignoring "--postprocess" for non-rec workflow.')
 
     # check for clara:
     if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
