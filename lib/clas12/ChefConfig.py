@@ -291,10 +291,15 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"coatjava" does not exist: '+self['coatjava'])
 
     # check yaml files:
-    if self['model'].find('ana')>=0 and self['trainYaml'] is None:
-      self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
+    if self['model'].find('ana')>=0:
+      if self['trainYaml'] is None:
+        self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
+      if self['reconYaml'] is None:
+        self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
     if self['model'].find('rec')>=0 and self['reconYaml'] is None:
       self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
+    if self['reconYaml'] is not None:
+      self['schema']=ChefUtil.getSchemaName(self['reconYaml'])
     self._checkYamls()
 
     # parse run list:
