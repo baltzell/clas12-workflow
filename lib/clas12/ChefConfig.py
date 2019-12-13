@@ -8,13 +8,15 @@ _LOGGER=logging.getLogger(__name__)
 CHOICES={
     'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
-    'threads' : [16, 20, 24, 32]
+    'threads' : [16, 20, 24, 32],
+    'node'    : ['general','centos77','centos72','farm19','farm18','farm16','farm14','farm13','qcd12s','amd','xeon']
 }
 
 CFG=collections.OrderedDict()
 CFG['project']      = 'clas12'
 CFG['runGroup']     = None
 CFG['tag']          = None
+CFG['node']         = 'centos7'
 CFG['model']        = None
 CFG['reconYaml']    = None
 CFG['trainYaml']    = None
@@ -170,6 +172,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
     cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
+
+    cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
