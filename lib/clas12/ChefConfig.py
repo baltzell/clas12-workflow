@@ -33,6 +33,7 @@ CFG['trainSize']    = 30
 CFG['threads']      = 16
 CFG['torus']        = None
 CFG['solenoid']     = None
+CFG['postproc']     = False
 CFG['claraLogDir']  = None
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
 CFG['submit']       = False
@@ -164,6 +165,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
+    cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
+
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
 
@@ -280,7 +283,7 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check for coatjava
-    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0:
+    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0 or self['postproc']:
       if self['coatjava'] is None:
         if self['clara'] is not None:
           _LOGGER.warning('Using coatjava from clara: '+self['clara'])
@@ -306,6 +309,28 @@ class ChefConfig(collections.OrderedDict):
     self['runs'] = ChefUtil.getRunList(self['runs'])
     if self['runs'] is None or len(self['runs'])==0:
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
+
+    # check post-processing:
+    if self['postproc']:
+      if self['model'].find('ana')<0 and self['model'].find('rec')<0:
+        self.cli.warning('Ignoring "postproc" for non-rec/ana workflow.')
+      else:
+        # check for suffiecient coatjava version:
+        # FIXME: remove this check eventually
+        cjv=ChefUtil.getCoatjavaVersion(self['coatjava'])
+        if cjv is None:
+          self.cli.error('Could not determine coatjava version.')
+        if cjv[0]<6:
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        if cjv[1]<4:
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        if cjv[2]<1:
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        # not ready for 120 Hz:
+        # FIXME: postprocess should read CCDB for frequency
+        for run in self['runs']:
+          if run>11000:
+            self.cli.critical('Post-processing is not ready for runs at 120 Hz helicity.')
 
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])
