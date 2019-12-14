@@ -1,17 +1,9 @@
 #!/usr/bin/env python
-import sys
-import subprocess
-import argparse
-from SwifStatus import SWIF
+import sys,subprocess,argparse
+from SwifStatus import getWorkflowNames,deleteWorkflow
 from CLAS12SwifStatus import CLAS12SwifStatus
 
-def getWorkflowNames():
-  workflows=[]
-  for line in subprocess.check_output([SWIF,'list']).splitlines():
-    line=line.strip()
-    if line.find('workflow_name')==0:
-      workflows.append(line.split('=')[1].strip())
-  return workflows
+# TODO: switch to JSON format (didn't know it was available at the time)
 
 def processWorkflow(workflow,args):
 
@@ -26,7 +18,7 @@ def processWorkflow(workflow,args):
 
   if args.retry:
     result = status.retryProblems()
-    if len(result)>0:
+    if len(result)>0 and not args.quiet:
       print status.getPrettyStatus()
       print result
 
@@ -56,15 +48,17 @@ if __name__ == '__main__':
   cli.add_argument('--list',    help='list workflows',    action='store_true',default=False)
   cli.add_argument('--retry',   help='retry problem jobs',action='store_true',default=False)
   cli.add_argument('--save',    help='save to logs',      action='store_true',default=False)
-#  cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
   cli.add_argument('--problems',help='show problem jobs', action='store_true',default=False)
+  cli.add_argument('--quiet',   help='do not print retries', action='store_true',default=False)
 #  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
   cli.add_argument('--workflow',help='workflow name (else all workflows)', action='append',default=[])
   cli.add_argument('--logdir',  help='local log directory'+df, type=str,default=None)
+#  cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
 #  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
 #  cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
   cli.add_argument('--clas12mon',help='write to clas12mon db',action='store_true',default=False)
+  cli.add_argument('--delete',  help='delete workflow',   action='store_true',default=False)
 
   args = cli.parse_args()
 
@@ -82,8 +76,11 @@ if __name__ == '__main__':
 
   else:
     for workflow in args.workflow:
-      processWorkflow(workflow,args)
-#    if args.save and args.publish:
-#      rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
-#      subprocess.check_output(rsyncCmd)
+      if args.delete:
+        deleteWorkflow(workflow)
+      else:
+        processWorkflow(workflow,args)
+#        if args.save and args.publish:
+#          rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
+#          subprocess.check_output(rsyncCmd)
 

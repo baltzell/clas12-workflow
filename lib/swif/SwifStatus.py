@@ -46,6 +46,17 @@ SWIFJSONKEYS=[
 'current_ts',
 ]
 
+def getWorkflowNames():
+  workflows=[]
+  for line in subprocess.check_output([SWIF,'list']).splitlines():
+    line=line.strip()
+    if line.find('workflow_name')==0:
+      workflows.append(line.split('=')[1].strip())
+  return workflows
+
+def deleteWorkflow(name):
+  print subprocess.check_output([SWIF,'cancel','-delete','-workflow',name])
+
 class SwifStatus():
 
   def __init__(self,name):
