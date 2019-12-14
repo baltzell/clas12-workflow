@@ -12,6 +12,7 @@ class Job(SwifJob):
     self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
+    self.os=cfg['node']
     self.cfg=cfg
   def addInputData(self,filename):
     basename=filename.split('/').pop()
@@ -31,7 +32,7 @@ class Job(SwifJob):
     if len(cfgdir)<1: return
     if re.match('^\d+$',cfgdir[len(cfgdir)-1]) is not None: cfgdir.pop()
     cfgdir='/'+('/'.join(cfgdir))
-    cfgfile=cfgdir+'/config.json'
+    cfgfile=cfgdir+'/REAMDE.json'
     if os.path.isfile(cfgfile):
       # check for conflict with pre-existing config file:
       with open(cfgfile,'r') as f:
@@ -158,7 +159,7 @@ class ReconJob(Job):
     self.setDisk(ChefUtil.getReconDiskReq(self.cfg['reconYaml'],filename))
     Job.addInputData(self,filename)
     basename=filename.split('/').pop()
-    outDir='%s/recon/%s/'%(self.cfg['outDir'],self.getTag('run'))
+    outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
     Job.addOutputData(self,'rec_'+basename,outDir)
   def setCmd(self,hack):
     cmd = './clara.sh -t '+str(self.getCores())
@@ -190,7 +191,7 @@ class TrainJob(Job):
     self.setDisk(ChefUtil.getTrainDiskReq(self.cfg['reconYaml'],filenames))
     for x in filenames:
       Job.addInputData(self,x)
-    outDir='%s/train/%s/'%(self.cfg['outDir'],self.getTag('run'))
+    outDir='%s/%s/train/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
       for y in ChefUtil.getTrainIndices(self.cfg['trainYaml']):

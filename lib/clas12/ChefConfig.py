@@ -8,13 +8,15 @@ _LOGGER=logging.getLogger(__name__)
 CHOICES={
     'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
     'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
-    'threads' : [16, 20, 24, 32]
+    'threads' : [16, 20, 24, 32],
+    'node'    : ['general','centos77','centos72','farm19','farm18','farm16','farm14','farm13','qcd12s','amd','xeon']
 }
 
 CFG=collections.OrderedDict()
 CFG['project']      = 'clas12'
 CFG['runGroup']     = None
 CFG['tag']          = None
+CFG['node']         = 'centos7'
 CFG['model']        = None
 CFG['reconYaml']    = None
 CFG['trainYaml']    = None
@@ -31,6 +33,7 @@ CFG['trainSize']    = 30
 CFG['threads']      = 16
 CFG['torus']        = None
 CFG['solenoid']     = None
+CFG['postproc']     = False
 CFG['claraLogDir']  = None
 CFG['postproc']     = False
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
@@ -164,6 +167,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
+    cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
+
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
 
@@ -172,6 +177,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
     cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
+
+    cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
@@ -281,7 +288,7 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check for coatjava
-    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0:
+    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0 or self['postproc']:
       if self['coatjava'] is None:
         if self['clara'] is not None:
           _LOGGER.warning('Using coatjava from clara: '+self['clara'])
@@ -292,16 +299,43 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"coatjava" does not exist: '+self['coatjava'])
 
     # check yaml files:
-    if self['model'].find('ana')>=0 and self['trainYaml'] is None:
-      self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
+    if self['model'].find('ana')>=0:
+      if self['trainYaml'] is None:
+        self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
+      if self['reconYaml'] is None:
+        self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
     if self['model'].find('rec')>=0 and self['reconYaml'] is None:
       self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
+    if self['reconYaml'] is not None:
+      self['schema']=ChefUtil.getSchemaName(self['reconYaml'])
     self._checkYamls()
 
     # parse run list:
     self['runs'] = ChefUtil.getRunList(self['runs'])
     if self['runs'] is None or len(self['runs'])==0:
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
+
+    # check post-processing:
+    if self['postproc']:
+      if self['model'].find('ana')<0 and self['model'].find('rec')<0:
+        self.cli.warning('Ignoring "postproc" for non-rec/ana workflow.')
+      else:
+        # check for suffiecient coatjava version:
+        # FIXME: remove this check eventually
+        cjv=ChefUtil.getCoatjavaVersion(self['coatjava'])
+        if cjv is None:
+          self.cli.error('Could not determine coatjava version.')
+        if cjv[0]<6:
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        if cjv[1]<4:
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        if cjv[2]<1:
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        # not ready for 120 Hz:
+        # FIXME: postprocess should read CCDB for frequency
+        for run in self['runs']:
+          if run>11000:
+            self.cli.critical('Post-processing is not ready for runs at 120 Hz helicity.')
 
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])
