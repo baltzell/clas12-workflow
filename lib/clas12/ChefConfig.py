@@ -35,7 +35,6 @@ CFG['torus']        = None
 CFG['solenoid']     = None
 CFG['postproc']     = False
 CFG['claraLogDir']  = None
-CFG['postproc']     = False
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
 CFG['submit']       = False
 CFG['fileRegex']    = RunFileUtil.getFileRegex()
@@ -157,7 +156,6 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
 
-    cli.add_argument('--postproc', help='run post-processing of tag-1 events', action='store_true', default=False)
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
     cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file', type=str,default=None)
     cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file', type=str,default=None)
@@ -277,9 +275,6 @@ class ChefConfig(collections.OrderedDict):
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
 
-    if self['model'].find('rec')<0 and self['postproc']:
-      self.cli.warning('Ignoring "--postprocess" for non-rec workflow.')
-
     # check for clara:
     if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
       if self['clara'] is None:
@@ -317,7 +312,8 @@ class ChefConfig(collections.OrderedDict):
 
     # check post-processing:
     if self['postproc']:
-      if self['model'].find('ana')<0 and self['model'].find('rec')<0:
+      if self['model'].find('rec')<0:
+        self['postproc']=False
         self.cli.warning('Ignoring "postproc" for non-rec/ana workflow.')
       else:
         # check for suffiecient coatjava version:
@@ -327,10 +323,12 @@ class ChefConfig(collections.OrderedDict):
           self.cli.error('Could not determine coatjava version.')
         if cjv[0]<6:
           self.cli.error('Post-processing requires coatjava>6b.4.1')
-        if cjv[1]<4:
-          self.cli.error('Post-processing requires coatjava>6b.4.1')
-        if cjv[2]<1:
-          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        elif cjv[0]==6:
+          if cjv[1]<4:
+            self.cli.error('Post-processing requires coatjava>6b.4.1')
+          elif cjv[1]==4:
+            if cjv[2]<1:
+              self.cli.error('Post-processing requires coatjava>6b.4.1')
         # not ready for 120 Hz:
         # FIXME: postprocess should read CCDB for frequency
         for run in self['runs']:

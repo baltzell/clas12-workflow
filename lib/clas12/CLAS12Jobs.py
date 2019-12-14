@@ -145,6 +145,7 @@ class ReconJob(Job):
   THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
+    self.addEnv('COATJAVA',cfg['coatjava'])
     self.addEnv('CLARA_HOME',cfg['clara'])
     self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
@@ -169,15 +170,17 @@ class ReconJob(Job):
     if self.cfg['postproc']:
       for x in self.outputData:
         x=os.path.basename(x)
-        cmd += ' && %s/bin/.postprocess pp.hipo %s'%(self.cfg['coatjava'],x)
-        cmd += ' && rm -f %s && mv -f pp.hipo %s'(x,x)
-        cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(x,self.cfg['coatjava'],x)
+        cmd += ' && ls -l && echo %s/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['coatjava'],x)
+        cmd += ' && %s/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['coatjava'],x)
+        cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
+        cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
         cmd += ' && ls %s'%(x)
     Job.setCmd(self,cmd)
 
 class TrainJob(Job):
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
+    self.addEnv('COATJAVA',cfg['coatjava'])
     self.addEnv('CLARA_HOME',cfg['clara'])
     self.addEnv('JAVA_OPTS','-Xmx8g -Xms6g')
     self.setRam('10GB')
