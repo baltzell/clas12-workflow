@@ -145,7 +145,8 @@ class ReconJob(Job):
   THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
-    self.addEnv('COATJAVA',cfg['coatjava'])
+    if cfg['postproc']:
+      self.addEnv('COATJAVA',cfg['coatjava'])
     self.addEnv('CLARA_HOME',cfg['clara'])
     self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
@@ -180,7 +181,6 @@ class ReconJob(Job):
 class TrainJob(Job):
   def __init__(self,workflow,cfg):
     Job.__init__(self,workflow,cfg)
-    self.addEnv('COATJAVA',cfg['coatjava'])
     self.addEnv('CLARA_HOME',cfg['clara'])
     self.addEnv('JAVA_OPTS','-Xmx8g -Xms6g')
     self.setRam('10GB')
