@@ -60,13 +60,12 @@ class RunFile:
   def show(self):
     print(self.fileName,self.runNumber,self.fileNumber)
 
-# TODO:  make this a subclass of list
-class RunFileGroup():
+class RunFileGroup(list):
+
   def __init__(self):
+    list.__init__(self)
     self.runNumber=None
-    self.runFileList=[]
-  def size(self):
-    return len(self.runFileList)
+
   def add(self,rf):
     if not isinstance(rf,RunFile):
       raise TypeError('must be a RunFile')
@@ -74,47 +73,46 @@ class RunFileGroup():
       return
     elif self.runNumber is None:
       self.runNumber = rf.runNumber
-      self.runFileList.append(rf)
+      self.append(rf)
     elif self.runNumber != rf.runNumber:
       _LOGGER.critical('Run number mismatch: '+str(self.runNumber)+'/'+str(rf.runNumber))
       sys.exit()
-    elif rf in self.runFileList:
+    elif rf in self:
       _LOGGER.critical('Found duplicate run/file numbers: '+str(rf))
       sys.exit()
     else:
       inserted=False
-      for ii in range(len(self.runFileList)):
-        if rf < self.runFileList[ii]:
-          self.runFileList.insert(ii,rf)
+      for ii in range(len(self)):
+        if rf < self[ii]:
+          self.insert(ii,rf)
           inserted=True
           break
       if not inserted:
-        self.runFileList.append(rf)
+        self.append(rf)
+
   def addFile(self,fileName):
     self.add(RunFile(fileName))
+
   def __str__(self):
     xx=str(self.runNumber)+'('
-    xx += ','.join([str(yy.fileNumber) for yy in self.runFileList])
+    xx += ','.join([str(yy.fileNumber) for yy in self])
     xx+=')'
     return xx
+
   def show(self):
     print(str(self.runNumber))
-    for rf in self.runFileList: rf.show()
+    for rf in self: rf.show()
 
-class RunFileGroups:
+class RunFileGroups(collections.OrderedDict):
 
   def __init__(self):
     self.groupSize=0
-    # maintain user's run insertion order:
-    self.rfgs=collections.OrderedDict()
-
-  def hasRun(self,run):
-    return run in self.rfgs
+    collections.OrderedDict.__init__(self)
 
   def addRun(self,run):
     if not type(run) is int:
       raise ValueError('run must be an int: '+str(run))
-    self.rfgs[run]=RunFileGroup()
+    self[run]=RunFileGroup()
 
   def addRuns(self,runs):
     for run in runs:
@@ -126,9 +124,9 @@ class RunFileGroups:
   def addFile(self,fileName):
     rf=RunFile(fileName)
     # ignore if run# is not registered:
-    if rf is None or not rf.runNumber in self.rfgs:
+    if rf is None or not rf.runNumber in self:
       return
-    self.rfgs[rf.runNumber].addFile(fileName)
+    self[rf.runNumber].addFile(fileName)
 
   def addDir(self,dirName):
     _LOGGER.info('Adding directory '+dirName+' ...')
@@ -164,13 +162,13 @@ class RunFileGroups:
   def getGroups(self):
     groups=[]
     phaseList=[]
-    for run,rfg in self.rfgs.items():
+    for run,rfg in self.items():
       # make a new group for the next run:
       if len(phaseList)>0:
         groups.append(phaseList)
       phaseList=[]
       # loop over the files in this run:
-      for rf in rfg.runFileList:
+      for rf in rfg:
         phaseList.append(rf.fileName)
         # make a new group if we're over the size limit:
         if self.groupSize>0 and len(phaseList)>=self.groupSize:
@@ -183,15 +181,15 @@ class RunFileGroups:
 
   def getFlatList(self):
     flatList=[]
-    for run,rfg in self.rfgs.items():
-      for rf in rfg.runFileList:
+    for run,rfg in self.items():
+      for rf in rfg:
         flatList.append(rf.fileName)
     return flatList
 
   def getRunList(self,minFileCount=1):
     runs=[]
-    for run,rfg in self.rfgs.items():
-      if minFileCount>0 and rfg.size()<minFileCount: continue
+    for run,rfg in self.items():
+      if minFileCount>0 and len(rfg)<minFileCount: continue
       runs.append(run)
     return sorted(runs)
 
@@ -200,7 +198,7 @@ class RunFileGroups:
       print(group)
 
   def showFlatList(self):
-    for key,val in self.rfgs.items():
+    for key,val in self.items():
       print(key,)
       val.show()
 
