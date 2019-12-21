@@ -117,8 +117,7 @@ class ChefConfig(collections.OrderedDict):
                     _LOGGER.critical('  '+cols[1].strip('"'))
                     sys.exit()
             if not good:
-              _LOGGER.critical('No schema_dir defined in '+self[x])
-              sys.exit()
+              _LOGGER.warning('No schema_dir defined in '+self[x])
         else:
           _LOGGER.critical('Nonexistent yaml: '+self[x])
           sys.exit()

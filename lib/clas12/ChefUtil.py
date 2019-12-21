@@ -67,7 +67,7 @@ def getSchemaName(yamlfile):
       if   s=='monitoring':  s='mon'
       elif s=='calibration': s='calib'
       return s
-  return None
+  return ''
 
 def getReconFileBytes(schema,decodedfile):
   if schema is not None and schema.startswith('/'):
