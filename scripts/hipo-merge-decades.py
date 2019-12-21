@@ -3,9 +3,7 @@ import sys,os,time,subprocess,logging
 
 # requires hipo-utils to be in $PATH
 
-import ChefUtil
-import ChefConfig
-import RunFile
+import ChefUtil,ChefConfig,RunFileUtil
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
 logger=logging.getLogger(__name__)
@@ -49,7 +47,7 @@ def merge(decade,cfg):
     file.flush()
     file.close()
 
-cc = ChefConfig(sys.argv[1:])
+cc = ChefConfig.ChefConfig(sys.argv[1:])
 cfg = cc.cfg
 
 print 'Getting workDir groups ...'
