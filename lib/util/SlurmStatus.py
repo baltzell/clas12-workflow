@@ -1,4 +1,4 @@
-import json,requests,datetime,re
+import json,requests,datetime,re,sys
 
 import Matcher
 
@@ -27,8 +27,9 @@ class SlurmStatus():
   _TIMEVARS=['cputime','walltime']
   _BYTEVARS=['memoryUsed','memoryReq']
   _STATES=['timeout','success','failed','over_rlimit']
-  _VARS=['project','name','id','coreCount','hostname','memoryReq','memoryUsed','state','exitCode','submit','finish']
-  _LEN=[6,30,10,2,10,7,7,12,3,25,25]
+  _VARS     =['project','name','id','coreCount','hostname','memoryReq','memoryUsed','cputime','walltime','c/w/#','submit','finish','state','exitCode']
+  _SHORTVARS=['proj',   'name','id','#',        'host',    'memReq',   'memUse',    'cpu',    'wall',    'c/w/#','submit','finish','state','ex'      ]
+  _LEN      =[ 6,        30,    10,  2,          10,        6,          6,           5,        5,         5,      19,      19,      12,     3        ]
   def __init__(self,user,data):
     self.user=user
     self.data=data
@@ -43,28 +44,51 @@ class SlurmStatus():
     # convert all times to seconds:
     for x in SlurmStatus._TIMEVARS:
       if x in self.data:
+        self.data[x+'-1']=self.data[x]
         self.data[x]=self.convertTime(self.data[x])
+    # calculate cpu/wall ratio:
+    if 'cputime' in self.data and 'walltime' in self.data:
+      try:
+        int(self.data['cputime'])
+        int(self.data['walltime'])
+        int(self.data['coreCount'])
+        if self.data['walltime']>0:
+          self.data['c/w/#']=float(self.data['cputime'])/self.data['walltime']/self.data['coreCount']
+      except:
+        pass
   def getHeader(self):
     ret=''
-    ret+='%10s'%'user'
-    for ii,yy in enumerate(SlurmStatus._VARS):
+    ret+='%10s '%'user'
+    for ii,yy in enumerate(SlurmStatus._SHORTVARS):
       ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%yy
     ret+='\n'
     return ret
   def convertTime(self,string):
     ret=string
-    m=re.match('(\d\d):(\d\d):(\d\d)',string)
-    if m is not None:
-      s=int(m.group(3))
-      h=int(m.group(1))
-      m=int(m.group(2))
-      ret=s+60*m+60*60*h
+    if string is None or string.strip()=='':
+      return string
+    mm=re.match('^(\d+):(\d\d):(\d\d)$',string)
+    d,h,m,s=0,0,0,0
+    if mm is not None:
+      h=int(mm.group(1))
+      m=int(mm.group(2))
+      s=int(mm.group(3))
     else:
-      m=re.match('(\d+):(\d+)\.(\d+)',string)
-      if m is not None:
-        s=int(m.group(2))
-        m=int(m.group(1))
-        ret=s+60*m
+      mm=re.match('^(\d+):(\d+)\.(\d+)$',string)
+      if mm is not None:
+        m=int(mm.group(1))
+        s=int(mm.group(2))
+      else:
+        mm=re.match('^(\d+)-(\d+):(\d+):(\d+)$',string)
+        if mm is not None:
+          d=int(mm.group(1))
+          h=int(mm.group(2))
+          m=int(mm.group(3))
+          s=int(mm.group(4))
+        else:
+          print('Error converting time: >'+string+'<')
+          sys.exit()
+    ret=s+60*m+60*60*h+24*60*60*d
     return ret
   def convertDate(self,string):
     # datetime doesn't have non-zero-padded stuff,
@@ -115,21 +139,31 @@ class SlurmStatus():
     ret=''
     ret+='%10s '%self.user
     for ii,yy in enumerate(SlurmStatus._VARS):
+      a='N/A'
       if yy in self.data:
         a=self.data[yy]
         if isinstance(a,datetime.datetime):
-          ret+=datetime.datetime.strftime(a,'%Y/%m/%d-%H:%M:%S ')
+          a==datetime.datetime.strftime(a,'%Y/%m/%d-%H:%M:%S ')
         elif yy in SlurmStatus._BYTEVARS and isinstance(a,float):
-          if a/1e6>=1000: ret+='%4.1f GB '%(a/1e9)
-          else:          ret+='%4.0f MB '%(a/1e6)
-        else:
-          if len(str(a))>30:
-            prefix=a[0:14]
-            suffix=a[len(a)-15:]
-            a=prefix+'*'+suffix
-          ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%str(a)
+          if a/1e6>=1000:
+            a='%4.1fG'%(a/1e9)
+          else:
+            a='%4.0fM'%(a/1e6)
+        elif yy=='name' and len(str(a))>30:
+          prefix=a[0:14]
+          suffix=a[len(a)-15:]
+          a=prefix+'*'+suffix
+        elif yy=='c/w/#':
+          a='%.2f'%a
+        elif yy=='cputime' or yy=='walltime':
+          try:
+            a='%.1f'%(float(a)/60/60)
+          except:
+            pass
+      if yy in SlurmStatus._BYTEVARS or yy in ['cputime','walltime','c/w/#']:
+        ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%str(a).strip()
       else:
-        ret+=('%'+str(SlurmStatus._LEN[ii])+'s ')%'N/A'
+        ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%str(a).strip()
     ret+='\n'
     return ret
 
@@ -142,17 +176,18 @@ class SlurmQuery():
     self.end=None
     self.dayDelta=7
     self.states=[]
-    self.setAllStates()
-    self.setDefaultTime()
     self.data={}
     self.myData=[]
     self.statuses=[]
     self.matchAny=[]
     self.matchAll=[]
+    self.setAllStates()
+    self.setDefaultTime()
   def setAllStates(self):
     self.states=SlurmStatus._STATES
   def setDefaultTime(self):
     now=datetime.datetime.now()
+    # move it to tomorrow:
     self.end=now+datetime.timedelta(days=1)
     self.start=self.end+datetime.timedelta(days=-self.dayDelta)
   def setDayDelta(self,days):
@@ -216,7 +251,7 @@ class SlurmQuery():
     ret=''
     self.get()
     if len(self.myData)>0:
-#      ret+=self.myData[0].getHeader()
+      ret+=self.myData[0].getHeader()
       for xx in self.myData:
         ret+=str(xx)
     return ret

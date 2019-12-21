@@ -28,6 +28,7 @@ if len(args.u)==0:
 if args.e is not None:
   try:
     args.e=datetime.datetime.strptime(args.e,'%Y-%m-%d')
+    # move to 00:00:00 the following day:
     args.e+=datetime.timedelta(days=1)
   except:
     cli.error('Invalid date format:  '+args.e)
