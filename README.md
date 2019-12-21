@@ -123,6 +123,5 @@ See `$CLAS12WFLOW/cron/swif.cron` for an example cron job.
   * maintain a fixed and available disk space requirement
 
 ## TODO
-* inlude post-processing tasks (e.g. skim merging, helicity analysis, monitoring)
 * write outputs to `/cache` with a `jcache -put` inside the job, pointing downstream dependencies to the `/mss` location
 
