@@ -90,7 +90,6 @@ class DecodeAndMergeJob(Job):
     decodedfiles=[]
     for eviofile in eviofiles:
       Job.addInputData(self,eviofile)
-#      print self.getTag('file')
       basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
       decodedfiles.append(basename)
     runno = RunFile(eviofiles[0]).runNumber
@@ -205,6 +204,25 @@ class TrainJob(Job):
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
     cmd += ' && ls -lhtr'
+    Job.setCmd(self,cmd)
+
+class TrainMrgJob(Job):
+  def __init__(self,workflow,cfg):
+    Job.__init__(self,workflow,cfg)
+    self.addEnv('COATJAVA',cfg['coatjava'])
+    # FIXME: use `module load`, but need to know what version or wait until stable
+    lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
+    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12')
+    self.setRam('700MB')
+    self.addTag('mode','anamrg')
+    self.setTime('12h')
+  def setRun(self,run):
+    self.run=int(run)
+  def setCmd(self):
+    # FIXME: write outputs to local disk and use Auger staging
+    cmd=os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
+    cmd+=' -i %s/%s/train/%.6d'%(self.cfg['outDir'],self.cfg['schema'],self.run)
+    cmd+=' -o %s/%s/train'%(self.cfg['outDir'],self.cfg['schema'])
     Job.setCmd(self,cmd)
 
 if __name__ == '__main__':

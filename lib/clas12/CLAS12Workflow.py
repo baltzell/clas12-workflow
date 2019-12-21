@@ -83,6 +83,24 @@ class CLAS12Workflow(SwifWorkflow):
         inps=[]
     return jobs
 
+  def trainmerge(self,phase,jobs):
+    runs={}
+    for job in jobs:
+      if job.getTag('mode')=='ana':
+        if job.getTag('run') not in runs:
+          runs[job.getTag('run')]=[]
+        runs[job.getTag('run')].append(job)
+    jobs=[]
+    for run in runs:
+      job=CLAS12Jobs.TrainMrgJob(self.name,self.cfg)
+      for j in runs[run]:
+        job.antecedents.append(j.getJobName())
+      job.setRun(run)
+      job.setCmd()
+      jobs.append(job)
+      self.addJob(job)
+    return jobs
+
   #
   # decodemerge:  add jobs for decode+merge hipo files
   # - one job per merge

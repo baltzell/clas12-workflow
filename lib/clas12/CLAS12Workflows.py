@@ -32,6 +32,9 @@ class MinimalDependency(CLAS12Workflow):
       if self.cfg['model'].find('ana')>=0:
         xx = self.train(self.phase,xx)
 
+    if self.cfg['model'].find('ana')>=0:
+      xx = self.trainmerge(self.phase,self.jobs)
+
 
 class RollingRuns(CLAS12Workflow):
 #
@@ -104,6 +107,10 @@ class RollingRuns(CLAS12Workflow):
 
       if len(decodeQ)==0 and len(mergeQ)==0 and len(deleteQ)==0 and len(reconQ)==0 and len(trainQ)==0:
         break
+
+    if self.cfg['model'].find('ana')>=0:
+      xx = trainmerge(self.phase,self.jobs)
+
 
 
 #if __name__ == '__main__':
