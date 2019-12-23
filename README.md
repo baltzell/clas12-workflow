@@ -91,7 +91,7 @@ To also merge the decoded files, change the `--model` option to `decmrg`, to add
 
 After importing the resulting JSON file via `swif import -file filename`, you would `swif run` it to start the workflow.  Alternatively, the `--submit` option would have executed these two Swif steps automatically.
 
-See the `$CLAS12WFLOW/examples` directory for example command-lines and config files. 
+See the [examples](./examples) directory for example command-lines and config files. 
 
 ### Monitoring / Control
 `swif-status.py` wraps various Swif commands.  By default it just prints all your current workflows' statuses, with command-line options to:
@@ -99,7 +99,7 @@ See the `$CLAS12WFLOW/examples` directory for example command-lines and config f
 * push status to clas12mon for timelines
 * save the current status and full job details, and publish to a web directory
 
-See `$CLAS12WFLOW/cron/swif.cron` for an example cron job.
+See [cron/swif.cron](./cron/swif.cron) for an example cron job.
 
 ## Features
 * intended to be extendable to non-CLAS12 workflows, see `lib/swif/` and `lib/util/`

@@ -169,8 +169,13 @@ def getRunList(data):
       _LOGGER.info('Reading run numbers from file: '+data)
       for line in open(data,'r').readlines():
         run=line.strip().split()
+        # ignore comment lines starting with a "#":
+        if line.strip().startswith("#"):
+          continue
+        # ignore empty lines:
         if len(run)<1:
           continue
+        # otherwise first column must be the number:
         try:
           runs.append(int(run[0]))
         except:
