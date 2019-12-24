@@ -32,7 +32,7 @@ class Job(SwifJob):
     if len(cfgdir)<1: return
     if re.match('^\d+$',cfgdir[len(cfgdir)-1]) is not None: cfgdir.pop()
     cfgdir='/'+('/'.join(cfgdir))
-    cfgfile=cfgdir+'/REAMDE.json'
+    cfgfile=cfgdir+'/README.json'
     if os.path.isfile(cfgfile):
       # check for conflict with pre-existing config file:
       with open(cfgfile,'r') as f:
