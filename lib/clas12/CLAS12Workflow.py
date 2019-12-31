@@ -18,7 +18,7 @@ class CLAS12Workflow(SwifWorkflow):
     self.findFiles(self.cfg['inputs'])
     r=self.getRunList()
     if len(r)>0:
-      self.name+='_R%d'%(r[0])
+      self.name+='_%d'%(r[0])
       if len(r)>1:
         self.name+='x%d'%(len(r))
     self.logDir=None
