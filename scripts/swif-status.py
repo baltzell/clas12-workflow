@@ -13,15 +13,24 @@ def processWorkflow(workflow,args):
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
 
+  # print details of jobs with problems:
   if args.problems:
     status.showPersistentProblems()
 
+  # if retrying, only print status if problems exist:
   if args.retry:
     result = status.retryProblems()
     if len(result)>0 and not args.quiet:
       print status.getPrettyStatus()
       print result
 
+  # otherwise always print status:
+  else:
+    print status.getPrettyStatus()
+    if args.details:
+      print status.getPrettyJsonDetails()
+
+  # save job status in text file
   if args.save:
     if status.isComplete():
       if status.isPreviousComplete():
@@ -31,11 +40,6 @@ def processWorkflow(workflow,args):
     status.saveLog()
     if args.details:
       status.saveDetails()
-
-  else:
-    print status.getPrettyStatus()
-    if args.details:
-      print status.getPrettyJsonDetails()
 
   if args.clas12mon:
     status.saveDatabase()

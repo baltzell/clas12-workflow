@@ -4,6 +4,8 @@ from ChefConfig import CHOICES
 from ChefUtil import mkdir
 from SwifStatus import SwifStatus
 
+# FIXME: move logging up to SwifStatus
+
 class CLAS12SwifStatus(SwifStatus):
   def __init__(self,name,args):
     SwifStatus.__init__(self,name)
