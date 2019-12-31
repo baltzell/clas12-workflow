@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-import sys,subprocess,argparse
+import sys,subprocess,argparse,logging
 from SwifStatus import getWorkflowNames,deleteWorkflow
 from CLAS12SwifStatus import CLAS12SwifStatus
+
+logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
+logger=logging.getLogger(__name__)
 
 # TODO: switch to JSON format (didn't know it was available at the time)
 
