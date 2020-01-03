@@ -12,6 +12,7 @@ class Job(SwifJob):
     self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
+    self.project=cfg['project']
     self.os=cfg['node']
     self.cfg=cfg
   def addInputData(self,filename):

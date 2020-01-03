@@ -13,7 +13,6 @@ CHOICES={
 }
 
 CFG=collections.OrderedDict()
-CFG['project']      = 'clas12'
 CFG['runGroup']     = None
 CFG['tag']          = None
 CFG['node']         = 'general'
@@ -41,6 +40,10 @@ CFG['fileRegex']    = RunFileUtil.getFileRegex()
 CFG['mergePattern'] = 'clas_%.6d.evio.%.5d-%.5d.hipo'
 CFG['singlePattern']= 'clas_%.6d.evio.%.5d.hipo'
 CFG['ignored']      = {}
+if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','hps']:
+  CFG['project']='hallb-pro'
+else:
+  CFG['project']='clas12'
 
 class ChefConfig(collections.OrderedDict):
 
