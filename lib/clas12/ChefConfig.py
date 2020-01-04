@@ -182,7 +182,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
-    cli.add_argument('--version',action='version',version='0.6')
+    cli.add_argument('--version',action='version',version='0.7')
 
     return cli
 
