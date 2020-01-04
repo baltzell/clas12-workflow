@@ -55,7 +55,7 @@ ls -lt
 # check inputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $xx || ( rm -f *.hipo && exit 501)
+    hipocheck $xx || rm -f *.hipo && exit 101
 done
 
 # run clara:
@@ -74,7 +74,7 @@ claraexit=$?
 # check outputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $outprefix$xx || ( rm -f *.hipo && exit 502 )
+    hipocheck $outprefix$xx || rm -f *.hipo && exit 102
 done
 
 # remove this later:

@@ -78,7 +78,7 @@ ls -lt
 # check inputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $xx || ( rm -f *.hipo && exit 501)
+    hipocheck $xx || rm -f *.hipo && exit 101
 done
 
 # run clara:
@@ -103,7 +103,7 @@ do
     do
         yy=./skim_${xx}_${nn}.hipo
         zz=./skim${nn}_${xx}
-        hipocheck $yy || ( rm -f *.hipo && exit 502 )
+        hipocheck $yy || rm -f *.hipo && exit 102
         mv -f $yy $zz
     done
 done
