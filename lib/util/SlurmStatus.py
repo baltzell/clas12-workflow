@@ -30,7 +30,7 @@ class SlurmStatus():
   _STATES=['timeout','success','failed','over_rlimit']
   _VARS     =['project','name','id','coreCount','hostname','memoryReq','memoryUsed','cputime','walltime','c/w/#','submit','finish','state','exitCode']
   _SHORTVARS=['proj',   'name','id','#',        'host',    'memReq',   'memUse',    'cpu',    'wall',    'c/w/#','submit','finish','state','ex'      ]
-  _LEN      =[ 6,        30,    10,  2,          10,        6,          6,           5,        5,         5,      19,      19,      12,     3        ]
+  _LEN      =[ 9,        30,    10,  2,          10,        6,          6,           5,        5,         5,      19,      19,      12,     3        ]
 
   def __init__(self,user,data):
     self.user=user
@@ -61,7 +61,7 @@ class SlurmStatus():
 
   def getHeader(self):
     ret=''
-    ret+='%10s '%'user'
+    ret+='%8s '%'user'
     for ii,yy in enumerate(SlurmStatus._SHORTVARS):
       ret+=('%-'+str(SlurmStatus._LEN[ii])+'s ')%yy
     ret+='\n'
@@ -149,7 +149,7 @@ class SlurmStatus():
 
   def __str__(self):
     ret=''
-    ret+='%10s '%self.user
+    ret+='%8s '%self.user
     for ii,yy in enumerate(SlurmStatus._VARS):
       a='N/A'
       if yy in self.data:
