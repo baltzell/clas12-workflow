@@ -18,6 +18,7 @@ CFG['tag']          = None
 CFG['node']         = 'general'
 CFG['model']        = None
 CFG['reconYaml']    = None
+CFG['project']      = 'clas12'
 CFG['trainYaml']    = None
 CFG['coatjava']     = None
 CFG['clara']        = None
@@ -40,10 +41,10 @@ CFG['fileRegex']    = RunFileUtil.getFileRegex()
 CFG['mergePattern'] = 'clas_%.6d.evio.%.5d-%.5d.hipo'
 CFG['singlePattern']= 'clas_%.6d.evio.%.5d.hipo'
 CFG['ignored']      = {}
+
+# override default project for priority accounts:
 if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','hps']:
   CFG['project']='hallb-pro'
-else:
-  CFG['project']='clas12'
 
 class ChefConfig(collections.OrderedDict):
 
@@ -125,10 +126,15 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.critical('Nonexistent yaml: '+self[x])
           sys.exit()
 
+  def compactModel(self):
+    x=self['model']
+    for y in ['dec','mrg','rec','ana']:
+      x=x.replace(y,y[0])
+    return x
 
   def getWorkflow(self):
     if self._workflow is None:
-      name='%s-%s-%s'%(self['runGroup'],self['model'],self['tag'])
+      name='%s-%s-%s'%(self['runGroup'],self.compactModel(),self['tag'])
       if self['phaseSize'] >= 0:
         self._workflow = CLAS12Workflows.RollingRuns(name,self)
       else:
@@ -144,7 +150,7 @@ class ChefConfig(collections.OrderedDict):
         epilog='(*) = required option for all models, from command-line or config file')
 
     cli.add_argument('--runGroup',metavar='NAME',help='(*) run group name', type=str, choices=CHOICES['runGroup'], default=None)
-    cli.add_argument('--tag',     metavar='NAME',help='(*) workflow name suffix/tag, e.g. v0, automatically prefixed with runGroup and task to define workflow name',  type=str, default=None)
+    cli.add_argument('--tag',     metavar='NAME',help='(*) e.g. pass1v0, automatically prefixed with runGroup and suffixed by model to define workflow name',  type=str, default=None)
     cli.add_argument('--model', metavar='NAME', help='(*) workflow model ('+'/'.join(CHOICES['model'])+')', type=str, choices=CHOICES['model'],default=None)
 
     cli.add_argument('--inputs', metavar='PATH',help='(*) name of file containing a list of input files, or a directory to be searched recursively for input files, or a (quoted) shell glob of either.  This option is repeatable.',action='append',type=str,default=[])
