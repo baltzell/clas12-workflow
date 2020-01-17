@@ -34,7 +34,6 @@ if mm is not None:
 logger.info('scanning input directory for train files ...')
 for dirpath,dirnames,filenames in os.walk(args.i):
   # check that it's a run-number directory:
-  print os.path.basename(dirpath)
   mm=re.match('^(\d+)$',os.path.basename(dirpath))
   if mm is None:
     continue
