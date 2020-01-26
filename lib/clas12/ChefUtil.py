@@ -60,6 +60,36 @@ def getTrainIndices(yamlfile):
         ids.append(int(line.strip().split()[1]))
   return sorted(ids)
 
+def getTrainNames(yamlfile):
+  names={}
+  for x in getTrainIndices(yamlfile):
+    names[x]=None
+  # yaml parser does not come with stock python ...
+  section=False
+  for line in open(yamlfile,'r').readlines():
+    if line.strip().find('custom-names:')==0:
+      section=True
+      continue
+    elif line.strip().endswith(':'):
+      section=False
+    if not section:
+      continue
+    cols=line.strip().split(':')
+    if len(cols)==2:
+      try:
+        thisid=int(cols[0])
+      except:
+        continue
+      if thisid not in names:
+        _LOGGER.error('Invalid wagon id in custom-names in train yaml:  '+line)
+      names[thisid]=cols[1].strip()
+  # must be all-or-none:
+  if None in names.values():
+    for x,y in names.items():
+      if y is not None:
+        _LOGGER.error('Missing custom-name in train yaml: '+line)
+  return names
+
 def getSchemaName(yamlfile):
   for line in open(yamlfile,'r').readlines():
     if line.strip().find('schema_dir: ')==0:
