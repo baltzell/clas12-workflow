@@ -51,11 +51,18 @@ class ClaraStats:
     ret=''
     ret+='\nTotal Jobs: '+str(self.incomplete+self.successes)+'\n'
     ret+='\nClara Fail:\n'
+    fmt='  %7s : %10d : %4.1f%%\n'
     for b in ClaraErrors._BITS:
-      ret+='  %7s : %10d : %4.1f%%\n'%(b,self.errors[b],100*float(self.errors[b])/(self.incomplete+self.successes))
+      if self.incomplete+self.successes>0:
+        ret+=fmt%(b,self.errors[b],100*float(self.errors[b])/(self.incomplete+self.successes))
+      else:
+        ret+=fmt%(b,self.errors[b],0)
     ret+='\nSlurm Fail:\n'
     for b in SlurmErrors._BITS:
-      ret+='  %7s : %10d : %4.1f%%\n'%(b,self.slurmerrors[b],100*float(self.slurmerrors[b])/(self.incomplete+self.successes))
+      if self.incomplete+self.successes>0:
+        ret+=fmt%(b,self.slurmerrors[b],100*float(self.slurmerrors[b])/(self.incomplete+self.successes))
+      else:
+        ret+=fmt%(b,self.slurmerrors[b],0)
     ret+='\nFlavor Fail:\n'
     for f in JobSpecs._FLAVORS:
       ret+=f+' '

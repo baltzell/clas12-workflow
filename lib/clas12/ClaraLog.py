@@ -1,4 +1,4 @@
-import os,sys,re,datetime
+import os,sys,re,datetime,socket
 
 from JobSpecs import JobSpecs
 from ClaraErrors import ClaraErrors
@@ -58,11 +58,28 @@ class ClaraLog(JobSpecs):
 
   # Extract the hostname from a /farm_out logfile
   def getClaraHostname(self,logfilename):
+    # first try to get it from the filename:
     for flavor in JobSpecs._FLAVORS:
       # CLARA-generated names:
       m=re.match('.*/(%s)(\d+)_.*'%(flavor),logfilename)
       if m is not None:
         return m.group(1)+m.group(2)
+    # otherwise find the ip address in its contents:
+    with open(logfilename,'r') as f:
+      while True:
+        line=f.readline()
+        if not line:
+          break
+        cols=line.strip().split()
+        if len(cols)==4 and cols[0]=='Proxy' and cols[1]=='Host':
+          try:
+            hostname=socket.gethostbyaddr(cols[3])[0]
+            for flavor in JobSpecs._FLAVORS:
+              m=re.match('(%s)(\d+)'%(flavor),hostname)
+              if m is not None:
+                return m.group(1)+m.group(2)
+          except:
+            pass
     return None
 
   def attachFarmout(self):
