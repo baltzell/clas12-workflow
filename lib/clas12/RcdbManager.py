@@ -75,7 +75,7 @@ class RcdbManager():
     # if we found no conditions for this run, set it to None:
     if not found:
       self.data[int(run)]=None
-      _LOGGER.error('Failed to retrieve constants for run '+str(run))
+      _LOGGER.error('Failed to retrieve any constants for run '+str(run))
 
     # close connection:
     db.disconnect()
@@ -93,7 +93,7 @@ class RcdbManager():
     self.load(run)
     if int(run) in self.data and self.data[int(run)] is not None and key in self.data[int(run)]:
       return self.data[int(run)][key]
-    raise ValueError('Cannot find %s for run %d in RCDB'%(key,int(run)))
+    return None
 
   def getSolenoidScale(self,run):
     return self.get(run,'solenoid_scale')
