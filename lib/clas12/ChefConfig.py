@@ -7,7 +7,7 @@ _LOGGER=logging.getLogger(__name__)
 
 CHOICES={
     'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
-    'runGroup': ['rga','rgb','rgk','rgm','rgl','rgd','rge','test'],
+    'runGroup': ['rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
     'threads' : [16, 20, 24, 32],
     'node'    : ['general','centos77','centos72','farm19','farm18','farm16','farm14','farm13','qcd12s','amd','xeon']
 }
