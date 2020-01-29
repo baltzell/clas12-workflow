@@ -4,7 +4,7 @@ from JobErrors import SlurmErrors
 
 class JobSpecs:
 
-  _FLAVORS=['farm18','farm16','farm14','farm13','qcd12s']
+  _FLAVORS=['farm19','farm18','farm16','farm14','farm13','qcd12s']
 
   def __init__(self):
     self.augerid=None

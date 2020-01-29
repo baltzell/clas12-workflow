@@ -3,9 +3,10 @@ from JobSpecs import JobSpecs
 from ClaraErrors import ClaraErrors
 from JobErrors import SlurmErrors
 
-_COLORS =[1       ,2       ,4       ,3       ,94]
-_THREADS=[16, 20,   24,   32]
-_FILLS  =[0,  3003, 3004, 3005]
+_COLORS =[1,  2,    4,    3,    94,  51]
+
+_THREADS=[12, 20,   16,   24,   32]
+_FILLS  =[0,  3007, 3003, 3004, 3005]
 
 class ClaraStats:
 
