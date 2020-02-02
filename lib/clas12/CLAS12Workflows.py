@@ -34,6 +34,7 @@ class MinimalDependency(CLAS12Workflow):
 
     if self.cfg['model'].find('ana')>=0:
       xx = self.trainmerge(self.phase,self.jobs)
+      xx = self.trainclean(self.phase,self.jobs)
 
 
 class RollingRuns(CLAS12Workflow):

@@ -275,8 +275,8 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
 
     else:
-      if self['workDir'] is not None:
-        _LOGGER.warning('Ignoring --workDir for non-merging, non-phased workflow.')
+      if self['workDir'] is not None and self['model'].find('ana')<0:
+        _LOGGER.warning('Ignoring --workDir for non-merging, non-phased, trainless workflow.')
         self['workDir']=None
 
     # set user-defined regex for input files:

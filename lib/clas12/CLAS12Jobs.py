@@ -194,7 +194,11 @@ class TrainJob(Job):
     self.setDisk(ChefUtil.getTrainDiskReq(self.cfg['reconYaml'],filenames))
     for x in filenames:
       Job.addInputData(self,x)
-    outDir='%s/%s/train/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
+    if self.cfg['workDir'] is None:
+      outDir=self.cfg['outDir']
+    else:
+      outDir=self.cfg['workDir']
+    outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
       for y in ChefUtil.getTrainIndices(self.cfg['trainYaml']):
@@ -221,10 +225,31 @@ class TrainMrgJob(Job):
     self.run=int(run)
   def setCmd(self):
     # FIXME: write outputs to local disk and use Auger staging
+    if self.cfg['workDir'] is None:
+      inDir=self.cfg['outDir']
+    else:
+      inDir=self.cfg['workDir']
     cmd=os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
-    cmd+=' -i %s/%s/train/%.6d'%(self.cfg['outDir'],self.cfg['schema'],self.run)
+    cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],self.run)
     cmd+=' -o %s/%s/train'%(self.cfg['outDir'],self.cfg['schema'])
+    cmd+=' -y '+self.cfg['trainYaml']
     Job.setCmd(self,cmd)
+
+class TrainCleanupJob(Job):
+  def __init__(self,workflow,cfg):
+    Job.__init__(self,workflow,cfg)
+    self.setRam('100MB')
+    self.setTime('2h')
+    self.addTag('mode','anaclean')
+  def setRun(self,run):
+    self.run=int(run)
+  def setCmd(self):
+    if self.cfg['workDir'] is None:
+      cmd='rm -rf %s/%s/train/%.6d'%(self.cfg['outDir'],self.cfg['schema'],self.run)
+    else:
+      cmd='rm -rf %s/%s/train/%.6d'%(self.cfg['workDir'],self.cfg['schema'],self.run)
+    Job.setCmd(self,cmd)
+
 
 if __name__ == '__main__':
 
