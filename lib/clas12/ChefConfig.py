@@ -279,6 +279,15 @@ class ChefConfig(collections.OrderedDict):
         _LOGGER.warning('Ignoring --workDir for non-merging, non-phased, trainless workflow.')
         self['workDir']=None
 
+    # no temporary files on /cache or mss
+    if self['workDir'] is not None:
+      if self['workDir'].find('/cache')==0 or self['workDir'].find('/mss')==0:
+        self.cli.error('--workDir cannot be on /cache or /mss.')
+    if self['model'].find('ana')>=0:
+      if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
+        if self['workDir'] is None:
+          self.cli.error('--workDir is required for trains if --outDir is on /cache or /mss')
+
     # set user-defined regex for input files:
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
