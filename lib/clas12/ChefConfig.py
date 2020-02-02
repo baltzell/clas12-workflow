@@ -332,7 +332,7 @@ class ChefConfig(collections.OrderedDict):
     if self['postproc']:
       if self['model'].find('rec')<0:
         self['postproc']=False
-        self.cli.warning('Ignoring "postproc" for non-rec/ana workflow.')
+        self.cli.warning('Ignoring "postproc" for non-rec workflow.')
       else:
         # check for suffiecient coatjava version:
         # FIXME: remove this check eventually
@@ -344,14 +344,12 @@ class ChefConfig(collections.OrderedDict):
         elif cjv[0]==6:
           if cjv[1]<4:
             self.cli.error('Post-processing requires coatjava>6b.4.1')
-          elif cjv[1]==4:
-            if cjv[2]<1:
-              self.cli.error('Post-processing requires coatjava>6b.4.1')
+          elif cjv[1]==4 and cjv[2]<1:
+            self.cli.error('Post-processing requires coatjava>6b.4.1')
         # not ready for 120 Hz:
-        # FIXME: postprocess should read CCDB for frequency
         for run in self['runs']:
-          if run>11000:
-            self.cli.critical('Post-processing is not ready for runs at 120 Hz helicity.')
+          if run>11000 and cjv[0]==6 and cjv[1]<5:
+            self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
 
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])
