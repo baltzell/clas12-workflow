@@ -18,7 +18,7 @@ Note that the `--config` parameter provides for loading options from a file, and
 **_And a couple peculiarities:_**
 * For workflows that include decoding, `--decDir` allows to send the decoded files to a different destination than the other tasks (since decoding is unique in that it is generally only done once).
 * For workflows that include decoding, merging _and_ phase dependencies, setting `--workDir` enables staging of single decoded files before merging (otherwise decoding jobs are many-to-one file I/O).
-
+* For workflows that include analysis trains, `--workDir` enables staging the single train outputs in a separate location before merging them by run number (e.g. so temporary files are not written to /cache)
 
 ```
 ifarm1801> clas12-workflow.py -h
@@ -29,29 +29,31 @@ usage: clas12-workflow.py [-h] [--runGroup NAME] [--tag NAME] [--model NAME]
                           [--coatjava PATH] [--clara PATH] [--threads #]
                           [--reconYaml PATH] [--trainYaml PATH]
                           [--claraLogDir PATH] [--phaseSize #] [--mergeSize #]
-                          [--trainSize #] [--torus #.#] [--solenoid #.#]
-                          [--fileRegex REGEX] [--config PATH] [--defaults]
-                          [--show] [--submit] [--version]
+                          [--trainSize #] [--postproc] [--torus #.#]
+                          [--solenoid #.#] [--fileRegex REGEX] [--config PATH]
+                          [--defaults] [--show] [--node NAME] [--submit]
+                          [--version]
 
 Generate a CLAS12 SWIF workflow.
 
 optional arguments:
   -h, --help          show this help message and exit
   --runGroup NAME     (*) run group name
-  --tag NAME          (*) workflow name suffix/tag, e.g. v0, automatically
-                      prefixed with runGroup and task to define workflow name
+  --tag NAME          (*) e.g. pass1v0, automatically prefixed with runGroup
+                      and suffixed by model to define workflow name
   --model NAME        (*) workflow model (dec/decmrg/rec/ana/decrec/decmrgrec/
                       recana/decrecana/decmrgrecana)
   --inputs PATH       (*) name of file containing a list of input files, or a
                       directory to be searched recursively for input files, or
-                      a shell glob of either. This option is repeatable.
+                      a (quoted) shell glob of either. This option is
+                      repeatable.
   --runs RUN/PATH     (*) run numbers (e.g. "4013" or "4013,4015" or
                       "3980,4000-4999"), or a file containing a list of run
                       numbers. This option is repeatable.
   --outDir PATH       final data location
   --decDir PATH       overrides outDir for decoding
-  --workDir PATH      temporary data location (for merging and phased
-                      workflows only)
+  --workDir PATH      temporary data location for single decoded/train files
+                      before merging
   --logDir PATH       log location (otherwise the SLURM default)
   --coatjava PATH     coatjava install location
   --clara PATH        clara install location
@@ -60,8 +62,9 @@ optional arguments:
   --trainYaml PATH    train yaml file
   --claraLogDir PATH  location for clara log files
   --phaseSize #       number of files per phase (negative is unphased)
-  --mergeSize #       number of files per merge
+  --mergeSize #       number of decoded files per merge
   --trainSize #       number of files per train
+  --postproc          enable post-processing of helicity and beam charge
   --torus #.#         override RCDB torus scale
   --solenoid #.#      override RCDB solenoid scale
   --fileRegex REGEX   input filename format (for matching run and file
@@ -69,10 +72,11 @@ optional arguments:
   --config PATH       load config file (overriden by command line arguments)
   --defaults          print default config file and exit
   --show              print config file and exit
+  --node NAME         batch farm node type (os/feature)
   --submit            submit and run jobs immediately
   --version           show program's version number and exit
 
-(*) = required option for all workflows, from command-line or config file
+(*) = required option for all models, from command-line or config file
 ```
 
 ### Examples

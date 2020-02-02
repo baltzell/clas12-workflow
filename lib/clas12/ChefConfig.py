@@ -158,7 +158,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None)
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
-    cli.add_argument('--workDir',metavar='PATH',help='temporary data location (for merging and phased workflows only)', type=str,default=None)
+    cli.add_argument('--workDir',metavar='PATH',help='temporary data location for single decoded/train files before merging', type=str,default=None)
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
     cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
@@ -170,7 +170,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files per phase (negative is unphased)', type=int, default=None)
-    cli.add_argument('--mergeSize', metavar='#',help='number of files per merge', type=int, default=None)
+    cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
