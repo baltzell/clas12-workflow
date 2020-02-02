@@ -188,7 +188,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
-    cli.add_argument('--version',action='version',version='clas12-workflow/0.8')
+    cli.add_argument('--version',action='version',version='clas12-workflow/0.9')
 
     return cli
 
