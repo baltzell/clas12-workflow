@@ -103,6 +103,7 @@ class ChefConfig(collections.OrderedDict):
 
   def _checkYamls(self):
     for x in ['reconYaml','trainYaml']:
+      ChefUtil.getTrainNames(x)
       if self[x] is not None:
         if os.path.isfile(self[x]):
           if x=='reconYaml':

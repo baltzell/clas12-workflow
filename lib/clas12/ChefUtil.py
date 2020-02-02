@@ -55,6 +55,8 @@ def getCoatjavaVersion(path):
 def getTrainIndices(yamlfile):
   ids=[]
   for line in open(yamlfile,'r').readlines():
+    if line.strip().find('#')==0:
+      continue
     if line.strip().find('id: ')==0:
       if int(line.strip().split()[1]) not in ids:
         ids.append(int(line.strip().split()[1]))
@@ -67,6 +69,8 @@ def getTrainNames(yamlfile):
   # yaml parser does not come with stock python ...
   section=False
   for line in open(yamlfile,'r').readlines():
+    if line.strip().find('#')==0:
+      continue
     if line.strip().find('custom-names:')==0:
       section=True
       continue
@@ -87,7 +91,7 @@ def getTrainNames(yamlfile):
   if None in names.values():
     for x,y in names.items():
       if y is not None:
-        _LOGGER.error('Missing custom-name in train yaml: '+line)
+        _LOGGER.error('Missing custom-name in train yaml:\n'+str(names))
   return names
 
 def getSchemaName(yamlfile):
