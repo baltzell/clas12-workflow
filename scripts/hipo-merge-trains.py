@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import re,os,sys,logging,subprocess,argparse
+import ChefUtil
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
 logger=logging.getLogger(__name__)
@@ -7,6 +8,7 @@ logger=logging.getLogger(__name__)
 cli=argparse.ArgumentParser(description='Merge a directory of clas12-workflow train outputs.')
 cli.add_argument('-i',metavar='path',help='input directory',type=str,required=True)
 cli.add_argument('-o',metavar='path',help='output directory',type=str,required=True)
+cli.add_argument('-y',metavar='path',help='train yaml file (for determining skim names)',type=str,required=False)
 args=cli.parse_args(sys.argv[1:])
 args.i=args.i.rstrip('/')
 
@@ -46,7 +48,7 @@ for dirpath,dirnames,filenames in os.walk(args.i):
   # check that it's still the same basepath:
   if basepath is None:
     basepath=bp
-  elif basepath!=bp:
+  elif basepath != bp:
     logger.error('Found multiple basepaths:')
     logger.error(basepath)
     logger.error(bp)
@@ -63,6 +65,11 @@ if len(trainIndices)==0:
 else:
   logger.info('Found %d wagons, merging them by run number ...'%len(trainIndices))
 
+# retrieve train names from yaml file:
+trainNames=None
+if args.y is not None:
+  trainNames=ChefUtil.getTrainNames(args.y)
+
 # call hipo-merge-runs.py once per trainIndex:
 for trainIndex in sorted(trainIndices):
   logger.info('Merging wagon #'+str(trainIndex))
@@ -70,9 +77,14 @@ for trainIndex in sorted(trainIndices):
     inGlob='%s/%.6d/skim%d_*.hipo'%(basepath,singleRun,trainIndex)
   else:
     inGlob='%s/*/skim%d_*.hipo'%(basepath,trainIndex)
-  outStub='%s/skim%d/skim%d'%(args.o,trainIndex,trainIndex)
+  # use custom names else just skim# indices:
+  if trainNames is None or trainNames[trainIndex] is None:
+    outStub='%s/skim%d/skim%d'%(args.o,trainIndex,trainIndex)
+  else:
+    outStub='%s/%s/%s'%(args.o,trainNames[trainIndex],trainNames[trainIndex])
   cmd=[os.path.dirname(os.path.realpath(__file__))+'/hipo-merge-runs.py']
   cmd.extend(['-i',inGlob,'-o',outStub])
+  print(' '.join(cmd))
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
   while True:
     line=p.stdout.readline().rstrip()
