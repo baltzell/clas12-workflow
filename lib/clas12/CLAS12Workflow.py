@@ -86,7 +86,7 @@ class CLAS12Workflow(SwifWorkflow):
   def trainmerge(self,phase,jobs):
     runs={}
     for job in jobs:
-      if job.getTag('mode')=='ana':
+      if job.getTag('mode')=='ana' or job.getTag('mode')=='anamrg':
         if job.getTag('run') not in runs:
           runs[job.getTag('run')]=[]
         runs[job.getTag('run')].append(job)
