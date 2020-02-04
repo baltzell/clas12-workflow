@@ -103,30 +103,34 @@ class ChefConfig(collections.OrderedDict):
 
   def _checkYamls(self):
     for x in ['reconYaml','trainYaml']:
-      if self[x] is not None:
-        ChefUtil.getTrainNames(self[x])
-      if self[x] is not None:
-        if os.path.isfile(self[x]):
-          if x=='reconYaml':
-            good=False
-            with open(self[x],'r') as f:
-              for line in f.readlines():
-                if line.strip().find('schema_dir: ')==0:
-                  cols=line.strip().split()
-                  if len(cols)<2:
-                    _LOGGER.critical('Undefined schema_dir in '+self[x])
-                    sys.exit()
-                  elif os.path.isdir(cols[1].strip('"')):
-                    good=True
-                  else:
-                    _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
-                    _LOGGER.critical('  '+cols[1].strip('"'))
-                    sys.exit()
-            if not good:
-              _LOGGER.warning('No schema_dir defined in '+self[x])
-        else:
+      if self[x] is None:
+        continue
+      if not os.path.isfile(self[x]):
           _LOGGER.critical('Nonexistent yaml: '+self[x])
           sys.exit()
+      else:
+        if x=='reconYaml':
+          good=False
+          with open(self[x],'r') as f:
+            for line in f.readlines():
+              if line.strip().find('schema_dir: ')==0:
+                cols=line.strip().split()
+                if len(cols)<2:
+                  _LOGGER.critical('Undefined schema_dir in '+self[x])
+                  sys.exit()
+                elif os.path.isdir(cols[1].strip('"')):
+                  good=True
+                else:
+                  _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
+                  _LOGGER.critical('  '+cols[1].strip('"'))
+                  sys.exit()
+          if not good:
+            _LOGGER.warning('No schema_dir defined in '+self[x])
+        elif x=='trainYaml':
+          if None in ChefUtil.getTrainNames(self[x]).values():
+            _LOGGER.info('Using default "skim#" names for train merging')
+          else:
+            _LOGGER.info('Using custom names for train merging based on '+self[x])
 
   def compactModel(self):
     x=self['model']
