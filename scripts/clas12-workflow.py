@@ -3,7 +3,7 @@ import sys,os,logging
 from ChefConfig import ChefConfig
 
 #logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s %(lineno).3d] %(message)s')
-logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')
+logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
 logger=logging.getLogger(__name__)
 
 print('')
@@ -12,7 +12,7 @@ workflow=cc.getWorkflow()
 
 workflow.generate()
 
-logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases.'%\
+logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\
     (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))
 
 if os.path.exists(workflow.name+'.json'):
@@ -24,6 +24,6 @@ with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
 
 if cc.get('submit'):
-  logger.info('Submitting %s.json with %d jobs ...'%(workflow.name,len(workflow.jobs)))
+  logger.info('Submitting %s.json with %d jobs ...\n'%(workflow.name,len(workflow.jobs)))
   workflow.submitJson()
 

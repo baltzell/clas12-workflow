@@ -86,7 +86,7 @@ class CLAS12Workflow(SwifWorkflow):
   def trainmerge(self,phase,jobs):
     runs={}
     for job in jobs:
-      if job.getTag('mode')=='ana' or job.getTag('mode')=='anamrg':
+      if job.getTag('mode')=='ana':
         if job.getTag('run') not in runs:
           runs[job.getTag('run')]=[]
         runs[job.getTag('run')].append(job)
@@ -95,7 +95,7 @@ class CLAS12Workflow(SwifWorkflow):
       job=CLAS12Jobs.TrainMrgJob(self.name,self.cfg)
       for j in runs[run]:
         job.antecedents.append(j.getJobName())
-      job.setRun(run)
+      job.addTag('run','%.6d'%int(run))
       job.setCmd()
       jobs.append(job)
       self.addJob(job)
@@ -104,7 +104,7 @@ class CLAS12Workflow(SwifWorkflow):
   def trainclean(self,phase,jobs):
     runs={}
     for job in jobs:
-      if job.getTag('mode')=='ana':
+      if job.getTag('mode')=='ana' or job.getTag('mode')=='anamrg':
         if job.getTag('run') not in runs:
           runs[job.getTag('run')]=[]
         runs[job.getTag('run')].append(job)
@@ -113,7 +113,7 @@ class CLAS12Workflow(SwifWorkflow):
       job=CLAS12Jobs.TrainCleanupJob(self.name,self.cfg)
       for j in runs[run]:
         job.antecedents.append(j.getJobName())
-      job.setRun(run)
+      job.addTag('run','%.6d'%int(run))
       job.setCmd()
       jobs.append(job)
       self.addJob(job)

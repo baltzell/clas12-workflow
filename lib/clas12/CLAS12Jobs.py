@@ -15,13 +15,13 @@ class Job(SwifJob):
     self.project=cfg['project']
     self.os=cfg['node']
     self.cfg=cfg
-  def addInputData(self,filename):
+  def addInputData(self,filename,auger=True):
     basename=filename.split('/').pop()
     self.inputData.append(filename)
-    self.addInput(basename,filename)
+    if auger: self.addInput(basename,filename)
     runno=RunFile(filename).runNumber
     fileno=RunFile(filename).fileNumber
-    self.addTag('run','%.6d'%runno)
+    self.addTag('run','%.6d'%int(runno))
     if self.getTag('file') is None:
       self.addTag('file','%.5d'%fileno)
   def doReadme(self,directory):
@@ -45,12 +45,12 @@ class Job(SwifJob):
       with open(cfgfile,'w') as f:
         f.write(self.cfg.getReadme())
         f.close()
-  def addOutputData(self,basename,directory,tag=None):
+  def addOutputData(self,basename,directory,tag=None,auger=True):
     ChefUtil.mkdir(directory,tag)
     self.doReadme(directory)
     self.addTag('outDir',directory)
     self.outputData.append(directory+'/'+basename)
-    self.addOutput(basename,directory+'/'+basename)
+    if auger: self.addOutput(basename,directory+'/'+basename)
 
 class MergingJob(Job):
   def __init__(self,workflow,cfg):
@@ -221,18 +221,21 @@ class TrainMrgJob(Job):
     self.setRam('700MB')
     self.addTag('mode','anamrg')
     self.setTime('12h')
-  def setRun(self,run):
-    self.run=int(run)
   def setCmd(self):
     # FIXME: write outputs to local disk and use Auger staging
     if self.cfg['workDir'] is None:
-      inDir=self.cfg['outDir']
+      inDir = self.cfg['outDir']
     else:
-      inDir=self.cfg['workDir']
-    cmd=os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
-    cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],self.run)
-    cmd+=' -o %s/%s/train'%(self.cfg['outDir'],self.cfg['schema'])
+      inDir = self.cfg['workDir']
+    outDir = '%s/%s/train'%(self.cfg['outDir'],self.cfg['schema'])
+    self.addOutputData(outDir,outDir,auger=False)
+    for trainName in ChefUtil.getTrainNames(self.cfg['trainYaml']).values():
+      ChefUtil.mkdir(outDir+'/'+trainName)
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
+    cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
+    cmd+=' -o '+outDir
     cmd+=' -y '+self.cfg['trainYaml']
+    cmd+=' ; ls -ltR %s ; ls -lt %s'%(inDir,outDir)
     Job.setCmd(self,cmd)
 
 class TrainCleanupJob(Job):
@@ -241,13 +244,12 @@ class TrainCleanupJob(Job):
     self.setRam('100MB')
     self.setTime('2h')
     self.addTag('mode','anaclean')
-  def setRun(self,run):
-    self.run=int(run)
   def setCmd(self):
     if self.cfg['workDir'] is None:
-      cmd='rm -rf %s/%s/train/%.6d'%(self.cfg['outDir'],self.cfg['schema'],self.run)
+      delDir = self.cfg['outDir']
     else:
-      cmd='rm -rf %s/%s/train/%.6d'%(self.cfg['workDir'],self.cfg['schema'],self.run)
+      delDir = self.cfg['workDir']
+    cmd='rm -rf %s/%s/train/%.6d'%(delDir,self.cfg['schema'],int(self.getTag('run')))
     Job.setCmd(self,cmd)
 
 
