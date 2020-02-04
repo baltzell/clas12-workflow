@@ -39,6 +39,8 @@ if len(rfgs.getGroups())==0:
 else:
   logger.info('Merging %d runs ...',len(rfgs.getGroups()))
 
+outFiles=[]
+
 # run `hipo-utils -merge` once per run number:
 for rfg in rfgs.getGroups():
   rf=RunFile(rfg[0])
@@ -51,8 +53,9 @@ for rfg in rfgs.getGroups():
     hu=os.getenv('COATJAVA')+'/bin/hipo-utils'
   cmd=[hu,'-merge','-o',out]
   cmd.extend(rfg)
+  outFiles.append(out)
+  print(cmd)
   if args.d:
-    print(cmd)
     continue
   try:
     process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -61,6 +64,11 @@ for rfg in rfgs.getGroups():
       if not line:
         break
       print(line)
+    process.wait()
+    if process.returncode!=0 or ChefUtil.hipoIntegrityCheck(out)!=0:
+      for o in outFiles: os.remove(o)
+      logger.critical(('Integrity check failure'+out))
+      sys.exit(process.returncode)
   except:
     print(traceback.format_exc())
     if os.path.isfile(out):
