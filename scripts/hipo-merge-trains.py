@@ -91,4 +91,7 @@ for trainIndex in sorted(trainIndices):
     if not line:
       break
     print(line)
+  p.wait()
+  if p.returncode!=0:
+    sys.exit(p.returncode)
 
