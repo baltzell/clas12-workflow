@@ -91,7 +91,8 @@ def getTrainNames(yamlfile):
   if None in names.values():
     for x,y in names.items():
       if y is not None:
-        _LOGGER.error('Missing custom-name in train yaml:\n'+str(names))
+        _LOGGER.error('Missing custom-name in train yaml:  '+str(names))
+        sys.exit(42)
   return names
 
 def getSchemaName(yamlfile):
@@ -247,4 +248,22 @@ def getRunList(data):
             _LOGGER.critical('Run numbers must be integers:  '+run)
             sys.exit()
   return runs
+
+def hipoIntegrityCheck(filename):
+  if not os.path.exists(filename): return 201
+  if os.path.getsize(filename)<128: return 202
+  hu='hipo-utils'
+  if os.getenv('COATJAVA') is not None:
+    hu=os.getenv('COATJAVA')+'/bin/hipo-utils'
+  elif os.getenv('CLAS12DIR') is not None:
+    hu=os.getenv('CLAS12DIR')+'/bin/hipo-utils'
+  cmd=[hu,'-test',filename]
+  p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+  while True:
+    line=p.stdout.readline().rstrip()
+    if not line:
+      break
+    print line
+  p.wait()
+  return p.returncode
 
