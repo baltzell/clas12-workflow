@@ -1,7 +1,7 @@
 import os,logging
+
 from SwifJob import SwifJob
 from SwifWorkflow import SwifWorkflow
-from RunFileUtil import RunFile
 import CLAS12Jobs
 import ChefUtil
 
@@ -201,7 +201,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.setRam('512MB')
         job.setTime('%ds'%(60+3*len(deletes)))
         job.setDisk('100MB')
-        job.addTag('run','%.6d'%RunFile(deletes[0]).runNumber)
+        job.setRun(RunFile(deletes[0]).runNumber)
         f1=RunFile(deletes[0]).fileNumber
         f2=RunFile(deletes[len(deletes)-1]).fileNumber
         job.addTag('file','%.5d-%.5d'%(f1,f2))
@@ -229,7 +229,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.setRam('512MB')
         job.setTime('%ds'%(600+60*len(moves)))
         job.setDisk('100MB')
-        job.addTag('run','%.6d'%RunFile(moves[0]).runNumber)
+        job.setRun(RunFile(moves[0]).runNumber)
         job.addTag('mode','move')
         job.addTag('outDir',self.cfg['decDir'])
         outDir='%s/%.6d'%(self.cfg['decDir'],int(job.getTag('run')))
@@ -281,7 +281,7 @@ class CLAS12Workflow(SwifWorkflow):
       job.setRam('4000MB')
       job.setTime('%dh'%(12*nFiles))
       job.setDisk('%dGB'%(4*nFiles))
-      job.addTag('run','%.6d'%runno)
+      job.setRun(runno)
       job.addTag('file','%.5d'%fileno)
       job.addTag('mode','recon')
       job.addTag('coatjava',self.cfg['coatjava'])
