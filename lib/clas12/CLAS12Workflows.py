@@ -15,7 +15,7 @@ class MinimalDependency(CLAS12Workflow):
 
   def generate(self):
 
-    _LOGGER.info('Generating a MinimalDependency workflow ...')
+    _LOGGER.info('Generating a MinimalDependency workflow')
 
     for xx in self.getGroups():
 
@@ -33,8 +33,8 @@ class MinimalDependency(CLAS12Workflow):
         xx = self.train(self.phase,xx)
 
     if self.cfg['model'].find('ana')>=0:
-      xx = self.trainmerge(self.phase,self.jobs)
-      xx = self.trainclean(self.phase,self.jobs)
+      self.trainmerge(self.phase,self.jobs)
+      self.trainclean(self.phase,self.jobs)
 
 
 class RollingRuns(CLAS12Workflow):
@@ -54,7 +54,7 @@ class RollingRuns(CLAS12Workflow):
 
   def generate(self):
 
-    _LOGGER.info('Generating a RollingRuns workflow ...')
+    _LOGGER.info('Generating a RollingRuns workflow')
 
     # master-queue:
     queue=self.getGroups()
@@ -110,7 +110,8 @@ class RollingRuns(CLAS12Workflow):
         break
 
     if self.cfg['model'].find('ana')>=0:
-      xx = trainmerge(self.phase,self.jobs)
+      trainmerge(self.phase,self.jobs)
+      trainclean(self.phase,self.jobs)
 
 
 
