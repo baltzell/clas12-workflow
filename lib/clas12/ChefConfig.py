@@ -126,11 +126,6 @@ class ChefConfig(collections.OrderedDict):
                   sys.exit()
           if not good:
             _LOGGER.warning('No schema_dir defined in '+self[x])
-        elif x=='trainYaml':
-          if None in ChefUtil.getTrainNames(self[x]).values():
-            _LOGGER.info('Using default "skim#" names for train merging')
-          else:
-            _LOGGER.info('Using custom names for train merging based on '+self[x])
 
   def compactModel(self):
     x=self['model']

@@ -93,6 +93,8 @@ def getTrainNames(yamlfile):
       if y is not None:
         _LOGGER.error('Missing custom-name in train yaml:  '+str(names))
         sys.exit(42)
+    for x,y in names.items():
+      names[x]='skim%d'%int(x)
   return names
 
 def getSchemaName(yamlfile):
