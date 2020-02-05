@@ -1,9 +1,10 @@
-import os,sys,json,copy,logging,getpass,argparse,traceback,collections
+import os,sys,glob,json,copy,logging,getpass,argparse,traceback,collections
 import ChefUtil
 import RunFileUtil
 import CLAS12Workflows
 
 _LOGGER=logging.getLogger(__name__)
+_TOPDIR = os.path.dirname(os.path.realpath(__file__)).rstrip('lib/clas12')
 
 CHOICES={
     'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
@@ -106,26 +107,30 @@ class ChefConfig(collections.OrderedDict):
       if self[x] is None:
         continue
       if not os.path.isfile(self[x]):
+        yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
+        if os.path.isfile(yamlprefix+self[x]+'.yaml'):
+          self[x] = yamlprefix+self[x]+'.yaml'
+          _LOGGER.warning('Using stock yaml: '+self[x])
+        else:
           _LOGGER.critical('Nonexistent yaml: '+self[x])
           sys.exit()
-      else:
-        if x=='reconYaml':
-          good=False
-          with open(self[x],'r') as f:
-            for line in f.readlines():
-              if line.strip().find('schema_dir: ')==0:
-                cols=line.strip().split()
-                if len(cols)<2:
-                  _LOGGER.critical('Undefined schema_dir in '+self[x])
-                  sys.exit()
-                elif os.path.isdir(cols[1].strip('"')):
-                  good=True
-                else:
-                  _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
-                  _LOGGER.critical('  '+cols[1].strip('"'))
-                  sys.exit()
-          if not good:
-            _LOGGER.warning('No schema_dir defined in '+self[x])
+      if x=='reconYaml':
+        good=False
+        with open(self[x],'r') as f:
+          for line in f.readlines():
+            if line.strip().find('schema_dir: ')==0:
+              cols=line.strip().split()
+              if len(cols)<2:
+                _LOGGER.critical('Undefined schema_dir in '+self[x])
+                sys.exit()
+              elif os.path.isdir(cols[1].strip('"')):
+                good=True
+              else:
+                _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
+                _LOGGER.critical('  '+cols[1].strip('"'))
+                sys.exit()
+        if not good:
+          _LOGGER.warning('No schema_dir defined in '+self[x])
 
   def compactModel(self):
     x=self['model']
@@ -147,6 +152,9 @@ class ChefConfig(collections.OrderedDict):
 
   def getCli(self):
 
+    stockReconYamls=[os.path.basename(x).lstrip('recon_').rstrip('.yaml') for x in glob.glob(_TOPDIR+'/yamls/recon_*.yaml')]
+    stockTrainYamls=[os.path.basename(x).lstrip('train_').rstrip('.yaml') for x in glob.glob(_TOPDIR+'/yamls/train_*.yaml')]
+
     cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
         epilog='(*) = required option for all models, from command-line or config file')
 
@@ -166,8 +174,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
-    cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file', type=str,default=None)
-    cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file', type=str,default=None)
+    cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
+    cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files per phase (negative is unphased)', type=int, default=None)
