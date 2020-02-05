@@ -42,10 +42,19 @@ services:
     name: BAND
 ####################################################
 configuration:
+  custom-names:
+    1: rf 
+    2: dc
+    3: ftof
+    4: htcc
+    5: ctof
+    6: cnd 
+    7: ft 
+    8: band
   io-services:
     writer:
       compression: 2
-      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-5-RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments-6-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-7-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-8-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks-9-RUN::config,REC::Event,CVTRec::Tracks,CND::*-10-RUN::config,REC::Event,REC::Particle,FT::particles,FTCAL::*,FTHODO::*-11-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler
+      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-2-RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments-3-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-4-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-5-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks-6-RUN::config,REC::Event,CVTRec::Tracks,CND::*-7-RUN::config,REC::Event,REC::Particle,FT::particles,FTCAL::*,FTHODO::*-8-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler
   services:
 #################################################### RF
     RF:
@@ -53,54 +62,54 @@ configuration:
       forward: 11:X+:X-:Xn  
 #################################################### DC
     DCm:
-      id: 5
+      id: 2
       forward: 1-:11:X+:X-:Xn
     DCp:
-      id: 5
+      id: 2
       forward: 1+:11:X+:X-:Xn  
 #################################################### FTOF
     FTOFm:
-      id: 6
+      id: 3
       forward: 1-:11:X+:X-:Xn
     FTOFp:
-      id: 6
+      id: 3
       forward: 1+:11:X+:X-:Xn
 #################################################### HTCC
     HTCCm:
-      id: 7
+      id: 4
       forward: 1-:11:X+:X-:Xn
     HTCCp:
-      id: 7
+      id: 4
       forward: 1+:11:X+:X-:Xn
 #################################################### CTOF
     CTOF:
-      id: 8
+      id: 5
       forward: 11:X+:X-:Xn
       central: 1-:X+:X-:Xn
 #################################################### CND
     CND:
-      id: 9
+      id: 6
       forward: 11:X+:X-:Xn
       central: 1-:X+:X-:Xn
 #################################################### FT
     FTp:
-      id: 10
+      id: 7
       forward: 11:X+:X-:Xn
       tagger: 1+:X+:X-:Xn
     FTm:
-      id: 10
+      id: 7
       forward: 11:X+:X-:Xn
       tagger: 1-:X+:X-:Xn
     FTn:
-      id: 10
+      id: 7
       forward: 11:X+:X-:Xn
       tagger: 1n:X+:X-:Xn
     FTn:
-      id: 10
+      id: 7
       tagger: 2n:X+:X-:Xn      
 #################################################### BAND
     BAND:
-      id: 11
+      id: 8
       forward: 11:X+:X-:Xn
       tagger: X+:X-:Xn
       central: X+:X-:Xn
