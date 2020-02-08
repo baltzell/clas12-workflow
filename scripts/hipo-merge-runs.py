@@ -15,6 +15,7 @@ cli=argparse.ArgumentParser(description='Merge a directory of HIPO files by run 
 cli.add_argument('-i',metavar='string',help='input files specification (directory, glob, file containing list of files), repeatable',type=str,default=[],action='append',required=True)
 cli.add_argument('-o',metavar='path',help='output prefix (automatically suffixed with "_run#.hipo")',type=str,required=True)
 cli.add_argument('-a',help='allow and skip pre-existing outputs',default=False,action='store_true')
+cli.add_argument('-A',help='allow and delete pre-existing outputs',default=False,action='store_true')
 cli.add_argument('-d',help='dry run',default=False,action='store_true')
 args=cli.parse_args(sys.argv[1:])
 
@@ -31,8 +32,11 @@ if not args.a:
     rf=RunFile(rfg[0])
     out=args.o+'_%.6d.hipo'%rf.runNumber
     if os.path.exists(out):
-      logger.error('File already exists:  '+out)
-      sys.exit(1)
+      if args.A:
+        os.remove(out)
+      else:
+        logger.error('File already exists:  '+out)
+        sys.exit(1)
 
 if len(rfgs.getGroups())==0:
   logger.error('Found no runs')
