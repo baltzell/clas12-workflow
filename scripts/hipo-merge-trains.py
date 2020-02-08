@@ -83,7 +83,7 @@ for trainIndex in sorted(trainIndices):
   else:
     outStub='%s/%s/%s'%(args.o,trainNames[trainIndex],trainNames[trainIndex])
   cmd=[os.path.dirname(os.path.realpath(__file__))+'/hipo-merge-runs.py']
-  cmd.extend(['-i',inGlob,'-o',outStub])
+  cmd.extend(['-A','-i',inGlob,'-o',outStub])
   print((' '.join(cmd)))
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
   while True:
