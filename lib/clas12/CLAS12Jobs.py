@@ -172,7 +172,7 @@ class TrainMrgJob(CLAS12Job):
     # FIXME: use `module load`, but need to know what version or wait until stable
     lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
     self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12')
-    self.setRam('700MB')
+    self.setRam('1000MB')
     self.addTag('mode','anamrg')
     self.setTime('12h')
   def setCmd(self):
