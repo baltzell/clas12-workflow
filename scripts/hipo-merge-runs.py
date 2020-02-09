@@ -33,6 +33,7 @@ if not args.a:
     out=args.o+'_%.6d.hipo'%rf.runNumber
     if os.path.exists(out):
       if args.A:
+        logger.warning('Removing pre-existing output file:  '+out)
         os.remove(out)
       else:
         logger.error('File already exists:  '+out)
