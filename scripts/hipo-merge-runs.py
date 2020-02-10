@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os,sys,argparse,subprocess,logging,traceback
+import os,sys,argparse,subprocess,logging,traceback,datetime
 
 import ChefUtil
 from RunFileUtil import getRunList
@@ -59,6 +59,7 @@ for rfg in rfgs.getGroups():
   cmd=[hu,'-merge','-o',out]
   cmd.extend(rfg)
   outFiles.append(out)
+  print(datetime.datetime.now())
   print(cmd)
   if args.d:
     continue
