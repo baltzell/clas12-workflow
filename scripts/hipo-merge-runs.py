@@ -60,16 +60,18 @@ for rfg in rfgs.getGroups():
   cmd.extend(rfg)
   outFiles.append(out)
   print(datetime.datetime.now())
-  print(cmd)
+  print(' '.join(cmd))
   if args.d:
     continue
   try:
     process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    while True:
-      line = process.stdout.readline().rstrip()
-      if not line:
-        break
-      print(line)
+    #while True:
+    #  line = process.stdout.readline().rstrip()
+    #  if not line:
+    #    break
+    #  print(line)
+    for line in iter(process.stdout.readline, ''):
+      print(line.rstrip())
     process.wait()
     if process.returncode!=0 or ChefUtil.hipoIntegrityCheck(out)!=0:
       for o in outFiles: os.remove(o)
