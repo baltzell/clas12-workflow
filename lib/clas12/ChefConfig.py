@@ -152,8 +152,11 @@ class ChefConfig(collections.OrderedDict):
 
   def getCli(self):
 
-    stockReconYamls=[os.path.basename(x).lstrip('recon_').rstrip('.yaml') for x in glob.glob(_TOPDIR+'/yamls/recon_*.yaml')]
-    stockTrainYamls=[os.path.basename(x).lstrip('train_').rstrip('.yaml') for x in glob.glob(_TOPDIR+'/yamls/train_*.yaml')]
+    stockReconYamls,stockTrainYamls=[],[]
+    for x in glob.glob(_TOPDIR+'/yamls/recon_*.yaml'):
+      stockReconYamls.append(os.path.basename(x)[6:][:-6])
+    for x in glob.glob(_TOPDIR+'/yamls/train_*.yaml'):
+      stockTrainYamls.append(os.path.basename(x)[6:][:-5])
 
     cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
         epilog='(*) = required option for all models, from command-line or config file')

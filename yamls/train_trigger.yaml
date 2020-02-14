@@ -1,0 +1,36 @@
+io-services:
+  reader:
+    class: org.jlab.jnp.grapes.io.HipoFrameReader
+    name: HipoFrameReader
+  writer:
+    class: org.jlab.jnp.grapes.io.HipoFrameWriter
+    name: HipoFrameWriter
+
+services:
+  - class: org.jlab.jnp.grapes.services.PairTriggerWagon
+    name: PAIR
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: SINGLE1
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: SINGLE2
+
+configuration:
+  custom-names:
+    1: pair
+    2: single 
+  io-services:
+    writer:
+      compression: 2
+      filter: 1-REC::*-7-REC::*-3-*
+  services:
+    PAIR:
+      id: 1
+    SINGLE1:
+      id: 2
+      forward: 11:X+:X-:Xn
+    SINGLE2:
+      id: 2
+      forward: -11:X+:X-:Xn
+
+mime-types:
+  - binary/data-hipo-frame
