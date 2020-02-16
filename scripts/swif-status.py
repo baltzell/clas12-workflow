@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys,subprocess,argparse,logging
-from SwifStatus import getWorkflowNames,deleteWorkflow
+from SwifStatus import getWorkflowNames,deleteWorkflow,SWIF_PROBLEMS
 from CLAS12SwifStatus import CLAS12SwifStatus
 
 logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
@@ -20,12 +20,20 @@ def processWorkflow(workflow,args):
   if args.problems:
     status.showPersistentProblems()
 
-  # if retrying, only print status if problems exist:
-  if args.retry:
-    result = status.retryProblems()
-    if len(result)>0 and not args.quiet:
-      print status.getPrettyStatus()
-      print result
+  # if retrying or abandoning, only print status if problems exist:
+  if len(args.abandon)>0 or args.retry:
+
+    if len(args.abandon)>0:
+      res = status.abandonProblems(args.abandon)
+      if len(res)>0 and not args.quiet:
+        print status.getPrettyStatus()
+        print res
+
+    if args.retry:
+      res = status.retryProblems()
+      if len(res)>0 and not args.quiet:
+        print status.getPrettyStatus()
+        print res
 
   # otherwise always print status:
   else:
@@ -59,13 +67,14 @@ if __name__ == '__main__':
   cli.add_argument('--problems',help='show problem jobs', action='store_true',default=False)
   cli.add_argument('--quiet',   help='do not print retries', action='store_true',default=False)
 #  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
-  cli.add_argument('--workflow',help='workflow name (else all workflows)', action='append',default=[])
   cli.add_argument('--logdir',  help='local log directory'+df, type=str,default=None)
 #  cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
 #  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
 #  cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
   cli.add_argument('--clas12mon',help='write to clas12mon db',action='store_true',default=False)
   cli.add_argument('--delete',  help='delete workflow',   action='store_true',default=False)
+  cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=SWIF_PROBLEMS)
+  cli.add_argument('--workflow',help='workflow name (else all workflows)', action='append',default=[])
 
   args = cli.parse_args()
 

@@ -6,6 +6,15 @@ import sys
 
 SWIF='/site/bin/swif'
 
+# FIXME:  incomplete/incorrect
+SWIF_PROBLEMS=[
+'SWIF-MISSING-OUTPUT',
+'SWIF-USER-ERROR',
+'SWIF-SYSTEM-ERROR',
+'AUGER-FAILED',
+'AUGER-OUTPUT',
+]
+
 SWIFJSONKEYS=[
 'workflow_name',
 'workflow_id',
@@ -224,6 +233,16 @@ class SwifStatus():
     ret.extend(self.modifyJobReqs(problems))
     for problem in problems:
       retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
+      ret.append(retryCmd)
+      ret.append(subprocess.check_output(retryCmd))
+    return ret
+
+  def abandonProblems(self,types):
+    ret=[]
+    for problem in self.getProblems():
+      if problem not in types:
+        continue
+      retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
       ret.append(retryCmd)
       ret.append(subprocess.check_output(retryCmd))
     return ret
