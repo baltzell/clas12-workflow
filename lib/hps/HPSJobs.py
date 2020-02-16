@@ -43,6 +43,8 @@ if __name__ == '__main__':
   phase=0
 
   for inputs in workflow.getGroups():
+    if len(inputs)<100:
+      continue
     phase+=1
     inps=[]
     for ii,inp in enumerate(inputs):
