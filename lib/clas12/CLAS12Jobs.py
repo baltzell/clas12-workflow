@@ -181,7 +181,7 @@ class TrainMrgJob(CLAS12Job):
       inDir = self.cfg['outDir']
     else:
       inDir = self.cfg['workDir']
-    outDir = '%s/%s/train'%(self.cfg['outDir'],self.cfg['schema'])
+    outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
     self.addOutputData(outDir,outDir,auger=False)
     for trainName in ChefUtil.getTrainNames(self.cfg['trainYaml']).values():
       ChefUtil.mkdir(outDir+'/'+trainName)

@@ -28,6 +28,7 @@ CFG['runs']         = []
 CFG['workDir']      = None
 CFG['outDir']       = None
 CFG['decDir']       = None
+CFG['trainDir']     = None
 CFG['phaseSize']    = -1
 CFG['mergeSize']    = 5
 CFG['trainSize']    = 30
@@ -170,6 +171,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None)
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
+    cli.add_argument('--trainDir', metavar='PATH',help='overrides outDir for trains', type=str,default=None)
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location for single decoded/train files before merging', type=str,default=None)
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
@@ -253,7 +255,7 @@ class ChefConfig(collections.OrderedDict):
       self.cli.error('"inputs" must be specified.')
 
     # cleanup directory definitions:
-    for xx in ['decDir','outDir','workDir','logDir']:
+    for xx in ['decDir','outDir','workDir','logDir','trainDir']:
       if self[xx] is not None:
         if self[xx]=='None' or self[xx]=='NULL' or self[xx]=='null':
           self[xx]=None
@@ -268,6 +270,14 @@ class ChefConfig(collections.OrderedDict):
         else:
           self['decDir']=self['outDir']+'/decoded'
           _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self['outDir']+')')
+    # for train workflows, assign trainDir to outDir if it doesn't exist:
+    if self['model'].find('ana')>=0:
+      if self['trainDir'] is None:
+        if self['outDir'] is None:
+          self.cli.error('One of "outDir" or "trainDir" must be defined for decoding workflows.')
+        else:
+          self['trainDir']=self['outDir']
+          _LOGGER.warning('Using --outDir for train outputs ('+self['outDir']+')')
 
     # for non-decoding workflows, require outDir:
     if self['model']!='dec' and self['model']!='decmrg':
