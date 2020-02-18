@@ -1,6 +1,6 @@
 import os,json,requests,subprocess
 
-from ChefConfig import CHOICES
+from ChefConfig import CHOICES,compactModel
 from ChefUtil import mkdir
 from SwifStatus import SwifStatus
 
@@ -67,8 +67,9 @@ class CLAS12SwifStatus(SwifStatus):
       # Revisit if Swif later provides for global workflow tags.
       tags=self.name.split('-')
       run_group=tags[0]
-      task=tags[1]
-      if runGroup not in CHOICES['runGroup'] or task not in CHOICES['model']:
+      task=fullModel(tags[1])
+      tag=tags[2]
+      if runGroup not in CHOICES['runGroup']:
         print 'Invalid workflow name for clas12mon:  '+self.name
         return
       status=self.getPrunedStatus()
@@ -77,7 +78,7 @@ class CLAS12SwifStatus(SwifStatus):
       data={}
       data['entry'] = json.dumps(status).lstrip('[').rstrip().rstrip(']')
       data['run_group'] = run_group
-      data['task'] = task
+      data['tag'] = tag
       headers={'Authorization':self.dbauth}
       return requests.post(self.dburl,data=data,headers=headers)
   def __saveDatabase(self):

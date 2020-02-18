@@ -48,6 +48,19 @@ CFG['ignored']      = {}
 if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','hps']:
   CFG['project']='hallb-pro'
 
+def compactModel(model):
+  x=model
+  for y in ['dec','mrg','rec','ana']:
+    x=x.replace(y,y[0])
+  return x
+
+def fullModel(model):
+  x=''
+  for y in ['dec','mrg','rec','ana']:
+    if y[0] in model:
+      x+=y
+  return x
+
 class ChefConfig(collections.OrderedDict):
 
   def __str__(self):
@@ -133,15 +146,9 @@ class ChefConfig(collections.OrderedDict):
         if not good:
           _LOGGER.warning('No schema_dir defined in '+self[x])
 
-  def compactModel(self):
-    x=self['model']
-    for y in ['dec','mrg','rec','ana']:
-      x=x.replace(y,y[0])
-    return x
-
   def getWorkflow(self):
     if self._workflow is None:
-      name='%s-%s-%s'%(self['runGroup'],self.compactModel(),self['tag'])
+      name='%s-%s-%s'%(self['runGroup'],compactModel(self['model']),self['tag'])
       if self['phaseSize'] >= 0:
         self._workflow = CLAS12Workflows.RollingRuns(name,self)
       else:
