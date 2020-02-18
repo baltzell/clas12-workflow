@@ -29,6 +29,7 @@ class SwifJob:
     # for non-Auger staging:
     self.inputData=[]
     self.outputData=[]
+    self.copyInputs=True
 
   def addEnv(self,key,val):
     self.env[key]=val
@@ -176,7 +177,8 @@ class SwifJob:
     cmd='unalias -a ; '
     for xx in self.env.keys():
       cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
-    cmd+=self._getCopyInputsCmd()
+    if self.copyInputs:
+      cmd+=self._getCopyInputsCmd()
     d=[]
     for o in self.outputs:
       if os.path.dirname(o['remote'].replace('file:/','/',1)) not in d:
