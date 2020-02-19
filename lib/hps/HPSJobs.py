@@ -47,8 +47,9 @@ if __name__ == '__main__':
 
   # future command-line arguments, if we want to generalize this:
   cfg={}
-  cfg['runs'] = '10004-10740'
-  cfg['inputs'] = '/home/baltzell/hps-2019-mss-prod.txt'
+  #cfg['runs'] = '10004-10740'
+  cfg['runs'] = '/home/hpsrun/users/baltzell/prodRuns.txt'
+  cfg['inputs'] = '/home/hpsrun/users/baltzell/hps-2019-mss-prod.txt'
   cfg['outDir'] = '/volatile/hallb/hps/baltzell/test'
   cfg['mergePattern'] = 'hps_%.6d.evio.%.5d-%.5d.hipo'
   cfg['mergeSize'] = 100
