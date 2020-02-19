@@ -174,7 +174,8 @@ class SwifJob:
       return ''
 
   def _createCommand(self):
-    cmd='unalias -a ; '
+    # FIXME:  this is shell-dependent:
+    cmd='unalias -a ; set echo ; '
     for xx in self.env.keys():
       cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
     if self.copyInputs:
