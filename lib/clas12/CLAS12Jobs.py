@@ -45,7 +45,9 @@ class DecodeAndMergeJob(CLAS12Job):
     decodedfiles=[]
     for eviofile in eviofiles:
       CLAS12Job.addInputData(self,eviofile)
-      basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
+      runno=RunFile(eviofile).runNumber
+      fileno=RunFile(eviofile).fileNumber
+      basename=self.cfg['singlePattern']%(runno,fileno)
       decodedfiles.append(basename)
     runno = RunFile(eviofiles[0]).runNumber
     fileno1 = RunFile(eviofiles[0]).fileNumber
