@@ -1,4 +1,4 @@
-import os,re,sys,logging,getpass
+import os,re,sys,logging,getpass,argparse
 
 import RunFileUtil
 import ChefUtil
@@ -15,14 +15,14 @@ RunFileUtil.setFileRegex('.*hps[_A-Za-z]*_(\d+)\.evio\.(\d+)')
 # MULT skims are much smaller
 class EvioTriggerFilterJob(SwifJob):
   def __init__(self,workflow,cfg):
-    SwifJob.__init__(self,workflow)
+    SwifJob.__init__(self,workflow.name)
     self.cfg=cfg
     self.copyInputs=False
     self.setTime('4h')
     self.setRam('500MB')
     self.setDisk('10GB')
     self.project='hallb-pro'
-    self.setLogDir('/farm_out/'+getpass.getuser()+'/trigskim')
+    self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
     ChefUtil.mkdir(self.logDir)
   def addOutput(self,local,remote):
     SwifJob.addOutput(self,local,remote)
@@ -45,35 +45,61 @@ class EvioTriggerFilterJob(SwifJob):
 
 if __name__ == '__main__':
 
-  # future command-line arguments, if we want to generalize this:
+  cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
+     epilog='(*) = required option for all models, from command-line or config file')
+
+  cli.add_argument('--tag',    metavar='NAME',help='(*) e.g. pass1v0, automatically prefixed with runGroup and suffixed by model to define workflow name',  type=str, default=None,required=True)
+  cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None,required=True)
+  cli.add_argument('--runs',   metavar='RUNS/PATH',help='(*) run numbers (e.g. "4013" or "4013,4015" or "3980,4000-4999"), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str,required=True)
+  args=cli.parse_args(sys.argv[1:])
+
   cfg={}
   #cfg['runs'] = '10004-10740'
-  cfg['runs'] = '/home/hpsrun/users/baltzell/prodRuns.txt'
-  cfg['inputs'] = '/home/hpsrun/users/baltzell/hps-2019-mss-prod.txt'
-  cfg['outDir'] = '/volatile/hallb/hps/baltzell/test'
-  cfg['mergePattern'] = 'hps_%.6d.evio.%.5d-%.5d.hipo'
+  #cfg['runs'] = sys.argv[1]#'/home/hpsrun/users/baltzell/prodRuns.txt'
+  #cfg['outDir'] = '/volatile/hallb/hps/baltzell/test'
+  cfg['runs']   = args.runs
+  cfg['outDir'] = args.outDir
+  cfg['inputs'] = '/home/hps/users/baltzell/hps-2019-mss-prod.txt'
+  cfg['mergePattern'] = 'hps_%.6d.evio.%.5d-%.5d'
   cfg['mergeSize'] = 100
 
-  workflow = SwifWorkflow('trigskim')
+  workflow = SwifWorkflow('trigskim-'+args.tag)
   workflow.addRuns(ChefUtil.getRunList(cfg['runs']))
   workflow.findFiles(cfg['inputs'])
   workflow.setPhaseSize(0)
 
   phase=0
+  runsInThisPhase=0
+  runsPerPhase=10
 
   for inputs in workflow.getGroups():
     if len(inputs)<100:
       continue
-    phase+=1
+    #runsInThisPhase += 1
+    #if runsInThisPhase > runsPerPhase:
+    #  runsInThisPhase = 0
+    #  phase += 1
     inps=[]
     for ii,inp in enumerate(inputs):
       inps.append(inp)
       if len(inps)>=cfg['mergeSize'] or ii>=len(inputs)-1:
-        job=EvioTriggerFilterJob(workflow.name,cfg)
+        job=EvioTriggerFilterJob(workflow,cfg)
         job.setPhase(phase)
-        for inp in inps: job.addInput(os.path.basename(inp),inp)
+        for inp in inps:
+          job.addInput(os.path.basename(inp),inp)
         job.setCmd()
-        workflow.addJob(job)
+        exists=False
+        for out in job.outputs:
+          if out['remote'].startswith('file:'):
+            x=out['remote'][5:]
+          elif out['remote'].startswith('mss:'):
+            x=out['remote'][4:]
+          if os.path.exists(x):
+            inps.pop()
+            exists=True
+            break
+        if not exists:
+          workflow.addJob(job)
         inps=[]
 
   print workflow.getJson()
