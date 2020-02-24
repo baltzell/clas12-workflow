@@ -81,7 +81,7 @@ class DecodingJob(CLAS12Job):
   def addInputData(self,filename):
     CLAS12Job.addInputData(self,filename)
     basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
-    if self.cfg['workDir'] is None:
+    if self.cfg['workDir'] is None or self.cfg['model'].find('decmrg')<0:
       outDir = '%s/%.6d/'%(self.cfg['decDir'],int(self.getTag('run')))
       CLAS12Job.addOutputData(self,basename,outDir)
     else:
