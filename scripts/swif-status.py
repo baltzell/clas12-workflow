@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import sys,subprocess,argparse,logging
 from SwifStatus import getWorkflowNames,deleteWorkflow,SWIF_PROBLEMS
-from CLAS12SwifStatus import CLAS12SwifStatus
+from CLAS12SwifStatus import CLAS12SwifStatus,getHeader
+from Matcher import matchAny
 
 logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
 logger=logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def processWorkflow(workflow,args):
     if args.details:
       status.saveDetails()
 
-  if args.clas12mon:
+  if matchAny(getHeader(workflow)['tag'],args.clas12mon):
     status.saveDatabase()
 
 if __name__ == '__main__':
@@ -67,14 +68,14 @@ if __name__ == '__main__':
   cli.add_argument('--problems',help='show problem jobs', action='store_true',default=False)
   cli.add_argument('--quiet',   help='do not print retries', action='store_true',default=False)
 #  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
-  cli.add_argument('--logdir',  help='local log directory'+df, type=str,default=None)
+  cli.add_argument('--logdir',  metavar='PATH',help='local log directory'+df, type=str,default=None)
 #  cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
 #  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
 #  cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
-  cli.add_argument('--clas12mon',help='write to clas12mon db',action='store_true',default=False)
+  cli.add_argument('--clas12mon',metavar='TAG',help='write matching workflows to clas12mon (repeatable)',type=str,default=[],action='append')
   cli.add_argument('--delete',  help='delete workflow',   action='store_true',default=False)
   cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=SWIF_PROBLEMS)
-  cli.add_argument('--workflow',help='workflow name (else all workflows)', action='append',default=[])
+  cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows)', action='append',default=[])
 
   args = cli.parse_args()
 

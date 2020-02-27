@@ -6,6 +6,19 @@ from SwifStatus import SwifStatus
 
 # FIXME: move logging up to SwifStatus
 
+# Assume workflow name is prefixed with 'runGroup-task-tag-'.
+# Note, we used to instead store these in Swif job tags, which was
+# cleaner but created unecessary overhead on Swif due to needing
+# to read full workflow status to just to extract a couple job tags.
+# Revisit if Swif later provides for global workflow tags.
+def getHeader(workflowName):
+  parts=workflowName.split('-')
+  header={}
+  header['run_group']=parts[0]
+  header['task']=fullModel(parts[1])
+  header['tag']=parts[2]
+  return header
+
 class CLAS12SwifStatus(SwifStatus):
   def __init__(self,name,args):
     SwifStatus.__init__(self,name)
@@ -60,25 +73,14 @@ class CLAS12SwifStatus(SwifStatus):
       print 'Invalid workflow name for clas12mon:  '+self.name
       return
     else:
-      # Assume workflow name is prefixed with 'runGroup-task-'.
-      # Note, we used to instead store these in Swif job tags, which was
-      # cleaner but created unecessary overhead on Swif due to needing
-      # to read full workflow status to just to extract a couple job tags.
-      # Revisit if Swif later provides for global workflow tags.
-      tags=self.name.split('-')
-      run_group=tags[0]
-      task=fullModel(tags[1])
-      tag=tags[2]
-      if run_group not in CHOICES['runGroup']:
+      data=getHeader(self.name)
+      if data['run_group'] not in CHOICES['runGroup']:
         print 'Invalid workflow name for clas12mon:  '+self.name
         return
       status=self.getPrunedStatus()
       # convert to json string, and strip off leading/trailing
       # square brackets for clas12mon:
-      data={}
       data['entry'] = json.dumps(status).lstrip('[').rstrip().rstrip(']')
-      data['run_group'] = run_group
-      data['tag'] = tag
       headers={'Authorization':self.dbauth}
       return requests.post(self.dburl,data=data,headers=headers)
   def __saveDatabase(self):
