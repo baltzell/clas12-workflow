@@ -53,7 +53,7 @@ def processWorkflow(workflow,args):
     if args.details:
       status.saveDetails()
 
-  if matchAny(getHeader(workflow)['tag'],args.clas12mon):
+  if len(args.clas12mon)>0 and matchAny(getHeader(workflow)['tag'],args.clas12mon):
     status.saveDatabase()
 
 if __name__ == '__main__':
