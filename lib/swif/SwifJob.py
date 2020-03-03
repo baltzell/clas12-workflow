@@ -181,8 +181,9 @@ class SwifJob:
       cmd+=self._getCopyInputsCmd()
     d=[]
     for o in self.outputs:
-      if os.path.dirname(o['remote'].replace('file:/','/',1)) not in d:
-        d.append(os.path.dirname(o['remote'].replace('file:/','/',1)))
+      if not o['remote'].startswith('mss:'):
+        if os.path.dirname(o['remote'].replace('file:/','/',1)) not in d:
+          d.append(os.path.dirname(o['remote'].replace('file:/','/',1)))
     if len(d)>0:
       cmd+=' && mkdir -p %s '%(' '.join(d))
     cmd+=' && '+self.cmd
