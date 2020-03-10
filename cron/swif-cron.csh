@@ -23,5 +23,10 @@ set d=`/usr/bin/dirname $d`/..
 
 setenv PYTHONPATH ${PYTHONPATH}:${d}/lib/swif:${d}/lib/util:${d}/lib/clas12
 
-$d/scripts/swif-status.py --retry
+if ( $#argv > 0 ) then
+  $d/scripts/swif-status.py $argv
+else
+  $d/scripts/swif-status.py --retry
+endif
+
 
