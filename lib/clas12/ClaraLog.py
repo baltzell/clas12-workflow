@@ -7,7 +7,7 @@ from LogFinder import LogFinder
 _MAXLOGSIZEMB=10
 _MINHIPOSIZEMB=100
 
-_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception','Input','Output',' is cached']
+_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception','Input','Output',' is cached','openning file','/bin/cp -p']
 
 class ClaraLog(JobSpecs):
 
@@ -49,6 +49,8 @@ class ClaraLog(JobSpecs):
 
   def findOutputFiles(self):
     of=[]
+    if self.outputdir is None:
+      return of
     for f in self.inputfiles:
       basename=self.outputprefix+f.split('/').pop()
       fout=self.outputdir+'/'+basename
@@ -110,6 +112,13 @@ class ClaraLog(JobSpecs):
       return t
     return None
 
+  def addInput(self,filename):
+    x=filename.split('/').pop()
+    if x not in self.inputfiles:
+      if self.outputprefix is not None:
+        if not x.startswith(self.outputprefix):
+          self.inputfiles.append(x)
+
   def parse(self,x):
     # abort ASAP unless we find a tag:
     keeper=False
@@ -136,7 +145,11 @@ class ClaraLog(JobSpecs):
       elif x.find('Input directory')==0:
         self.inputdir=cols[3]
       elif x.find('Output directory')==0:
-        self.outputdir=cols[3]
+        if not cols[3].startswith('/scratch/slurm'):
+          self.outputdir=cols[3]
+      elif x.startswith('/bin/cp -p'):
+        if cols[3].startswith('/'):
+          self.outputdir=os.path.dirname(cols[3])
     elif len(cols)==5:
       if x.find('Number of files')>=0:
         if self.nfiles<0:
@@ -150,7 +163,9 @@ class ClaraLog(JobSpecs):
         self.outputprefix=cols[4]
     elif len(cols)==6:
       if cols[4]=='is' and cols[5]=='cached':
-        self.inputfiles.append(cols[3].split('/').pop())
+        self.addInput(cols[3])
+      elif cols[0]=='reader::' and cols[2]=='openning':
+        self.addInput(cols[5])
     elif len(cols)==8:
       if cols[2]=='Average' and cols[3]=='processing' and cols[4]=='time':
         if self.t2<0:
