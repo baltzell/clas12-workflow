@@ -18,3 +18,7 @@ SCRIPT="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
 # This will run every two hours, on the hour:
 #0 */2  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
 #
+# This will run every 30 minutes, on ##:15 and ##:45, and
+# send workflows with tags including "v2.2" to clas12mon.
+#15,45 * * * * /usr/bin/flock -n $LOCKFILE $SCRIPT --quiet --clas12mon v2.2 || echo "ERROR:  Previous clas12-workflow cronjob still running"
+
