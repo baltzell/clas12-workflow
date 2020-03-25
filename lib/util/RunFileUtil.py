@@ -160,6 +160,14 @@ class RunFileGroups(collections.OrderedDict):
           self.addFile(xx)
 
   def getGroups(self):
+    #
+    # If groupSize is greater than 0, then groups will be
+    # limited to that number of files, in which case a
+    # single run may be split into multiple groups.
+    #
+    # Otherwise, each group will be contain all the files
+    # from one run.
+    #
     groups=[]
     phaseList=[]
     for run,rfg in self.items():

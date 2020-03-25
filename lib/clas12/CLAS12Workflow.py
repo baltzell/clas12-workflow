@@ -12,7 +12,6 @@ class CLAS12Workflow(SwifWorkflow):
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
     self.cfg=cfg
-    self.setPhaseSize(self.cfg['phaseSize'])
     self.addRuns(self.cfg['runs'])
     _LOGGER.info('Finding files from '+str(self.cfg['inputs']))
     self.findFiles(self.cfg['inputs'])
@@ -97,6 +96,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.antecedents.append(j.getJobName())
       job.addTag('run','%.6d'%int(run))
       job.setCmd()
+      job.setPhase(phase)
       jobs.append(job)
       self.addJob(job)
     return jobs
@@ -115,6 +115,7 @@ class CLAS12Workflow(SwifWorkflow):
         job.antecedents.append(j.getJobName())
       job.addTag('run','%.6d'%int(run))
       job.setCmd()
+      job.setPhase(phase)
       jobs.append(job)
       self.addJob(job)
     return jobs

@@ -17,7 +17,10 @@ class MinimalDependency(CLAS12Workflow):
 
     _LOGGER.info('Generating a MinimalDependency workflow')
 
-    for xx in self.getGroups():
+    for nn,xx in enumerate(self.getGroups()):
+
+      if self.cfg['phaseSize']>0 and nn%self.cfg['phaseSize']==0:
+        self.phase += 1
 
       if self.cfg['model'].find('dec')>=0:
 
@@ -68,7 +71,7 @@ class RollingRuns(CLAS12Workflow):
         self.train(self.phase,trainQ.pop(0))
 
       if len(reconQ)>0:
-        reconJobs=self.reconclara(self.phase,[reconQ.pop(0)])
+        reconJobs=self.reconclara(self.phase,reconQ.pop(0))
         if self.cfg['model'].find('ana')>=0:
           trainQ.append(reconJobs)
 
@@ -76,7 +79,7 @@ class RollingRuns(CLAS12Workflow):
         self.delete(self.phase,deleteQ.pop(0))
         moveJobs=self.move(self.phase,moveQ.pop(0))
         if self.cfg['model'].find('rec')>=0:
-          reconQ.extend(moveJobs)
+          reconQ.append(moveJobs)
 
       if len(mergeQ)>0:
         decodedFiles = mergeQ.pop(0)
@@ -88,7 +91,7 @@ class RollingRuns(CLAS12Workflow):
         if self.cfg['workDir'] is None:
           decodeJobs = self.decodemerge(self.phase,decodeQ.pop(0))
           if self.cfg['model'].find('rec')>=0:
-            reconQ.extend(decodeJobs)
+            reconQ.append(decodeJobs)
         else:
           decodeJobs = self.decode(self.phase,decodeQ.pop(0))
           if self.cfg['model'].find('mrg')>=0:
@@ -100,7 +103,7 @@ class RollingRuns(CLAS12Workflow):
         if self.cfg['model'].find('dec')>=0:
           decodeQ.append(queue.pop())
         elif self.cfg['model'].find('rec')>=0:
-          reconQ.extend(queue.pop())
+          reconQ.append(queue.pop())
         elif self.cfg['model'].find('ana')>=0:
           trainQ.append(queue.pop())
 

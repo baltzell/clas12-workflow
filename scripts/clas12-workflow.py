@@ -13,7 +13,7 @@ workflow=cc.getWorkflow()
 workflow.generate()
 
 logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\
-    (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))
+    (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase))
 
 if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')

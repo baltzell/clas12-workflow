@@ -149,10 +149,7 @@ class ChefConfig(collections.OrderedDict):
   def getWorkflow(self):
     if self._workflow is None:
       name='%s-%s-%s'%(self['runGroup'],compactModel(self['model']),self['tag'])
-      if self['phaseSize'] >= 0:
-        self._workflow = CLAS12Workflows.RollingRuns(name,self)
-      else:
-        self._workflow = CLAS12Workflows.MinimalDependency(name,self)
+      self._workflow = CLAS12Workflows.MinimalDependency(name,self)
     if self._workflow.getFileCount()<1:
       _LOGGER.critical('Found no applicable input files.  Check "inputs" and "run".')
       sys.exit()
@@ -190,7 +187,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
-    cli.add_argument('--phaseSize', metavar='#',help='number of files per phase (negative is unphased)', type=int, default=None)
+    cli.add_argument('--phaseSize', metavar='#',help='number of runs per phase (negative is unphased)', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
@@ -209,7 +206,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
 
-    cli.add_argument('--version',action='version',version='clas12-workflow/0.9')
+    cli.add_argument('--version',action='version',version='clas12-workflow/0.98')
 
     return cli
 
@@ -291,14 +288,13 @@ class ChefConfig(collections.OrderedDict):
       if self['outDir'] is None:
         self.cli.error('"outDir" must be specified for this workflow.')
 
+    # phaseSize=0 is useless after switch from #files to #runs, change it to 1:
+    if self['phaseSize']==0:
+      self.cli.info('phaseSize of 0 is being interpreted as 1 (one run per phase).')
+      self['phaseSize']=1
+
     # merging+phased workflows have additional constraints:
     if self['phaseSize']>=0 and self['model'].find('mrg')>=0:
-
-      if self['workDir'] is None:
-        self.cli.error('"workDir" must be defined for phased, merging workflows.')
-
-      if self['phaseSize']>0 and self['phaseSize']%self['mergeSize']!=0:
-        self.cli.error('"phaseSize" must be a multiple of "mergeSize".')
 
       if self['fileRegex'] != RunFileUtil.getFileRegex():
         self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
