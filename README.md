@@ -13,10 +13,10 @@ Note that the `--config` parameter provides for loading options from a file, and
 **_Two key parameters control the overall workflow, `--model` and `--phaseSize`:_**
 
 * **_Model_** describes the different tasks that will be performed (decoding, merging, reconstruction, analysis trains) for all input EVIO/HIPO files.  These tasks are done in a series of jobs that are submitted automatically by Swif after their dependencies are satisfied.
-* **_Phase size_** affects how dependencies within the workflow are managed.  Two dependency styles are available: _minimal job-job_ dependencies and _phased_ dependencies.  The former is the default, denoted by a negative `--phaseSize`, and maximizes concurrent batch farm footprint.  The latter groups jobs into N runs per Swif phase, serving to:
-** avoiding huge queues so other priority jobs submitted later can get in
-** promote getting complete runs processed over maximum throughput
-** promote run-ordering on tape over maximum throughput
+* **_Phase size_** affects how dependencies within the workflow are managed.  Two dependency styles are available: _minimal job-job_ dependencies and _phased_ dependencies.  The former is the default, denoted by a negative `--phaseSize`, and maximizes concurrent batch farm footprint.  The latter groups jobs into N runs per Swif phase (or files if greater than 99), serving to:
+  * avoiding huge queues so other priority jobs submitted later can get in
+  * promote getting complete runs processed over maximum throughput
+  * promote run-ordering on tape over maximum throughput
 
 **_And a couple peculiarities:_**
 * For workflows that include decoding, `--decDir` allows to send the decoded files to a different destination than the other tasks (since decoding is unique in that it is generally only done once).
@@ -27,9 +27,9 @@ ifarm1801> clas12-workflow.py -h
 
 usage: clas12-workflow.py [-h] [--runGroup NAME] [--tag NAME] [--model NAME]
                           [--inputs PATH] [--runs RUN/PATH] [--outDir PATH]
-                          [--decDir PATH] [--workDir PATH] [--logDir PATH]
-                          [--coatjava PATH] [--clara PATH] [--threads #]
-                          [--reconYaml PATH] [--trainYaml PATH]
+                          [--decDir PATH] [--trainDir PATH] [--workDir PATH]
+                          [--logDir PATH] [--coatjava PATH] [--clara PATH]
+                          [--threads #] [--reconYaml PATH] [--trainYaml PATH]
                           [--claraLogDir PATH] [--phaseSize #] [--mergeSize #]
                           [--trainSize #] [--postproc] [--torus #.#]
                           [--solenoid #.#] [--fileRegex REGEX] [--config PATH]
@@ -54,16 +54,18 @@ optional arguments:
                       numbers. This option is repeatable.
   --outDir PATH       final data location
   --decDir PATH       overrides outDir for decoding
+  --trainDir PATH     overrides outDir for trains
   --workDir PATH      temporary data location for single decoded/train files
                       before merging
   --logDir PATH       log location (otherwise the SLURM default)
   --coatjava PATH     coatjava install location
   --clara PATH        clara install location
   --threads #         number of Clara threads
-  --reconYaml PATH    recon yaml file
-  --trainYaml PATH    train yaml file
+  --reconYaml PATH    recon yaml file (stock options = )
+  --trainYaml PATH    train yaml file (stock options = trigger/calib)
   --claraLogDir PATH  location for clara log files
-  --phaseSize #       number of files per phase (negative is unphased)
+  --phaseSize #       number of files (or runs if less than 100) per phase,
+                      wile negative is unphased
   --mergeSize #       number of decoded files per merge
   --trainSize #       number of files per train
   --postproc          enable post-processing of helicity and beam charge
@@ -79,6 +81,7 @@ optional arguments:
   --version           show program's version number and exit
 
 (*) = required option for all models, from command-line or config file
+
 ```
 
 ### Examples
