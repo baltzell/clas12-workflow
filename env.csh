@@ -12,6 +12,6 @@ endif
 set sourced=($_)
 set d=`/usr/bin/readlink -f $sourced[2]`
 set d=`/usr/bin/dirname $d`
-setenv PYTHONPATH ${PYTHONPATH}:${d}/lib/clas12:${d}/lib/util:${d}/lib/swif
-setenv PATH ${PATH}:${d}/scripts
+setenv PYTHONPATH ${d}/lib/clas12:${d}/lib/util:${d}/lib/swif:${PYTHONPATH}
+setenv PATH ${d}/scripts:${PATH}
 
