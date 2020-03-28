@@ -336,7 +336,7 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check for coatjava
-    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0 or self['postproc'] or self['model'].find('ana')>=0:
+    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0 or self['model'].find('ana')>=0:
       if self['coatjava'] is None:
         if self['clara'] is not None:
           _LOGGER.warning('Using coatjava from clara: '+self['clara'])
@@ -371,7 +371,7 @@ class ChefConfig(collections.OrderedDict):
       else:
         # check for suffiecient coatjava version:
         # FIXME: remove this check eventually
-        cjv=ChefUtil.getCoatjavaVersion(self['coatjava'])
+        cjv=ChefUtil.getCoatjavaVersion(self['clara'])
         if cjv is None:
           self.cli.error('Could not determine coatjava version.')
         if cjv[0]<6:
