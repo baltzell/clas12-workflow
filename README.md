@@ -13,7 +13,10 @@ Note that the `--config` parameter provides for loading options from a file, and
 **_Two key parameters control the overall workflow, `--model` and `--phaseSize`:_**
 
 * **_Model_** describes the different tasks that will be performed (decoding, merging, reconstruction, analysis trains) for all input EVIO/HIPO files.  These tasks are done in a series of jobs that are submitted automatically by Swif after their dependencies are satisfied.
-* **_Phase size_** affects how dependencies within the workflow are managed.  Two dependency styles are available: _minimal job-job_ dependencies and _phased_ dependencies.  The former is the default, denoted by a negative `--phaseSize`, and maximizes concurrent batch farm footprint.  The latter groups jobs into N runs per Swif phase, which provides a more throttled workflow (e.g. suitable for running other workflows simultaneously) and potentially more ordering of the output files on tape.
+* **_Phase size_** affects how dependencies within the workflow are managed.  Two dependency styles are available: _minimal job-job_ dependencies and _phased_ dependencies.  The former is the default, denoted by a negative `--phaseSize`, and maximizes concurrent batch farm footprint.  The latter groups jobs into N runs per Swif phase, serving to:
+** avoiding huge queues so other priority jobs submitted later can get in
+** promote getting complete runs processed over maximum throughput
+** promote run-ordering on tape over maximum throughput
 
 **_And a couple peculiarities:_**
 * For workflows that include decoding, `--decDir` allows to send the decoded files to a different destination than the other tasks (since decoding is unique in that it is generally only done once).

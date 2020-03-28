@@ -149,7 +149,10 @@ class ChefConfig(collections.OrderedDict):
   def getWorkflow(self):
     if self._workflow is None:
       name='%s-%s-%s'%(self['runGroup'],compactModel(self['model']),self['tag'])
-      self._workflow = CLAS12Workflows.MinimalDependency(name,self)
+      if self['phaseSize']>0:
+        self._workflow = CLAS12Workflows.RollingRuns(name,self)
+      else:
+        self._workflow = CLAS12Workflows.MinimalDependency(name,self)
     if self._workflow.getFileCount()<1:
       _LOGGER.critical('Found no applicable input files.  Check "inputs" and "run".')
       sys.exit()
@@ -187,7 +190,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
-    cli.add_argument('--phaseSize', metavar='#',help='number of runs per phase (negative is unphased)', type=int, default=None)
+    cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, wile negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
@@ -288,10 +291,18 @@ class ChefConfig(collections.OrderedDict):
       if self['outDir'] is None:
         self.cli.error('"outDir" must be specified for this workflow.')
 
-    # phaseSize=0 is useless after switch from #files to #runs, change it to 1:
+    # before switchingn to run-phasing, phaseSize of 0 meant 1 run per phase,
+    # swap it here to keep that meaning the same:
     if self['phaseSize']==0:
-      self.cli.info('phaseSize of 0 is being interpreted as 1 (one run per phase).')
       self['phaseSize']=1
+
+    # print workflow dependency model info:
+    if self['phaseSize']<0:
+      _LOGGER.info('Using only job-job dependencies, no phases.')
+    elif self['phaseSize']<CLAS12Workflows.RUN_PHASING_CUTOFF:
+      _LOGGER.info('Using '+str(self['phaseSize'])+' *runs* per phase.')
+    else:
+      _LOGGER.info('Using '+str(self['phaseSize'])+' *files* per phase.')
 
     # merging+phased workflows have additional constraints:
     if self['phaseSize']>=0 and self['model'].find('mrg')>=0:
@@ -301,7 +312,7 @@ class ChefConfig(collections.OrderedDict):
 
     else:
       if self['workDir'] is not None and self['model'].find('ana')<0:
-        _LOGGER.warning('Ignoring --workDir for non-merging, non-phased, trainless workflow.')
+        _LOGGER.warning('Ignoring --workDir for non-phased, trainless workflow.')
         self['workDir']=None
 
     # no temporary files on /cache or mss

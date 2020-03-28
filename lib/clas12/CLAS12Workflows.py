@@ -1,15 +1,49 @@
 import logging
 
+from SwifWorkflow import SwifPhase
 from CLAS12Workflow import CLAS12Workflow
 
 _LOGGER=logging.getLogger(__name__)
 
+RUN_PHASING_CUTOFF=100
+
+######################################################################
+#
+# In general, at the cost of throughput, the phasing here serves to:
+# 1. avoid huge queues, allowing other jobs to queue instead
+# 3. promote getting full runs processed
+# 2. promote run-ordering on tape
+#
+######################################################################
+
+
 class MinimalDependency(CLAS12Workflow):
+######################################################################
 #
-# Minimal job-job dependencies, and no phases.  No staging/temporary
-# disk space is used.  Maximal batch farm footprint, limited only by
-# single job dependencies.
+# Minimal job-job dependencies, with *optional* phasing.
 #
+# If phasing is not used (i.e. phaseSize<0), this becomes the maximum
+# throughput model, in the sense that there's as little dependcies and
+# throttling as possible.
+#
+######################################################################
+#
+# If phasing is used, all the jobs corresponding to a given run are
+# included in the same phase, which means all swif antecedents are in
+# the same phase.
+#
+# For example, if phaseSize==2, then each phase contains:
+#
+# d(i) d(i+1) r(i) r(i+1) a(i) a(i+1)
+#
+# where i is the run number index and d/r/a is dec/rec/ana.
+#
+# This type of phasing has the potential drawback of trickling
+# at the end of each phase when the analysis trains/merge/cleanup
+# are running, and also slower at the beginning when it's just
+# decoding jobs.
+#
+######################################################################
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
 
@@ -17,9 +51,21 @@ class MinimalDependency(CLAS12Workflow):
 
     _LOGGER.info('Generating a MinimalDependency workflow')
 
-    for nn,xx in enumerate(self.getGroups()):
+    nruns,nfiles = 0,0
 
-      if self.cfg['phaseSize']>0 and nn%self.cfg['phaseSize']==0:
+    for xx in self.getGroups():
+
+      nruns += 1
+      nfiles += len(xx)
+
+      # interpret phase size as #files:
+      if self.cfg['phaseSize']>=RUN_PHASING_CUTOFF and nfiles>self.cfg['phaseSize']:
+        nfiles = 0
+        self.phase += 1
+
+      # interpret phase size as #runs:
+      elif self.cfg['phaseSize']>0 and nruns>self.cfg['phaseSize']==0:
+        nruns = 0
         self.phase += 1
 
       if self.cfg['model'].find('dec')>=0:
@@ -39,17 +85,23 @@ class MinimalDependency(CLAS12Workflow):
 
 
 class RollingRuns(CLAS12Workflow):
+######################################################################
+# 
+# Stagger runs' tasks' across phases, in a "round".  These means all
+# swif antecedents are in a previous phase, so no job has antecedents
+# that are not ready at the time it is submitted.
 #
-# Phased, with N runs per phase, where N is the number of tasks
-# (i.e. decode/merge/recon/train).  No explicit job-job depenedencies.
-# Staging disk space is used if merging, in which case 3*M GB is
-# required, where M is the number of files per run (or phaseSize).
+# For example, if phaseSize==2, then each phase contains:
 #
-# This workflow has the benefit of putting files back on tape ordered
-# by run, at the cost of potential bottlenecks of stuck tapes for
-# inputs.  Similarly, its batch farm footprint is throttled by run
-# sizes, allowing other workflows to run in parallel.
+# d(i) d(i-1) r(i-2) r(i-3) a(i-4) a(i-5)
 #
+# where i is the run number index and d/r/a = dec/rec/ana.
+#
+# This phasing model has the advantage of letting decoding/analysis
+# jobs sort of run in the background, while the overall throughput
+# is dictated by the longer reconstruction jobs.
+#
+######################################################################
   def __init__(self,name,cfg):
     CLAS12Workflow.__init__(self,name,cfg)
 
@@ -61,58 +113,62 @@ class RollingRuns(CLAS12Workflow):
     queue=self.getGroups()
 
     # sub-queues:
-    decodeQ,mergeQ,deleteQ,moveQ,reconQ,trainQ=[],[],[],[],[],[]
+    decodeQ,mergeQ,reconQ,trainQ=[],[],[],[]
+
+    nruns,nfiles = 0,0
 
     while True:
 
-      self.phase += 1
-
       if len(trainQ)>0:
-        self.train(self.phase,trainQ.pop(0))
+        xx = trainQ.pop(0)
+        #print('TrainQueue '+str(xx))
+        trainJobs = self.train(xx.phase,xx.jobs)
+        self.trainmerge(xx.phase,trainJobs)
+        self.trainclean(xx.phase,trainJobs)
 
       if len(reconQ)>0:
-        reconJobs=self.reconclara(self.phase,reconQ.pop(0))
+        xx = reconQ.pop(0)
+        #print('ReconQueue '+str(xx))
+        reconJobs=self.reconclara(xx.phase,xx.jobs)
         if self.cfg['model'].find('ana')>=0:
-          trainQ.append(reconJobs)
-
-      if len(deleteQ)>0:
-        self.delete(self.phase,deleteQ.pop(0))
-        moveJobs=self.move(self.phase,moveQ.pop(0))
-        if self.cfg['model'].find('rec')>=0:
-          reconQ.append(moveJobs)
-
-      if len(mergeQ)>0:
-        decodedFiles = mergeQ.pop(0)
-        mergeJobs = self.merge(self.phase,decodedFiles)
-        moveQ.append([x.outputData[0] for x in mergeJobs])
-        deleteQ.append(decodedFiles)
+          trainQ.append(SwifPhase(xx.phase+1,reconJobs))
 
       if len(decodeQ)>0:
-        if self.cfg['workDir'] is None:
-          decodeJobs = self.decodemerge(self.phase,decodeQ.pop(0))
-          if self.cfg['model'].find('rec')>=0:
-            reconQ.append(decodeJobs)
+        xx = decodeQ.pop(0)
+        if self.cfg['model'].find('mrg')>=0:
+          decodeJobs = self.decodemerge(xx.phase,xx.jobs)
         else:
-          decodeJobs = self.decode(self.phase,decodeQ.pop(0))
-          if self.cfg['model'].find('mrg')>=0:
-            mergeQ.append([x.outputData[0] for x in decodeJobs])
-          elif self.cfg['model'].find('rec')>=0:
-            reconQ.extend(decodeJobs)
+          decodeJobs = self.decode(xx.phase,xx.jobs)
+        if self.cfg['model'].find('rec')>=0:
+          reconQ.append(SwifPhase(xx.phase+1,decodeJobs))
 
       if len(queue)>0:
+
+        files = queue.pop(0)
+        nruns += 1
+        nfiles += len(files)
+
         if self.cfg['model'].find('dec')>=0:
-          decodeQ.append(queue.pop())
+          decodeQ.append(SwifPhase(self.phase,files))
         elif self.cfg['model'].find('rec')>=0:
-          reconQ.append(queue.pop())
+          reconQ.append(SwifPhase(self.phase,files))
         elif self.cfg['model'].find('ana')>=0:
-          trainQ.append(queue.pop())
+          trainQ.append(SwifPhase(self.phase,files))
 
-      if len(decodeQ)==0 and len(mergeQ)==0 and len(deleteQ)==0 and len(reconQ)==0 and len(trainQ)==0:
+        # interpret phase size as #files:
+        if self.cfg['phaseSize']>=RUN_PHASING_CUTOFF and nfiles>self.cfg['phaseSize']:
+          nruns = 0
+          nfiles = 0
+          self.phase += 1
+
+        # interpret phase size as #runs:
+        elif self.cfg['phaseSize']>0 and nruns%self.cfg['phaseSize']==0:
+          nruns = 0
+          nfiles = 0
+          self.phase += 1
+
+      if len(decodeQ)+len(reconQ)+len(trainQ) == 0:
         break
-
-    if self.cfg['model'].find('ana')>=0:
-      trainmerge(self.phase,self.jobs)
-      trainclean(self.phase,self.jobs)
 
 
 

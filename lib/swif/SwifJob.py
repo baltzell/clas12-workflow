@@ -32,10 +32,10 @@ class SwifJob:
     self.copyInputs=True
 
   def __str__(self):
-    s = 'Phase %d : %s : '%(self.phase,self.getJobName())
+    s = 'Phase %d : %s'%(self.phase,self.getJobName())
     for key,val in self.tags.items():
       if key in ['run','mode','file']:
-        s += '%s=%s'%(str(key),str(val))
+        s += ' : %s=%s'%(str(key),str(val))
     return s
 
   def addEnv(self,key,val):
