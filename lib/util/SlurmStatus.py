@@ -275,8 +275,29 @@ class SlurmQuery():
     self.get()
     if len(self.myData)>0:
       ret+=self.myData[0].getHeader()
+      cpus,walls,cores=[],[],[]
       for xx in self.myData:
         ret+=str(xx)
+        try:
+          cpu=float(xx.data['cputime'])
+          wall=float(xx.data['walltime'])
+          core=int(xx.data['coreCount'])
+          cpus.append(cpu)
+          walls.append(wall)
+          cores.append(core)
+        except:
+          pass
+      cpu=0
+      wall=0
+      for ii in range(len(cpus)):
+        cpu+=cpus[ii]
+        wall+=walls[ii]*cores[ii]
+      if wall>0:
+        ret += '\n'
+        ret += 'Job Count    : %d\n'%len(cpus)
+        ret += 'CPU Days     : %.1f\n'%(cpu/60/60/24)
+        ret += 'Wall Days    : %.1f\n'%(wall/60/60/24)
+        ret += 'CPU/Wall     : %.3f\n'%(cpu/wall)
     return ret
 
 if __name__ == '__main__':
