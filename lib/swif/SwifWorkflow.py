@@ -50,6 +50,17 @@ class SwifWorkflow(RunFileGroups):
     print(subprocess.check_output(['swif','run','-workflow',self.name]))
     print(subprocess.check_output(['swif','status','-workflow',self.name]))
 
+class SwifPhase():
+  def __init__(self,phase,jobs):
+    if not isinstance(phase,int):
+      raise TypeError('phase must be an integer')
+    if not isinstance(jobs,list):
+      raise TypeError('jobs must be a list')
+    self.phase=phase
+    self.jobs=jobs
+  def __str__(self):
+    return 'Phase %d : %s (%d)'%(self.phase,self.jobs[0],len(self.jobs))
+
 if __name__ == '__main__':
   name = 'myWorkflow'
   workflow = SwifWorkflow(name)
