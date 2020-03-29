@@ -22,7 +22,7 @@ def processWorkflow(workflow,args):
     status.showPersistentProblems()
 
   # if retrying or abandoning, only print status if problems exist:
-  if len(args.abandon)>0 or args.retry:
+  if len(args.abandon)>0 or args.retry or len(args.clas12mon)>0:
 
     if len(args.abandon)>0:
       res = status.abandonProblems(args.abandon)
