@@ -80,7 +80,7 @@ class MinimalDependency(CLAS12Workflow):
 
       if self.cfg['model'].find('ana')>=0:
         xx = self.train(self.phase,xx)
-        self.trainmerge(self.phase,xx)
+        xx.extend(self.trainmerge(self.phase,xx))
         self.trainclean(self.phase,xx)
 
 
@@ -123,7 +123,7 @@ class RollingRuns(CLAS12Workflow):
         xx = trainQ.pop(0)
         #print('TrainQueue '+str(xx))
         trainJobs = self.train(xx.phase,xx.jobs)
-        self.trainmerge(xx.phase,trainJobs)
+        trainJobs.extend(self.trainmerge(xx.phase,trainJobs))
         self.trainclean(xx.phase,trainJobs)
 
       if len(reconQ)>0:
