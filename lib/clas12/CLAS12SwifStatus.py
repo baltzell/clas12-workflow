@@ -88,6 +88,10 @@ class CLAS12SwifStatus(SwifStatus):
       if full and not self.tagsMerged:
         self.mergeTags()
       status=self.getPrunedStatus()
+      # ignore suspended workflows:
+      if len(status)>0 and 'suspended' in status[0]:
+        if status[0]['suspended']==1:
+          return
       #status[0]['succeeded']=200
       # convert to json string, and strip off leading/trailing
       # square brackets for clas12mon:
