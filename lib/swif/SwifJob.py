@@ -6,6 +6,7 @@ class SwifJob:
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
+    self.abbreviations={}
     self.env={}
     self.number=-1
     self.workflow=workflow
@@ -120,15 +121,23 @@ class SwifJob:
     elif time.find('s')>0:  scale=1
     return int(scale * int(time.rstrip('secondminutehour')))
 
+  def abbreviate(self,x):
+    for full,short in self.abbreviations.items():
+      x=x.replace(full,short)
+    return x
+
   def getJobName(self):
-    name='%s-%.5d'%(self.workflow,self.number)
+    task=''
+    if 'mode' in self.tags:
+      task='-'+self.abbreviate(self.tags['mode'])
+    name='%s-p%d%s-%.5d'%(self.workflow,self.phase,task,self.number)
     if len(name)>50:
       logging.getLogger(__name__).critical('Greater than max job name length (50 characters): '+name)
       sys.exit()
     return name
 
   def getLogPrefix(self):
-    prefix='%s/%s_p%d'%(self.logDir,self.getJobName(),self.phase)
+    prefix='%s/%s'%(self.logDir,self.getJobName())
     for key,val in self.tags.items():
       if key=='mode':
         prefix+='_'+val

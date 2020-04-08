@@ -2,6 +2,8 @@ import tempfile,subprocess
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
 
+SWIF='/site/bin/swif'
+
 class SwifWorkflow(RunFileGroups):
 
   def __init__(self,name):
@@ -20,7 +22,7 @@ class SwifWorkflow(RunFileGroups):
     self.jobs.append(job)
 
   def setPhaseSize(self,phaseSize):
-    self.setGroupSize(phaseSize)
+    RunFileGroups.setGroupSize(self,phaseSize)
 
   def getJobs(self,phase):
     jobs=[]
@@ -46,9 +48,9 @@ class SwifWorkflow(RunFileGroups):
     with tempfile.NamedTemporaryFile() as jsonFile:
       jsonFile.write(self.getJson())
       jsonFile.flush()
-      print(subprocess.check_output(['swif','import','-file',jsonFile.name]))
-    print(subprocess.check_output(['swif','run','-workflow',self.name]))
-    print(subprocess.check_output(['swif','status','-workflow',self.name]))
+      print(subprocess.check_output([SWIF,'import','-file',jsonFile.name]))
+    print(subprocess.check_output([SWIF,'run','-workflow',self.name]))
+    print(subprocess.check_output([SWIF,'status','-workflow',self.name]))
 
 class SwifPhase():
   def __init__(self,phase,jobs):
