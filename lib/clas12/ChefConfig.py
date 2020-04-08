@@ -335,16 +335,15 @@ class ChefConfig(collections.OrderedDict):
       if not os.path.exists(self['clara']):
         self.cli.error('"clara" does not exist: '+self['clara'])
 
-    # check for coatjava
-    if self['model'].find('dec')>=0 or self['model'].find('mrg')>=0 or self['model'].find('ana')>=0:
-      if self['coatjava'] is None:
-        if self['clara'] is not None:
-          _LOGGER.warning('Using coatjava from clara: '+self['clara'])
-          self['coatjava']=self['clara']+'/plugins/clas12'
-        else:
-          self.cli.error('"coatjava" must be defined for model='+str(self['model']))
-      if not os.path.exists(self['coatjava']):
-        self.cli.error('"coatjava" does not exist: '+self['coatjava'])
+    # use coatjava from clara if coatjava isn't defined:
+    if self['coatjava'] is None:
+      if self['clara'] is not None:
+        _LOGGER.warning('Using coatjava from clara: '+self['clara'])
+        self['coatjava']=self['clara']+'/plugins/clas12'
+      else:
+        self.cli.error('Unable to define a "coatjava".  Define it or "clara".')
+    if not os.path.exists(self['coatjava']):
+      self.cli.error('"coatjava" does not exist: '+self['coatjava'])
 
     # check yaml files:
     if self['model'].find('ana')>=0:
