@@ -36,6 +36,7 @@ CFG['threads']      = 16
 CFG['torus']        = None
 CFG['solenoid']     = None
 CFG['postproc']     = False
+CFG['schema']       = ''
 CFG['claraLogDir']  = None
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
 CFG['submit']       = False
@@ -226,6 +227,14 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.critical('Config file has invalid JSON format:  '+filename)
       sys.exit()
 
+    int_keys=[]
+    for key,val in CFG.items():
+      try:
+        int(val)
+        int_keys.append(key)
+      except:
+        pass
+
     for key,val in cfg.items():
       if key not in self:
         _LOGGER.critical('Config file contains invalid key:  '+key)
@@ -233,6 +242,12 @@ class ChefConfig(collections.OrderedDict):
       if key in CHOICES and val not in CHOICES[key]:
         _LOGGER.critical('Config file\'s "%s" must be one of %s'%(key,str(CHOICES[key])))
         sys.exit()
+      if key in int_keys:
+        try:
+          val=int(val)
+        except:
+          _LOGGER.critical('Config file\'s "'+key+'" must be an integer: '+val)
+          sys.exit()
       self[key]=val
 
   def _loadCliArgs(self):
@@ -384,6 +399,8 @@ class ChefConfig(collections.OrderedDict):
         for run in self['runs']:
           if run>11000 and cjv[0]==6 and cjv[1]<5:
             self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
+
+
 
 if __name__ == '__main__':
   cc=ChefConfig(sys.argv[1:])
