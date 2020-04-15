@@ -195,6 +195,8 @@ class SlurmQuery():
     self.statuses=[]
     self.matchAny=[]
     self.matchAll=[]
+    self.minimumWallHours=None
+    self.maximumWallHours=None
     self.states=SlurmStatus._STATES
     self.setDefaultTime()
 
@@ -274,6 +276,13 @@ class SlurmQuery():
       ret+=self.myData[0].getHeader()
       cpus,walls,cores=[],[],[]
       for xx in self.myData:
+        if 'walltime' in xx.data:
+          if self.minimumWallHours is not None:
+            if xx.data['walltime'] < float(self.minimumWallHours)*60*60:
+              continue
+          if self.maximumWallHours is not None:
+            if xx.data['walltime'] > float(self.maximumWallHours)*60*60:
+              continue
         ret+=str(xx)
         try:
           cpu=float(xx.data['cputime'])
@@ -291,7 +300,8 @@ class SlurmQuery():
         wall+=walls[ii]*cores[ii]
       if wall>0:
         ret += '\n'
-        ret += 'Job Count    : %d\n'%len(cpus)
+        ret += 'Job Count    : %d\n'%len(cores)
+        ret += 'CPU Count    : %d\n'%sum(cores)
         ret += 'CPU Days     : %.1f\n'%(cpu/60/60/24)
         ret += 'Wall Days    : %.1f\n'%(wall/60/60/24)
         ret += 'CPU/Wall     : %.3f\n'%(cpu/wall)
