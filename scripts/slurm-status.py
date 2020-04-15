@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys,pwd,grp,argparse,datetime,getpass
 
+from SlurmStatus import SlurmStatus
 from SlurmStatus import SlurmQuery
 
 project_groups={'clas12':'clas12','clas':'clas','hps':'hps'}
@@ -12,6 +13,7 @@ cli.add_argument('-d',metavar='#',help='Number of days to span (default=7)', typ
 cli.add_argument('-e',metavar='YYYY-MM-DD',help='End date of query span, at 24:00 (default=today)', type=str, default=None)
 cli.add_argument('-M',metavar='string',help='match all in job names (repeatable)', type=str, default=[], action='append')
 cli.add_argument('-m',metavar='string',help='match any in job names (repeatable)', type=str, default=[], action='append')
+cli.add_argument('-s',metavar='string',help='job state (repeatable)', type=str, default=[], action='append', choices=SlurmStatus._STATES)
 args=cli.parse_args(sys.argv[1:])
 
 if len(args.u)==0:
@@ -45,5 +47,7 @@ for user in args.u:
   sq.setDayDelta(args.d)
   if args.e is not None:
     sq.setDayEnd(args.e)
+  if len(args.s)>0:
+    sq.states=args.s
   print(sq)
 

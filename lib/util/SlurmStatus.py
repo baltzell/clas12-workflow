@@ -27,7 +27,7 @@ class SlurmStatus():
   _DATEVARS=['submit','finish']
   _TIMEVARS=['cputime','walltime']
   _BYTEVARS=['memoryUsed','memoryReq']
-  _STATES=['timeout','success','failed','over_rlimit']
+  _STATES=['TIMEOUT','SUCCESS','FAILED','OVER_RLIMIT']
   _VARS     =['project','name','id','coreCount','hostname','memoryReq','memoryUsed','cputime','walltime','c/w/#','submit','finish','state','exitCode']
   _SHORTVARS=['proj',   'name','id','#',        'host',    'memReq',   'memUse',    'cpu',    'wall',    'c/w/#','submit','finish','state','ex'      ]
   _LEN      =[ 9,        30,    10,  2,          10,        6,          6,           5,        5,         5,      19,      19,      12,     3        ]
@@ -195,11 +195,8 @@ class SlurmQuery():
     self.statuses=[]
     self.matchAny=[]
     self.matchAll=[]
-    self.setAllStates()
-    self.setDefaultTime()
-
-  def setAllStates(self):
     self.states=SlurmStatus._STATES
+    self.setDefaultTime()
 
   def setDefaultTime(self):
     now=datetime.datetime.now()
