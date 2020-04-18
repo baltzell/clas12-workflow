@@ -121,13 +121,17 @@ class ChefConfig(collections.OrderedDict):
     for x in ['reconYaml','trainYaml']:
       if self[x] is None:
         continue
-      if not os.path.isfile(self[x]):
+      elif self[x].startswith('/'):
+        if not os.path.isfile(self[x]):
+          _LOGGER.critical('Nonexistent user yaml: '+self[x])
+          sys.exit()
+      else:
         yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
         if os.path.isfile(yamlprefix+self[x]+'.yaml'):
           self[x] = yamlprefix+self[x]+'.yaml'
           _LOGGER.warning('Using stock yaml: '+self[x])
         else:
-          _LOGGER.critical('Nonexistent yaml: '+self[x])
+          _LOGGER.critical('Nonexistent stock yaml: '+self[x])
           sys.exit()
       if x=='reconYaml':
         good=False
@@ -163,7 +167,7 @@ class ChefConfig(collections.OrderedDict):
 
     stockReconYamls,stockTrainYamls=[],[]
     for x in glob.glob(_TOPDIR+'/yamls/recon_*.yaml'):
-      stockReconYamls.append(os.path.basename(x)[6:][:-6])
+      stockReconYamls.append(os.path.basename(x)[6:][:-5])
     for x in glob.glob(_TOPDIR+'/yamls/train_*.yaml'):
       stockTrainYamls.append(os.path.basename(x)[6:][:-5])
 
