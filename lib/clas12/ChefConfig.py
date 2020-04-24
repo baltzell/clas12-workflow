@@ -202,7 +202,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
-    cli.add_argument('--recharge', help='rebuild RUN::scaler for corrected gated beam charge', action='store_true', default=None)
+    cli.add_argument('--recharge', help='rebuild RUN::scaler (unnecessary if decoding was done with 6.5.6 or later)', action='store_true', default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
