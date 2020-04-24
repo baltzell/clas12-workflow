@@ -42,16 +42,6 @@ def getFileBytes(path):
       return os.path.getsize(path)
   return None
 
-def getCoatjavaVersion(path):
-  cj=path.split('/').pop().split('_').pop()
-  m=re.match('(\d+)[abc]\.(\d+)\.(\d+)',cj)
-  if m is not None:
-    return [int(m.group(1)),int(m.group(2)),int(m.group(3))]
-  m=re.match('.*\d+\.\d+\.\d+_(\d+)[abcd]*\.(\d+)\.(\d+).*',path)
-  if m is not None:
-    return [int(m.group(1)),int(m.group(2)),int(m.group(3))]
-  return None
-
 def getTrainIndices(yamlfile):
   ids=[]
   for line in open(yamlfile,'r').readlines():

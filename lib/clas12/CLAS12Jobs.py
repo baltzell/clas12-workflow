@@ -125,15 +125,23 @@ class ReconJob(CLAS12Job):
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
-    if self.cfg['postproc']:
+    if self.cfg['postproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
-        # postprocessing must run from the same coatjava as clara for bankdefs:
-        cmd += ' && ls -l && echo %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
-        cmd += ' && %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
-        cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
-        cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
-        cmd += ' && ls %s'%(x)
+        if self.cfg['recharge']:
+          # postprocessing must run from the same coatjava as clara for bankdefs:
+          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
+          cmd += ' && %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
+          cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
+          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
+          cmd += ' && ls %s )'%(x)
+        if self.cfg['postproc']:
+          # postprocessing must run from the same coatjava as clara for bankdefs:
+          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
+          cmd += ' && %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
+          cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
+          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
+          cmd += ' && ls %s )'%(x)
     CLAS12Job.setCmd(self,cmd)
 
 class TrainJob(CLAS12Job):

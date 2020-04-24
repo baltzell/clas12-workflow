@@ -1,5 +1,6 @@
 import os,sys,glob,json,copy,logging,getpass,argparse,traceback,collections
 import ChefUtil
+import CoatjavaVersion
 import RunFileUtil
 import CLAS12Workflows
 
@@ -36,6 +37,7 @@ CFG['threads']      = 16
 CFG['torus']        = None
 CFG['solenoid']     = None
 CFG['postproc']     = False
+CFG['recharge']     = False
 CFG['schema']       = ''
 CFG['claraLogDir']  = None
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
@@ -191,8 +193,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
-    cli.add_argument('--reconYaml',metavar='PATH',help='recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
-    cli.add_argument('--trainYaml',metavar='PATH',help='train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
+    cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
+    cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, wile negative is unphased', type=int, default=None)
@@ -200,6 +202,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
+    cli.add_argument('--recharge', help='rebuild RUN::scaler for corrected gated beam charge', action='store_true', default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
@@ -382,31 +385,24 @@ class ChefConfig(collections.OrderedDict):
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
 
     # check post-processing:
-    if self['postproc']:
+    if self['postproc'] or self['recharge']:
       if self['model'].find('rec')<0:
         self['postproc']=False
-        self.cli.warning('Ignoring "postproc" for non-rec workflow.')
-      else:
-        # check for suffiecient coatjava version:
-        # FIXME: remove this check eventually
-        cjv=ChefUtil.getCoatjavaVersion(self['clara'])
-        if cjv is None:
-          self.cli.error('Could not determine coatjava version.')
-        if cjv[0]<6:
+        self['recharge']=False
+        self.cli.warning('Ignoring "postproc" and "recharge" for non-rec workflow.')
+      cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
+      if self['postproc']:
+        if cjv < '6b.4.1':
           self.cli.error('Post-processing requires coatjava>6b.4.1')
-        elif cjv[0]==6:
-          if cjv[1]<4:
-            self.cli.error('Post-processing requires coatjava>6b.4.1')
-          elif cjv[1]==4 and cjv[2]<1:
-            self.cli.error('Post-processing requires coatjava>6b.4.1')
-        # not ready for 120 Hz:
         for run in self['runs']:
-          if run>11000 and cjv[0]==6 and cjv[1]<5:
+          if run>11000 and cjv < '6b.5.0':
             self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
-
+      if self['recharge'] and cjv < '6.5.6':
+        self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
 
 
 if __name__ == '__main__':
+  logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
   cc=ChefConfig(sys.argv[1:])
   print(str(cc))
 
