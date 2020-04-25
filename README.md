@@ -28,10 +28,11 @@ ifarm1801> clas12-workflow.py -h
 usage: clas12-workflow.py [-h] [--runGroup NAME] [--tag NAME] [--model NAME]
                           [--inputs PATH] [--runs RUN/PATH] [--outDir PATH]
                           [--decDir PATH] [--trainDir PATH] [--workDir PATH]
-                          [--logDir PATH] [--coatjava PATH] [--clara PATH]
-                          [--threads #] [--reconYaml PATH] [--trainYaml PATH]
-                          [--claraLogDir PATH] [--phaseSize #] [--mergeSize #]
-                          [--trainSize #] [--postproc] [--torus #.#]
+                          [--logDir PATH] [--coatjava VERSION/PATH]
+                          [--clara PATH] [--threads #] [--reconYaml PATH]
+                          [--trainYaml PATH] [--claraLogDir PATH]
+                          [--phaseSize #] [--mergeSize #] [--trainSize #]
+                          [--postproc] [--recharge] [--torus #.#]
                           [--solenoid #.#] [--fileRegex REGEX] [--config PATH]
                           [--defaults] [--show] [--node NAME] [--submit]
                           [--version]
@@ -39,46 +40,51 @@ usage: clas12-workflow.py [-h] [--runGroup NAME] [--tag NAME] [--model NAME]
 Generate a CLAS12 SWIF workflow.
 
 optional arguments:
-  -h, --help          show this help message and exit
-  --runGroup NAME     (*) run group name
-  --tag NAME          (*) e.g. pass1v0, automatically prefixed with runGroup
-                      and suffixed by model to define workflow name
-  --model NAME        (*) workflow model (dec/decmrg/rec/ana/decrec/decmrgrec/
-                      recana/decrecana/decmrgrecana)
-  --inputs PATH       (*) name of file containing a list of input files, or a
-                      directory to be searched recursively for input files, or
-                      a (quoted) shell glob of either. This option is
-                      repeatable.
-  --runs RUN/PATH     (*) run numbers (e.g. "4013" or "4013,4015" or
-                      "3980,4000-4999"), or a file containing a list of run
-                      numbers. This option is repeatable.
-  --outDir PATH       final data location
-  --decDir PATH       overrides outDir for decoding
-  --trainDir PATH     overrides outDir for trains
-  --workDir PATH      temporary data location for single decoded/train files
-                      before merging
-  --logDir PATH       log location (otherwise the SLURM default)
-  --coatjava PATH     coatjava install location
-  --clara PATH        clara install location
-  --threads #         number of Clara threads
-  --reconYaml PATH    recon yaml file (stock options = )
-  --trainYaml PATH    train yaml file (stock options = trigger/calib)
-  --claraLogDir PATH  location for clara log files
-  --phaseSize #       number of files (or runs if less than 100) per phase,
-                      wile negative is unphased
-  --mergeSize #       number of decoded files per merge
-  --trainSize #       number of files per train
-  --postproc          enable post-processing of helicity and beam charge
-  --torus #.#         override RCDB torus scale
-  --solenoid #.#      override RCDB solenoid scale
-  --fileRegex REGEX   input filename format (for matching run and file
-                      numbers)
-  --config PATH       load config file (overriden by command line arguments)
-  --defaults          print default config file and exit
-  --show              print config file and exit
-  --node NAME         batch farm node type (os/feature)
-  --submit            submit and run jobs immediately
-  --version           show program's version number and exit
+  -h, --help            show this help message and exit
+  --runGroup NAME       (*) run group name
+  --tag NAME            (*) e.g. pass1v0, automatically prefixed with runGroup
+                        and suffixed by model to define workflow name
+  --model NAME          (*) workflow model (dec/decmrg/rec/ana/decrec/decmrgre
+                        c/recana/decrecana/decmrgrecana)
+  --inputs PATH         (*) name of file containing a list of input files, or
+                        a directory to be searched recursively for input
+                        files, or a (quoted) shell glob of either. This option
+                        is repeatable.
+  --runs RUN/PATH       (*) run numbers (e.g. "4013" or "4013,4015" or
+                        "3980,4000-4999"), or a file containing a list of run
+                        numbers. This option is repeatable.
+  --outDir PATH         final data location
+  --decDir PATH         overrides outDir for decoding
+  --trainDir PATH       overrides outDir for trains
+  --workDir PATH        temporary data location for single decoded/train files
+                        before merging
+  --logDir PATH         log location (otherwise the SLURM default)
+  --coatjava VERSION/PATH
+                        coatjava version number (or install location)
+  --clara PATH          clara install location (never necessary if coatjava is
+                        specified as a VERSION)
+  --threads #           number of Clara threads
+  --reconYaml PATH      absolute path to recon yaml file (stock options = )
+  --trainYaml PATH      absolute path to train yaml file (stock options =
+                        trigger/calib)
+  --claraLogDir PATH    location for clara log files
+  --phaseSize #         number of files (or runs if less than 100) per phase,
+                        while negative is unphased
+  --mergeSize #         number of decoded files per merge
+  --trainSize #         number of files per train
+  --postproc            enable post-processing of helicity and beam charge
+  --recharge            rebuild RUN::scaler (unnecessary if decoding was done
+                        with 6.5.6 or later)
+  --torus #.#           override RCDB torus scale
+  --solenoid #.#        override RCDB solenoid scale
+  --fileRegex REGEX     input filename format (for matching run and file
+                        numbers)
+  --config PATH         load config file (overriden by command line arguments)
+  --defaults            print default config file and exit
+  --show                print config file and exit
+  --node NAME           batch farm node type (os/feature)
+  --submit              submit and run jobs immediately
+  --version             show program's version number and exit
 
 (*) = required option for all models, from command-line or config file
 
