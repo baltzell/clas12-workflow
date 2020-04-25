@@ -1,31 +1,32 @@
-import re,sys,logging
+import re,os,sys,glob,logging
 
 _LOGGER=logging.getLogger(__name__)
 
+CLAS12_PACKAGES_DIR='/group/clas12/packages/'
+CLARA_VERSION='4.3.12'
+
 class CoatjavaVersion():
 
-  # in hindsight, string comparison of #.#.# would work fine
+  # in hindsight, string comparison of '#.#.#' would work fine
   # after stripping out the a/b/c in the version name !!
 
   def __init__(self,string):
     self.string=string
-    self.version=self._parse(string)
+    self.version=None
+    self._parse(string)
     if self.version is None:
       _LOGGER.critical('Cannot determine coatjava version: '+string)
       sys.exit(1)
-    self.major=self.version[0]
-    self.minor=self.version[1]
-    self.small=self.version[2]
 
   def _parse(self,path):
-    cj=path.split('/').pop().split('_').pop()
-    m=re.match('.*\d+\.\d+\.\d+_(\d+)[abcd]*\.(\d+)\.(\d+).*',path)
+    m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
+    if m is None:
+      m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
     if m is not None:
-      return [int(m.group(1)),int(m.group(2)),int(m.group(3))]
-    m=re.match('.*(\d+)[abcd]*\.(\d+)\.(\d+).*',cj)
-    if m is not None:
-      return [int(m.group(1)),int(m.group(2)),int(m.group(3))]
-    return None
+      self.major=int(m.group(1))
+      self.minor=int(m.group(3))
+      self.small=int(m.group(4))
+      self.version=m.group().strip('_')
 
   def __lt__(self,other):
     if not isinstance(other,CoatjavaVersion):
@@ -65,7 +66,16 @@ class CoatjavaVersion():
     return False
 
   def __str__(self):
-    return '%s(%s)'%(self.string,self.version)
+    return '%s (%s)'%(self.string,self.version)
+
+def getCoatjavaVersions():
+  cjvs={}
+  for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+CLARA_VERSION+'_*'):
+    clara=os.path.normpath(clara)
+    if os.path.isdir(clara):
+      cjv=CoatjavaVersion(clara)
+      cjvs[cjv.version]=clara
+  return cjvs
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
@@ -74,7 +84,10 @@ if __name__ == '__main__':
       print('a: '+str(CoatjavaVersion(sys.argv[ii])))
       print('b: '+str(CoatjavaVersion(sys.argv[ii+1])))
       print('a>b: '+str(CoatjavaVersion(sys.argv[ii])>CoatjavaVersion(sys.argv[ii+1])))
-  else:
+  elif len(sys.argv)>1:
     for xx in sys.argv[1:]:
       print(CoatjavaVersion(xx))
+  else:
+    for xx,yy in getCoatjavaVersions().items():
+      print(xx+' '+yy)
 

@@ -189,15 +189,15 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location for single decoded/train files before merging', type=str,default=None)
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
-    cli.add_argument('--coatjava',metavar='PATH',help='coatjava install location', type=str,default=None)
-    cli.add_argument('--clara',metavar='PATH',help='clara install location', type=str,default=None)
+    cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number (or install location)', type=str,default=None)
+    cli.add_argument('--clara',metavar='PATH',help='clara install location (never necessary if coatjava is specified as a VERSION)', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
     cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
     cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
     cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
-    cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, wile negative is unphased', type=int, default=None)
+    cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, wihile negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
@@ -328,10 +328,8 @@ class ChefConfig(collections.OrderedDict):
 
     # merging+phased workflows have additional constraints:
     if self['phaseSize']>=0 and self['model'].find('mrg')>=0:
-
       if self['fileRegex'] != RunFileUtil.getFileRegex():
         self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
-
     else:
       if self['workDir'] is not None and self['model'].find('ana')<0:
         _LOGGER.warning('Ignoring --workDir for non-phased, trainless workflow.')
@@ -350,12 +348,17 @@ class ChefConfig(collections.OrderedDict):
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
 
-    # check for clara:
-    if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
-      if self['clara'] is None:
-        self.cli.error('"clara" must be defined for model='+str(self['model']))
-      if not os.path.exists(self['clara']):
-        self.cli.error('"clara" does not exist: '+self['clara'])
+    # let user specify version number instead of path:
+    if self['coatjava'] is not None and not self['coatjava'].startswith('/'):
+      _LOGGER.info('Assuming "coatjava" is a version number:  '+self['coatjava'])
+      claras=CoatjavaVersion.getCoatjavaVersions()
+      if self['coatjava'] in claras:
+        if self['clara'] is None:
+          _LOGGER.warning('Assuming the "clara" containing "coatjava":'+claras[self['coatjava']])
+          self['clara']=os.path.normpath(claras[self['coatjava']])
+        self['coatjava']=os.path.normpath(claras[self['coatjava']]+'/plugins/clas12')
+      else:
+        self.cli.error('Coatjava version not found: '+self['coatjava'])
 
     # use coatjava from clara if coatjava isn't defined:
     if self['coatjava'] is None:
@@ -366,6 +369,13 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('Unable to define a "coatjava".  Define it or "clara".')
     if not os.path.exists(self['coatjava']):
       self.cli.error('"coatjava" does not exist: '+self['coatjava'])
+
+    # check for clara:
+    if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
+      if self['clara'] is None:
+        self.cli.error('"clara" must be defined for model='+str(self['model']))
+      if not os.path.exists(self['clara']):
+        self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check yaml files:
     if self['model'].find('ana')>=0:
