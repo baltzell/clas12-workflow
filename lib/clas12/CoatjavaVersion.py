@@ -14,9 +14,6 @@ class CoatjavaVersion():
     self.string=string
     self.version=None
     self._parse(string)
-    if self.version is None:
-      _LOGGER.critical('Cannot determine coatjava version: '+string)
-      sys.exit(1)
 
   def _parse(self,path):
     m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
@@ -27,6 +24,8 @@ class CoatjavaVersion():
       self.minor=int(m.group(3))
       self.small=int(m.group(4))
       self.version=m.group().strip('_')
+    if self.version is None or not self.string.endswith(self.version):
+      raise ValueError('Cannot determine coatjava version: '+path)
 
   def __lt__(self,other):
     if not isinstance(other,CoatjavaVersion):
@@ -73,8 +72,11 @@ def getCoatjavaVersions():
   for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+CLARA_VERSION+'_*'):
     clara=os.path.normpath(clara)
     if os.path.isdir(clara):
-      cjv=CoatjavaVersion(clara)
-      cjvs[cjv.version]=clara
+      try:
+        cjv=CoatjavaVersion(clara)
+        cjvs[cjv.version]=clara
+      except:
+        pass
   return cjvs
 
 if __name__ == '__main__':
