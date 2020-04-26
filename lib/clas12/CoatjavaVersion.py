@@ -11,9 +11,9 @@ class CoatjavaVersion():
   # after stripping out the a/b/c in the version name !!
 
   def __init__(self,string):
-    self.string=string
+    self.string=string.strip().rstrip('/')
     self.version=None
-    self._parse(string)
+    self._parse(self.string)
 
   def _parse(self,path):
     m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
