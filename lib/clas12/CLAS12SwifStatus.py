@@ -1,4 +1,4 @@
-import os,json,requests,subprocess
+import os,re,json,requests,subprocess
 
 from ChefConfig import CHOICES,fullModel
 from ChefUtil import mkdir
@@ -58,6 +58,14 @@ class CLAS12SwifStatus(SwifStatus):
     with open(self.statusFilename,'w') as statusFile:
       statusFile.write(self.getPrettyJsonStatus())
       statusFile.close()
+
+  def findMissingOutputs(self):
+    ret=[]
+    # remove transient outputs:
+    for x in SwifStatus.findMissingOutputs(self):
+      if re.search('train/\d\d\d\d\d\d/skim\d',x) is None:
+        ret.append(x)
+    return ret
 
   def saveLog(self):
     mkdir(self.args.logdir+'/logs/')

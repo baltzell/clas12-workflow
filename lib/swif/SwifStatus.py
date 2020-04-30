@@ -262,6 +262,7 @@ class SwifStatus():
     return ret
 
   def findMissingOutputs(self):
+    ret=[]
     if self.details is None:
       self.loadDetails()
     if 'jobs' in self.details:
@@ -273,7 +274,8 @@ class SwifStatus():
                 for out in job['outputs']:
                   if 'remote' in out:
                     if not os.path.exists(out['remote']):
-                      print out['remote']
+                      ret.append(out['remote'])
+    return ret
 
   def getPersistentProblems(self):
     problemJobs=[]

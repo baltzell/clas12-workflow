@@ -18,7 +18,7 @@ def processWorkflow(workflow,args):
 #      status.moveJobLogs()
 
   if args.missing:
-    status.findMissingOutputs()
+    print('\n'.join(status.findMissingOutputs()))
     return
 
   # print details of jobs with problems:
