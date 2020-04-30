@@ -17,6 +17,10 @@ def processWorkflow(workflow,args):
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
 
+  if args.missing:
+    status.findMissingOutputs()
+    return
+
   # print details of jobs with problems:
   if args.problems:
     status.showPersistentProblems()
@@ -76,11 +80,15 @@ if __name__ == '__main__':
   cli.add_argument('--delete',  help='delete workflow',   action='store_true',default=False)
   cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=SWIF_PROBLEMS)
   cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows)', action='append',default=[])
+  cli.add_argument('--missing', help='find missing outpuf files', action='store_true',default=False)
 
   args = cli.parse_args()
 
   if args.save and not args.logdir:
-    sys.exit('ERROR:  must define --logdir if using the --save option')
+    cli.error('Must define --logdir if using the --save option')
+
+  if args.missing and len(args.workflow)==0:
+    cli.error('Must define --workflow if using the --missing option')
 
 #  if args.publish and not args.webdir:
 #    sys.exit('ERROR:  must define --webdir if using the --publish option')
