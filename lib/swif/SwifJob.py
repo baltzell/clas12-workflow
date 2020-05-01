@@ -191,10 +191,13 @@ class SwifJob:
 
   def _createCommand(self):
     cmd='unalias -a ; '
+    cmd+='env | egrep -e SWIF -e SLURM ;'
+    cmd+='echo $PWD ; pwd ;'
+    cmd+='expr $PWD : ^/scratch/slurm'
     for xx in self.env.keys():
-      cmd+='setenv '+xx+' "'+self.env[xx]+'" ; '
+      cmd+=' && setenv '+xx+' "'+self.env[xx]+'"'
     if self.copyInputs:
-      cmd+=self._getCopyInputsCmd()
+      cmd+=' && '+self._getCopyInputsCmd()
     d=[]
     for o in self.outputs:
       if not o['remote'].startswith('mss:'):
@@ -202,7 +205,7 @@ class SwifJob:
           d.append(os.path.dirname(o['remote'].replace('file:/','/',1)))
     if len(d)>0:
       cmd+=' && mkdir -p %s '%(' '.join(d))
-    cmd+=' && '+self.cmd
+    cmd+=' && ( '+self.cmd+' )'
     #cmd+=self._getJputOutputsCmd()
     return cmd
 
