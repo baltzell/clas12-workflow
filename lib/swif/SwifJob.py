@@ -139,9 +139,7 @@ class SwifJob:
   def getLogPrefix(self):
     prefix='%s/%s'%(self.logDir,self.getJobName())
     for key,val in self.tags.items():
-      if key=='mode':
-        prefix+='_'+val
-      elif key=='run':
+      if key=='run':
         prefix+='_r'+val
       elif key=='file':
         prefix+='_f'+val
