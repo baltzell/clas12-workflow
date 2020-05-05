@@ -38,8 +38,9 @@ for path in args.p:
     for d,x,files in os.walk(path):
       for f in files:
         if f.endswith('orch.log') or f.endswith('.out'):
-          if Matcher.matchAll(f,args.M) and Matcher.matchAny(f,args.m):
-            logfiles.append(d+'/'+f)
+          if Matcher.matchAll(f,[x.strip() for x in args.M]):
+            if Matcher.matchAny(f,[x.strip() for x in args.m]):
+              logfiles.append(d+'/'+f)
 
 if len(logfiles)==0:
   sys.exit('ERROR:  Found no valid log files.  Check path.')
