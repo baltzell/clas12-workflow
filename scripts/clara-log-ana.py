@@ -31,8 +31,9 @@ for path in args.p:
       basename=path
       if path.find('/')>=0:
         basename=path.split('/').pop()
-      if Matcher.matchAll(basename,args.M) and Matcher.matchAny(basename,args.m):
-        logfiles.append(path)
+      if Matcher.matchAll(basename,[x.strip() for x in args.M]):
+        if Matcher.matchAny(basename,[x.strip() for x in args.m]):
+          logfiles.append(path)
   elif os.path.isdir(path):
     for d,x,files in os.walk(path):
       for f in files:
