@@ -143,12 +143,12 @@ class SwifJob:
         prefix+='_r'+val
       elif key=='file':
         prefix+='_f'+val
-      elif key=='run_group':
-        continue
-      elif key=='task':
-        continue
-      elif val.find('/')<0:
-        prefix+='_'+key+val
+#      elif key=='run_group':
+#        continue
+#      elif key=='task':
+#        continue
+#      elif val.find('/')<0:
+#        prefix+='_'+key+val
     return prefix
 
   # copy Auger symlinked inputs:
