@@ -30,12 +30,11 @@ usage: clas12-workflow.py [-h] [--runGroup NAME] [--tag NAME] [--model NAME]
                           [--decDir PATH] [--trainDir PATH] [--workDir PATH]
                           [--logDir PATH] [--coatjava VERSION/PATH]
                           [--clara PATH] [--threads #] [--reconYaml PATH]
-                          [--trainYaml PATH] [--claraLogDir PATH]
-                          [--phaseSize #] [--mergeSize #] [--trainSize #]
-                          [--postproc] [--recharge] [--torus #.#]
-                          [--solenoid #.#] [--fileRegex REGEX] [--config PATH]
-                          [--defaults] [--show] [--node NAME] [--submit]
-                          [--version]
+                          [--trainYaml PATH] [--phaseSize #] [--mergeSize #]
+                          [--trainSize #] [--postproc] [--recharge]
+                          [--torus #.#] [--solenoid #.#] [--fileRegex REGEX]
+                          [--lowpriority] [--node NAME] [--config PATH]
+                          [--defaults] [--show] [--submit] [--version]
 
 Generate a CLAS12 SWIF workflow.
 
@@ -61,13 +60,12 @@ optional arguments:
   --logDir PATH         log location (otherwise the SLURM default)
   --coatjava VERSION/PATH
                         coatjava version number (or install location)
-  --clara PATH          clara install location (never necessary if coatjava is
+  --clara PATH          clara install location (unnecessary if coatjava is
                         specified as a VERSION)
   --threads #           number of Clara threads
   --reconYaml PATH      absolute path to recon yaml file (stock options = )
   --trainYaml PATH      absolute path to train yaml file (stock options =
                         trigger/calib)
-  --claraLogDir PATH    location for clara log files
   --phaseSize #         number of files (or runs if less than 100) per phase,
                         while negative is unphased
   --mergeSize #         number of decoded files per merge
@@ -79,10 +77,11 @@ optional arguments:
   --solenoid #.#        override RCDB solenoid scale
   --fileRegex REGEX     input filename format (for matching run and file
                         numbers)
+  --lowpriority         run with non-priority fairshare
+  --node NAME           batch farm node type (os/feature)
   --config PATH         load config file (overriden by command line arguments)
   --defaults            print default config file and exit
   --show                print config file and exit
-  --node NAME           batch farm node type (os/feature)
   --submit              submit and run jobs immediately
   --version             show program's version number and exit
 

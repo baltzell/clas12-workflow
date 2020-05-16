@@ -192,12 +192,12 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
     cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number (or install location)', type=str,default=None)
-    cli.add_argument('--clara',metavar='PATH',help='clara install location (never necessary if coatjava is specified as a VERSION)', type=str,default=None)
+    cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
     cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
     cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
-    cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
+#    cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, while negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
@@ -218,7 +218,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
-    cli.add_argument('--version',action='version',version='clas12-workflow/0.98')
+    cli.add_argument('--version',action='version',version='clas12-workflow/0.99')
 
     return cli
 
