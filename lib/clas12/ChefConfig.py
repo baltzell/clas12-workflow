@@ -85,6 +85,8 @@ class ChefConfig(collections.OrderedDict):
       self._loadCliArgs()
       self._verifyConfig()
       self._storeYamls()
+      if self.args.lowpriority:
+        CFG['project']='clas12'
       if self.args.show:
         c=copy.deepcopy(collections.OrderedDict(self))
         c.pop('ignored')
@@ -209,14 +211,13 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format (for matching run and file numbers)', type=str, default=None)
 
+    cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
+    cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
+
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
     cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
-
-    cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
-
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
-
     cli.add_argument('--version',action='version',version='clas12-workflow/0.98')
 
     return cli
