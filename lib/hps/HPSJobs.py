@@ -10,9 +10,12 @@ logger=logging.getLogger(__name__)
 
 RunFileUtil.setFileRegex('.*hps[_A-Za-z]*_(\d+)\.evio\.(\d+)')
 
-# 300K evio files in physrun2019
+#
+# 300K evio files in physrun2019 --> 900 TB
 # FEE skims are about 30 MB per evio file --> 9 TB
 # MULT skims are much smaller
+# MUON is about 3% --> 30 TB
+#
 class EvioTriggerFilterJob(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow.name)
@@ -28,8 +31,7 @@ class EvioTriggerFilterJob(SwifJob):
     SwifJob.addOutput(self,local,remote)
     ChefUtil.mkdir(os.path.dirname(remote))
   def setCmd(self):
-    cmd ='source /apps/root/6.12.06/bin/thisroot.csh ; '
-    cmd+='setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/home/holtrop/lib ; '
+    cmd ='setenv LD_LIBRARY_PATH /home/holtrop/lib:/apps/root/6.12.06/lib ; '
     cmd+='set echo ; ls -lhtr ; '
     cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T muon -E -o out_muon.evio ./*.evio* ;'
     #cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T FEE -o out_fee.evio ./*.evio* ;'
@@ -57,9 +59,6 @@ if __name__ == '__main__':
   args=cli.parse_args(sys.argv[1:])
 
   cfg={}
-  #cfg['runs'] = '10004-10740'
-  #cfg['runs'] = sys.argv[1]#'/home/hpsrun/users/baltzell/prodRuns.txt'
-  #cfg['outDir'] = '/volatile/hallb/hps/baltzell/test'
   cfg['runs']   = args.runs
   cfg['outDir'] = args.outDir
   cfg['inputs'] = '/home/hps/users/baltzell/hps-2019-mss-prod.txt'
@@ -71,17 +70,16 @@ if __name__ == '__main__':
   workflow.findFiles(cfg['inputs'])
   workflow.setPhaseSize(0)
 
-  phase=0
-  runsInThisPhase=0
-  runsPerPhase=10
+  runsPerPhase=31
+  phase,runsInThisPhase=0,0
 
   for inputs in workflow.getGroups():
     if len(inputs)<100:
       continue
-    #runsInThisPhase += 1
-    #if runsInThisPhase > runsPerPhase:
-    #  runsInThisPhase = 0
-    #  phase += 1
+    runsInThisPhase += 1
+    if runsInThisPhase > runsPerPhase:
+      runsInThisPhase = 0
+      phase += 1
     inps=[]
     for ii,inp in enumerate(inputs):
       inps.append(inp)
