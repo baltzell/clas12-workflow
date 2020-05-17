@@ -31,18 +31,20 @@ class EvioTriggerFilterJob(SwifJob):
     cmd ='source /apps/root/6.12.06/bin/thisroot.csh ; '
     cmd+='setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/home/holtrop/lib ; '
     cmd+='set echo ; ls -lhtr ; '
-    cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T FEE -o out_fee.evio ./*.evio* ;'
-    cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 16 -o out_mult2.evio ./*.evio* ;'
-    cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 17 -o out_mult3.evio ./*.evio* ;'
+    cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T muon -E -o out_muon.evio ./*.evio* ;'
+    #cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T FEE -o out_fee.evio ./*.evio* ;'
+    #cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 16 -o out_mult2.evio ./*.evio* ;'
+    #cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 17 -o out_mult3.evio ./*.evio* ;'
     cmd+='ls -lhtr ; '
     SwifJob.setCmd(self,cmd)
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
     outfile = cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
-    job.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fee_')))
-    job.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult2_')))
-    job.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult3_')))
-    job.addTag('run',rf1.runNumber)
+    job.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_muon_')))
+    #job.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fee_')))
+    #job.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult2_')))
+    #job.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult3_')))
+    job.addTag('run','%.6d'%rf1.runNumber)
 
 if __name__ == '__main__':
 
