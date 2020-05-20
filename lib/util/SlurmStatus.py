@@ -274,7 +274,7 @@ class SlurmQuery():
     self.get()
     if len(self.myData)>0:
       ret+=self.myData[0].getHeader()
-      cpus,walls,cores=[],[],[]
+      cpus,walls,cores,mused,mreqd=[],[],[],[],[]
       for xx in self.myData:
         if 'walltime' in xx.data:
           if self.minimumWallHours is not None:
@@ -288,23 +288,27 @@ class SlurmQuery():
           cpu=float(xx.data['cputime'])
           wall=float(xx.data['walltime'])
           core=int(xx.data['coreCount'])
+          used=int(xx.data['memoryUsed'])
+          reqd=int(xx.data['memoryReq'])
           cpus.append(cpu)
           walls.append(wall)
           cores.append(core)
+          mused.append(used)
+          mreqd.append(reqd)
         except:
           pass
-      cpu=0
       wall=0
       for ii in range(len(cpus)):
-        cpu+=cpus[ii]
         wall+=walls[ii]*cores[ii]
       if wall>0:
         ret += '\n'
-        ret += 'Job Count    : %d\n'%len(cores)
-        ret += 'CPU Count    : %d\n'%sum(cores)
-        ret += 'CPU Days     : %.1f\n'%(cpu/60/60/24)
-        ret += 'Wall Days    : %.1f\n'%(wall/60/60/24)
-        ret += 'CPU/Wall     : %.3f\n'%(cpu/wall)
+        ret += 'Job Count       : %d\n'%len(cores)
+        ret += 'CPU Count       : %d\n'%sum(cores)
+        ret += 'CPU Days        : %.1f\n'%(sum(cpus)/60/60/24)
+        ret += 'Wall Days       : %.1f\n'%(wall/60/60/24)
+        ret += 'CPU/Wall        : %.3f\n'%(sum(cpus)/wall)
+        ret += 'MemUsed/Req     : %.3f\n'%(float(sum(mused))/sum(mreqd))
+        ret += 'MemReq/Slot(GB) : %.3f\n'%(float(sum(mreqd))/1e9/sum(cores))
     return ret
 
 if __name__ == '__main__':
