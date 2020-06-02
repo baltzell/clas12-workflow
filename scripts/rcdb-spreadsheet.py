@@ -21,5 +21,5 @@ for run in range(args.rmin,args.rmax+1):
 if args.j:
   print(rm)
 else:
-  print(rm.csv())
+  print((rm.csv()))
 

@@ -129,8 +129,8 @@ class ClaraStats:
       self.canvas.SaveAs(prefix+'.png')
     if self.ntuple is not None:
       self.ntuple.Write()
-    for x in self.histos.values():
-      for y in x.values():
+    for x in list(self.histos.values()):
+      for y in list(x.values()):
         y.Write()
     f.Close()
 
@@ -187,9 +187,9 @@ class ClaraStats:
       h.Draw(opt)
       opt='SAMEH'
     toterrors,totslurmerrors=0,0
-    for x in self.errors.keys():
+    for x in list(self.errors.keys()):
       toterrors+=self.errors[x]
-    for x in self.slurmerrors.keys():
+    for x in list(self.slurmerrors.keys()):
       totslurmerrors+=self.slurmerrors[x]
     tot=self.successes+self.incomplete
     #tot=self.successes+toterrors

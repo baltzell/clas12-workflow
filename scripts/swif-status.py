@@ -18,7 +18,7 @@ def processWorkflow(workflow,args):
 #      status.moveJobLogs()
 
   if args.missing:
-    print('\n'.join(status.findMissingOutputs()))
+    print(('\n'.join(status.findMissingOutputs())))
     return
 
   # print details of jobs with problems:
@@ -31,27 +31,27 @@ def processWorkflow(workflow,args):
     if len(args.abandon)>0:
       res = status.abandonProblems(args.abandon)
       if len(res)>0 and not args.quiet:
-        print status.getPrettyStatus()
-        print res
+        print(status.getPrettyStatus())
+        print(res)
 
     if args.retry:
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
-        print status.getPrettyStatus()
-        print res
+        print(status.getPrettyStatus())
+        print(res)
 
   # otherwise always print status:
   else:
-    print status.getPrettyStatus()
+    print(status.getPrettyStatus())
     if args.details:
-      print status.getPrettyJsonDetails()
+      print(status.getPrettyJsonDetails())
 
   # save job status in text file
   if args.save:
     if status.isComplete():
       if status.isPreviousComplete():
         return
-      print 'WORKFLOW FINISHED:  '+workflow
+      print('WORKFLOW FINISHED:  '+workflow)
     status.saveStatus()
     status.saveLog()
     if args.details:
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     args.workflow=getWorkflowNames()
 
   if args.list:
-    print '\n'.join(args.workflow)
+    print('\n'.join(args.workflow))
 
   else:
     for workflow in args.workflow:

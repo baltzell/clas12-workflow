@@ -81,15 +81,15 @@ class CLAS12SwifStatus(SwifStatus):
 
   def saveDatabase(self,full=False):
     if self.dbauth is None:
-      print 'Missing clas12mon credentials.'
+      print('Missing clas12mon credentials.')
       return
     elif self.name.count('-')<2:
-      print 'Invalid workflow name for clas12mon:  '+self.name
+      print('Invalid workflow name for clas12mon:  '+self.name)
       return
     else:
       data=getHeader(self.name)
       if data['run_group'] not in CHOICES['runGroup']:
-        print 'Invalid workflow name for clas12mon:  '+self.name
+        print('Invalid workflow name for clas12mon:  '+self.name)
         return
       # this is expensive (slow), as it requires requesting
       # full workflow status from Swif:

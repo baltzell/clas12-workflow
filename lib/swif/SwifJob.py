@@ -34,7 +34,7 @@ class SwifJob:
 
   def __str__(self):
     s = 'Phase %d : %s'%(self.phase,self.getJobName())
-    for key,val in self.tags.items():
+    for key,val in list(self.tags.items()):
       if key in ['run','mode','file']:
         s += ' : %s=%s'%(str(key),str(val))
     return s
@@ -122,7 +122,7 @@ class SwifJob:
     return int(scale * int(time.rstrip('secondminutehour')))
 
   def abbreviate(self,x):
-    for full,short in self.abbreviations.items():
+    for full,short in list(self.abbreviations.items()):
       x=x.replace(full,short)
     return x
 
@@ -138,7 +138,7 @@ class SwifJob:
 
   def getLogPrefix(self):
     prefix='%s/%s'%(self.logDir,self.getJobName())
-    for key,val in self.tags.items():
+    for key,val in list(self.tags.items()):
       if key=='run':
         prefix+='_r'+val
       elif key=='file':
@@ -193,7 +193,7 @@ class SwifJob:
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'
     cmd+='expr $PWD : ^/scratch/slurm'
-    for xx in self.env.keys():
+    for xx in list(self.env.keys()):
       cmd+=' && setenv '+xx+' "'+self.env[xx]+'"'
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
@@ -220,7 +220,7 @@ class SwifJob:
 
     if not self.phase is None: job += ' -phase '+str(self.phase)
 
-    for key,val in self.tags.items(): job += ' -tag %s %s'   %(key,val)
+    for key,val in list(self.tags.items()): job += ' -tag %s %s'   %(key,val)
     for xx in self.inputs:  job += ' -input %s %s' %(xx['local'],xx['remote'])
     for xx in self.outputs: job += ' -output %s %s'%(xx['local'],xx['remote'])
 
@@ -266,6 +266,6 @@ if __name__ == '__main__':
   job.addTag('foo','bar')
   job.setLogDir('/tmp/logs')
   job.setPhase(77)
-  print(job.getShell())
-  print(job.getJson())
+  print((job.getShell()))
+  print((job.getJson()))
 

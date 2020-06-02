@@ -59,23 +59,23 @@ for logfile in logfiles:
     if cs.successes==1 or cs.successes%10==0:
       cs.draw()
       if args.v:
-        print cs
+        print(cs)
   # printout unknown errors:
   if args.v and clog.errors.getBit('UDF'):
-    print 'UDF:    ',logfile,'\n',str(clog.lastline)
+    print('UDF:    ',logfile,'\n',str(clog.lastline))
   if args.v and clog.errors.getBit('TRUNC'):
-    print 'TRUNC::::::::::::::::::::::::  '
-    print logfile,'\n',str(clog.lastline),'\n',clog.slurmlog
+    print('TRUNC::::::::::::::::::::::::  ')
+    print(logfile,'\n',str(clog.lastline),'\n',clog.slurmlog)
   # abort, we already got the requested statistics:
   if args.n>0 and cs.successes>args.n:
     break
 
-print cs
+print(cs)
 
 if args.o is not None:
   cs.save(args.o)
 if args.i:
   cs.draw()
-  print 'Done.  Press any key to close.'
-  raw_input()
+  print('Done.  Press any key to close.')
+  input()
 

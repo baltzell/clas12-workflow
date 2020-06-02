@@ -60,7 +60,7 @@ def getWorkflowNames():
   return workflows
 
 def deleteWorkflow(name):
-  print subprocess.check_output([SWIF,'cancel','-delete','-workflow',name])
+  print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
 
 class SwifStatus():
 
@@ -108,11 +108,11 @@ class SwifStatus():
     for job in self.details['jobs']:
       if 'tags' not in job:
         continue
-      for key,val in job['tags'].items():
+      for key,val in list(job['tags'].items()):
         if key=='file': continue
         idx=-1
         for ii in range(len(tags)):
-          if key in tags[ii].keys():
+          if key in list(tags[ii].keys()):
             idx=ii
             break
         if idx<0:
@@ -133,7 +133,7 @@ class SwifStatus():
       modified = True
       while modified:
         modified = False
-        for key,val in stat.items():
+        for key,val in list(stat.items()):
           if val==None:
             del stat[key]
             modified = True
@@ -191,7 +191,7 @@ class SwifStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
-        for key,val in atag.items():
+        for key,val in list(atag.items()):
           if key==tag:
             if type(val) is list:
               return val[0]
@@ -206,7 +206,7 @@ class SwifStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
-        for key,val in atag.items():
+        for key,val in list(atag.items()):
           if key==tag:
             status['tags'].remove(atag)
             if type(val) is list:
@@ -299,7 +299,7 @@ class SwifStatus():
 
   def showPersistentProblems(self):
     for job in self.getPersistentProblems():
-      print(json.dumps(job,indent=2,separators=(',',': '),sort_keys=True))
+      print((json.dumps(job,indent=2,separators=(',',': '),sort_keys=True)))
 
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
@@ -308,5 +308,5 @@ if __name__ == '__main__':
 #  print(s.getPrettyStatus())
 #  print(s.getPrettyJsonStatus())
 #  s.showPersistentProblems();
-  print('\n'.join(s.getTagValues('run')))
+  print(('\n'.join(s.getTagValues('run'))))
 

@@ -83,13 +83,13 @@ if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
   if len(sys.argv)>2:
     for ii in range(1,len(sys.argv)-1):
-      print('a: '+str(CoatjavaVersion(sys.argv[ii])))
-      print('b: '+str(CoatjavaVersion(sys.argv[ii+1])))
-      print('a>b: '+str(CoatjavaVersion(sys.argv[ii])>CoatjavaVersion(sys.argv[ii+1])))
+      print(('a: '+str(CoatjavaVersion(sys.argv[ii]))))
+      print(('b: '+str(CoatjavaVersion(sys.argv[ii+1]))))
+      print(('a>b: '+str(CoatjavaVersion(sys.argv[ii])>CoatjavaVersion(sys.argv[ii+1]))))
   elif len(sys.argv)>1:
     for xx in sys.argv[1:]:
-      print(CoatjavaVersion(xx))
+      print((CoatjavaVersion(xx)))
   else:
-    for xx,yy in getCoatjavaVersions().items():
-      print(xx+' '+yy)
+    for xx,yy in list(getCoatjavaVersions().items()):
+      print((xx+' '+yy))
 

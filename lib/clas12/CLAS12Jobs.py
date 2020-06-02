@@ -195,7 +195,7 @@ class TrainMrgJob(CLAS12Job):
       inDir = self.cfg['workDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
     self.addOutputData(outDir,outDir,auger=False)
-    for trainName in ChefUtil.getTrainNames(self.cfg['trainYaml']).values():
+    for trainName in list(ChefUtil.getTrainNames(self.cfg['trainYaml']).values()):
       ChefUtil.mkdir(outDir+'/'+trainName)
     cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
@@ -231,5 +231,5 @@ if __name__ == '__main__':
   from SwifWorkflow import SwifWorkflow
   wflow=SwifWorkflow('wflow')
   wflow.addJob(job)
-  print(wflow.getJson())
+  print((wflow.getJson()))
 

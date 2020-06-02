@@ -95,7 +95,7 @@ class SlurmStatus():
           s=int(mm.group(4))
         else:
           # else stop, need to learn how to intpreret this time format:
-          print('Error converting time: >'+string+'<')
+          print(('Error converting time: >'+string+'<'))
           sys.exit()
     return s+60*m+60*60*h+24*60*60*d
 
@@ -131,7 +131,7 @@ class SlurmStatus():
           try:
             ret=float(x[0])
             scales={'GB':1e9,'MB':1e6,'KB':1e3}
-            for scale in scales.keys():
+            for scale in list(scales.keys()):
               if x[1].find(scale)>=0:
                 ret*=scales[scale]
                 break
