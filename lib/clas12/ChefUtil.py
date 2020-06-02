@@ -172,7 +172,7 @@ def getFileList(fileOrDir):
 
 def countHipoEvents(filename):
   x=subprocess.check_output(['hipo-utils','-info',filename])
-  for line in reversed(x.split('\n')):
+  for line in reversed(x.decode('UTF-8').split('\n')):
     cols=line.strip().split()
     if len(cols)==3 and line.strip().find('Entries = ')==0:
       try:

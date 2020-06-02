@@ -42,7 +42,7 @@ def processWorkflow(workflow,args):
 
   # otherwise always print status:
   else:
-    print(status.getPrettyStatus())
+    print((status.getPrettyStatus()+'\n'))
     if args.details:
       print(status.getPrettyJsonDetails())
 

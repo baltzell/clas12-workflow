@@ -54,7 +54,7 @@ SWIFJSONKEYS=[
 def getWorkflowNames():
   workflows=[]
   for line in subprocess.check_output([SWIF,'list']).splitlines():
-    line=line.strip()
+    line=line.decode('UTF-8').strip()
     if line.find('workflow_name')==0:
       workflows.append(line.split('=')[1].strip())
   return workflows
@@ -79,11 +79,11 @@ class SwifStatus():
 
   def loadStatus(self):
     cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
-    self.status=json.loads(subprocess.check_output(cmd))
+    self.status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
 
   def loadDetails(self):
     cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
-    self.details=json.loads(subprocess.check_output(cmd))
+    self.details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
 
   def getTagValues(self,tag):
     vals=[]

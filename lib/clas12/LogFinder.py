@@ -14,7 +14,7 @@ class LogFinder:
     if user not in LogFinder._STATUSCACHE:
       print('Loading slurmJobs cache for user='+user+' ...')
       keys=[]
-      for line in subprocess.check_output(['slurmJobs','-u',user]).split('\n'):
+      for line in subprocess.check_output(['slurmJobs','-u',user]).decode('UTF-8').split('\n'):
         cols=line.strip().split()
         if len(cols)>1:
           if cols[0]=='JOB_ID':
