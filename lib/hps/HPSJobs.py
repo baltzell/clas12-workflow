@@ -61,7 +61,7 @@ if __name__ == '__main__':
   cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
      epilog='(*) = required option for all models, from command-line or config file')
 
-  cli.add_argument('--trigger',metavar='NAME',action='append',default=[],choices['fee','mult2','mult3','muon','fcup'])
+  cli.add_argument('--trigger',metavar='NAME',action='append',default=[],choices=['fee','mult2','mult3','muon','fcup'])
   cli.add_argument('--tag',    metavar='NAME',help='(*) e.g. pass1v0, automatically prefixed with runGroup and suffixed by model to define workflow name',  type=str, default=None,required=True)
   cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None,required=True)
   cli.add_argument('--runs',   metavar='RUNS/PATH',help='(*) run numbers (e.g. "4013" or "4013,4015" or "3980,4000-4999"), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str,required=True)
