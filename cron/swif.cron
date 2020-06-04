@@ -10,10 +10,16 @@ LOCKFILE="/home/bobcat/.clas12workflow-cron.lock"
 SCRIPT="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
 #
 # This will run every 30 minutes (i.e. on the hour and half-hour)
+# and issue retries for all workflows:
 #*/30 *  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
 #
-# This will run once every hour, on the hour:
-0 *  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
+# This will run every 30 minutes, and do both
+# 1:  swif retries for all workflows
+# 2:  publish wrkflows with tag==pass1v0 to clas12mon
+*/30 * * * * /usr/bin/flock -n $LOCKFILE $SCRIPT --retry --clas12mon pass1v0 || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# This will run once every hour, on the hour, and do swif retries if necessary:
+#0 *  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
 #
 # This will run every two hours, on the hour:
 #0 */2  *  *  * /usr/bin/flock -n $LOCKFILE $SCRIPT || echo "ERROR:  Previous clas12-workflow cronjob still running"
