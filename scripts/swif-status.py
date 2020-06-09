@@ -9,6 +9,9 @@ logger=logging.getLogger(__name__)
 
 # TODO: switch to JSON format (didn't know it was available at the time)
 
+PROBLEMS=SWIF_PROBLEMS[:]
+PROBLEMS.append('ANY')
+
 def processWorkflow(workflow,args):
 
   status = CLAS12SwifStatus(workflow,args)
@@ -78,7 +81,7 @@ if __name__ == '__main__':
 #  cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
   cli.add_argument('--clas12mon',metavar='TAG',help='write matching workflows to clas12mon (repeatable)',type=str,default=[],action='append')
   cli.add_argument('--delete',  help='delete workflow',   action='store_true',default=False)
-  cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=SWIF_PROBLEMS)
+  cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=PROBLEMS)
   cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows)', action='append',default=[])
   cli.add_argument('--missing', help='find missing outpuf files', action='store_true',default=False)
 

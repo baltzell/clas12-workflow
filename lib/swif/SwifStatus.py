@@ -237,7 +237,7 @@ class SwifStatus():
   def abandonProblems(self,types):
     ret=[]
     for problem in self.getProblems():
-      if problem not in types:
+      if problem not in types and 'ANY' not in types:
         continue
       retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
       ret.append(retryCmd)
