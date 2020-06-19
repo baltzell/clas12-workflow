@@ -309,7 +309,7 @@ class SlurmQuery():
         ret += 'CPU/Wall        : %.3f\n'%(sum(cpus)/wall)
         ret += 'MemUsed/Req     : %.3f\n'%(float(sum(mused))/sum(mreqd))
         ret += 'MemReq/Slot(GB) : %.3f\n'%(float(sum(mreqd))/1e9/sum(cores))
-        ret += 'AvgMemUsed(GB)  : %.3f\n'%(sum(mused)/1e9/len(mused))
+        ret += 'MemUsed/Job(GB) : %.3f\n'%(sum(mused)/1e9/len(mused))
     return ret
 
 if __name__ == '__main__':
