@@ -78,7 +78,7 @@ class ChefConfig(collections.OrderedDict):
       self.cli = self.getCli()
       self.args = self.cli.parse_args(args)
       if self.args.defaults:
-        print(str(self))
+        print((str(self)))
         sys.exit()
       if self.args.config is not None:
         self._loadConfigFile(self.args.config)
@@ -90,7 +90,7 @@ class ChefConfig(collections.OrderedDict):
       if self.args.show:
         c=copy.deepcopy(collections.OrderedDict(self))
         c.pop('ignored')
-        print(json.dumps(c,indent=2,separators=(',',': '),sort_keys=False))
+        print((json.dumps(c,indent=2,separators=(',',': '),sort_keys=False)))
         sys.exit()
 
   def __eq__(self,cfg):
@@ -111,7 +111,7 @@ class ChefConfig(collections.OrderedDict):
     return json.dumps(c,indent=2,separators=(',',': '),sort_keys=False)
 
   def append(self,cfg):
-    for k,v in cfg.items():
+    for k,v in list(cfg.items()):
       if k not in self or self[k] is None:
         self[k]=v
 
@@ -231,19 +231,19 @@ class ChefConfig(collections.OrderedDict):
     try:
       cfg = json.load(open(filename,'r'))
     except:
-      print(traceback.format_exc())
+      print((traceback.format_exc()))
       _LOGGER.critical('Config file has invalid JSON format:  '+filename)
       sys.exit()
 
     int_keys=[]
-    for key,val in CFG.items():
+    for key,val in list(CFG.items()):
       try:
         int(val)
         int_keys.append(key)
       except:
         pass
 
-    for key,val in cfg.items():
+    for key,val in list(cfg.items()):
       if key not in self:
         _LOGGER.critical('Config file contains invalid key:  '+key)
         sys.exit()
@@ -259,7 +259,7 @@ class ChefConfig(collections.OrderedDict):
       self[key]=val
 
   def _loadCliArgs(self):
-    for key,val in vars(self.args).items():
+    for key,val in list(vars(self.args).items()):
       if key in self:
         if val is None:
           continue
@@ -415,5 +415,5 @@ class ChefConfig(collections.OrderedDict):
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
   cc=ChefConfig(sys.argv[1:])
-  print(str(cc))
+  print((str(cc)))
 

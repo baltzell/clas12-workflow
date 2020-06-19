@@ -28,7 +28,7 @@ class RunFile:
     self.fileName=None
     self.runNumber=None
     self.fileNumber=None
-    if isinstance(fileName,unicode):
+    if isinstance(fileName,str):
       fileName=str(fileName)
     fileName=fileName.strip()
     rf=getRunFileNumber(fileName)
@@ -58,7 +58,7 @@ class RunFile:
   def __str__(self):
     return '%s(%d/%d)'%(self.fileName,self.runNumber,self.fileNumber)
   def show(self):
-    print(self.fileName,self.runNumber,self.fileNumber)
+    print((self.fileName,self.runNumber,self.fileNumber))
 
 class RunFileGroup(list):
 
@@ -100,7 +100,7 @@ class RunFileGroup(list):
     return xx
 
   def show(self):
-    print(str(self.runNumber))
+    print((str(self.runNumber)))
     for rf in self: rf.show()
 
 class RunFileGroups(collections.OrderedDict):
@@ -170,7 +170,7 @@ class RunFileGroups(collections.OrderedDict):
     #
     groups=[]
     phaseList=[]
-    for run,rfg in self.items():
+    for run,rfg in list(self.items()):
       # make a new group for the next run:
       if len(phaseList)>0:
         groups.append(phaseList)
@@ -189,14 +189,14 @@ class RunFileGroups(collections.OrderedDict):
 
   def getFlatList(self):
     flatList=[]
-    for run,rfg in self.items():
+    for run,rfg in list(self.items()):
       for rf in rfg:
         flatList.append(rf.fileName)
     return flatList
 
   def getRunList(self,minFileCount=1):
     runs=[]
-    for run,rfg in self.items():
+    for run,rfg in list(self.items()):
       if minFileCount>0 and len(rfg)<minFileCount: continue
       runs.append(run)
     return sorted(runs)
@@ -206,8 +206,8 @@ class RunFileGroups(collections.OrderedDict):
       print(group)
 
   def showFlatList(self):
-    for key,val in self.items():
-      print(key,)
+    for key,val in list(self.items()):
+      print((key,))
       val.show()
 
   def getFileCount(self):

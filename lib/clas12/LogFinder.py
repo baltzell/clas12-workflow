@@ -12,9 +12,9 @@ class LogFinder:
 
   def loadStatusCache(self,user):
     if user not in LogFinder._STATUSCACHE:
-      print 'Loading slurmJobs cache for user='+user+' ...'
+      print('Loading slurmJobs cache for user='+user+' ...')
       keys=[]
-      for line in subprocess.check_output(['slurmJobs','-u',user]).split('\n'):
+      for line in subprocess.check_output(['slurmJobs','-u',user]).decode('UTF-8').split('\n'):
         cols=line.strip().split()
         if len(cols)>1:
           if cols[0]=='JOB_ID':
@@ -74,17 +74,17 @@ class LogFinder:
   def cacheFarmoutLogs(self,user,cachefile):
     if os.path.isfile(cachefile):
       os.remove(cachefile)
-    print 'Generating /farm_out file cache at '+cachefile+' ...'
+    print('Generating /farm_out file cache at '+cachefile+' ...')
     with open(cachefile,'w') as f:
       subprocess.call(['find','/farm_out/'+user],stdout=f)
-    print 'Generated /farm_out cache.'
+    print('Generated /farm_out cache.')
 
   def loadFarmoutLogs(self,user):
     self.files[user]={}
     cachefile='%s/claralogana_farmout_%s.txt'%(os.environ['HOME'],user)
     if not os.path.isfile(cachefile) or RECACHE:
       self.cacheFarmoutLogs(user,cachefile)
-    print 'Loading farmout logs from '+cachefile+' ...'
+    print('Loading farmout logs from '+cachefile+' ...')
     with open(cachefile,'r') as f:
       while True:
         line=f.readline()
@@ -99,7 +99,7 @@ class LogFinder:
         if not tag in self.files[user]:
           self.files[user][tag]=[]
         self.files[user][tag].append(filename)
-    print 'Done loading farmout logs.'
+    print('Done loading farmout logs.')
 
   def findFarmoutLog(self,hostname,claralog):
     files=[]

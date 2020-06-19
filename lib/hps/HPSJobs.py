@@ -114,5 +114,5 @@ if __name__ == '__main__':
           workflow.addJob(job)
         inps=[]
 
-  print workflow.getJson()
+  print(workflow.getJson())
 

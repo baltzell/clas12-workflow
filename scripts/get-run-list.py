@@ -21,9 +21,9 @@ for run in range(args.runStart,args.runEnd+1):
 for fileName in open(args.fileList,'r').readlines():
   rfgs.addFile(fileName)
 
-for run,rfg in rfgs.rfgs.iteritems():
+for run,rfg in rfgs.rfgs.items():
   if rfg.size()>10:
-    print(str(run)+' '+str(rfg.size()))
+    print((str(run)+' '+str(rfg.size())))
 
 missing=[]
 for run in rfgs.getRunList(10):
@@ -34,6 +34,6 @@ for run in rfgs.getRunList(10):
   except AttributeError:
     missing.append(run)
 if len(missing)>0:
-  print('Missing from RCDB: ',missing)
+  print(('Missing from RCDB: ',missing))
 
 

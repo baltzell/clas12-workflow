@@ -26,7 +26,7 @@ class ClaraLog(JobSpecs):
     if self.host is None:
       self.host=self.getClaraHostname(filename)
     if self.host is None:
-      print 'Unfound host:  '+filename
+      print('Unfound host:  '+filename)
       return
     for x in JobSpecs._FLAVORS:
       if self.host.find(x)==0:
@@ -139,9 +139,9 @@ class ClaraLog(JobSpecs):
           sys.exit('Invalid threads: %d!=%d'%(threads,self.threads))
     elif len(cols)==4:
       if x.find('shutdown DPE')>0:
-        print x
+        print(x)
         self.endtime=self.stringToTimestamp(x)
-        print self.endtime
+        print(self.endtime)
       elif x.find('Input directory')==0:
         self.inputdir=cols[3]
       elif x.find('Output directory')==0:
@@ -155,7 +155,7 @@ class ClaraLog(JobSpecs):
         if self.nfiles<0:
           self.nfiles=int(cols[4])
         else:
-          print self.filename,self.nfiles,x
+          print(self.filename,self.nfiles,x)
       elif x.find('Start time')==0:
         if self.starttime is None:
           self.starttime=self.stringToTimestamp(x)
@@ -171,18 +171,18 @@ class ClaraLog(JobSpecs):
         if self.t2<0:
           self.t2=float(cols[6])
         else:
-          print self.filename,self.threads,x
+          print(self.filename,self.threads,x)
     elif len(cols)==16:
       if cols[2]=='TOTAL' and cols[4]=='events' and cols[5]=='total':
         if self.events<0:
           self.events=int(cols[3])
         else:
-          print self.filename,self.threads,x
+          print(self.filename,self.threads,x)
       if cols[2]=='TOTAL' and cols[11]=='event' and cols[12]=='time':
         if self.t1<0:
           self.t1=float(cols[14])
         else:
-          print self.filename,self.threads,x
+          print(self.filename,self.threads,x)
     elif x.find('com.mysql.jdbc')>=0 and x.find('Too many connections')>0:
       self.errors.setBit('DB')
 

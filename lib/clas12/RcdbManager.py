@@ -84,7 +84,7 @@ class RcdbManager():
   def __str__(self):
     # prune the null entries:
     data=copy.deepcopy(self.data)
-    for run in data.keys():
+    for run in list(data.keys()):
       if data[run] is None:
         data.pop(run)
     return json.dumps(data,default=str,indent=2,separators=(',',': '))
@@ -124,5 +124,5 @@ if __name__ == '__main__':
   for run in sys.argv[1:]:
     r.getSolenoidScale(run)
   print(r)
-  print
+  print()
 

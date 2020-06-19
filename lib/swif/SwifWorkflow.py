@@ -42,15 +42,15 @@ class SwifWorkflow(RunFileGroups):
 
   def submitShell(self):
     for job in self.jobs:
-      print(subprocess.check_output(job.getShell().split()))
+      print((subprocess.check_output(job.getShell().split())))
 
   def submitJson(self):
     with tempfile.NamedTemporaryFile() as jsonFile:
       jsonFile.write(self.getJson())
       jsonFile.flush()
-      print(subprocess.check_output([SWIF,'import','-file',jsonFile.name]))
-    print(subprocess.check_output([SWIF,'run','-workflow',self.name]))
-    print(subprocess.check_output([SWIF,'status','-workflow',self.name]))
+      print((subprocess.check_output([SWIF,'import','-file',jsonFile.name])))
+    print((subprocess.check_output([SWIF,'run','-workflow',self.name])))
+    print((subprocess.check_output([SWIF,'status','-workflow',self.name])))
 
 class SwifPhase():
   def __init__(self,phase,jobs):
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     job.setCmd('evio2xml in.evio > out.xml')
     job.setLogDir('/tmp/log')
     workflow.addJob(job)
-  print(workflow.getShell())
-  print(workflow.getJson())
+  print((workflow.getShell()))
+  print((workflow.getJson()))
   #workflow.submitJson()
 

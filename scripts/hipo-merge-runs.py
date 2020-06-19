@@ -59,8 +59,8 @@ for rfg in rfgs.getGroups():
   cmd=[hu,'-merge','-o',out]
   cmd.extend(rfg)
   outFiles.append(out)
-  print(datetime.datetime.now())
-  print(' '.join(cmd))
+  print((datetime.datetime.now()))
+  print((' '.join(cmd)))
   if args.d:
     continue
   try:
@@ -71,14 +71,14 @@ for rfg in rfgs.getGroups():
     #    break
     #  print(line)
     for line in iter(process.stdout.readline, ''):
-      print(line.rstrip())
+      print((line.rstrip()))
     process.wait()
     if process.returncode!=0 or ChefUtil.hipoIntegrityCheck(out)!=0:
       for o in outFiles: os.remove(o)
       logger.critical(('Integrity check failure'+out))
       sys.exit(process.returncode)
   except:
-    print(traceback.format_exc())
+    print((traceback.format_exc()))
     if os.path.isfile(out):
       os.remove(out)
     sys.exit(1)

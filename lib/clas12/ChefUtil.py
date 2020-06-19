@@ -78,12 +78,12 @@ def getTrainNames(yamlfile):
         _LOGGER.error('Invalid wagon id in custom-names in train yaml:  '+line)
       names[thisid]=cols[1].strip()
   # must be all-or-none:
-  if None in names.values():
-    for x,y in names.items():
+  if None in list(names.values()):
+    for x,y in list(names.items()):
       if y is not None:
         _LOGGER.error('Missing custom-name in train yaml:  '+str(names))
         sys.exit(42)
-    for x,y in names.items():
+    for x,y in list(names.items()):
       names[x]='skim%d'%int(x)
   return names
 
@@ -172,7 +172,7 @@ def getFileList(fileOrDir):
 
 def countHipoEvents(filename):
   x=subprocess.check_output(['hipo-utils','-info',filename])
-  for line in reversed(x.split('\n')):
+  for line in reversed(x.decode('UTF-8').split('\n')):
     cols=line.strip().split()
     if len(cols)==3 and line.strip().find('Entries = ')==0:
       try:
@@ -255,7 +255,7 @@ def hipoIntegrityCheck(filename):
     line=p.stdout.readline().rstrip()
     if not line:
       break
-    print line
+    print(line)
   p.wait()
   return p.returncode
 

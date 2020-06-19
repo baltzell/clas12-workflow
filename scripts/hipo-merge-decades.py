@@ -50,13 +50,13 @@ def merge(decade,cfg):
 cc = ChefConfig.ChefConfig(sys.argv[1:])
 cfg = cc.cfg
 
-print 'Getting workDir groups ...'
+print('Getting workDir groups ...')
 availableDecades = getDecades(cfg['workDir'],cfg['runs'])
 
-print 'Getting inputs groups ...'
+print('Getting inputs groups ...')
 expectedDecades = getDecades(cfg['inputs'],cfg['runs'])
 
-for run,decades in availableDecades.iteritems():
+for run,decades in availableDecades.items():
   if not run in expectedDecades:
     continue
 #    sys.exit('RUN?  '+str(run))
@@ -68,7 +68,7 @@ for run,decades in availableDecades.iteritems():
     if not decade in expectedDecades[run]:
       sys.exit('DECADE?  '+str(decade))
     if decades[decade].size() == expectedDecades[run][decade].size():
-      print '  Complete Decade: ',run,decade,decades[decade].size(),decades[decade]
+      print('  Complete Decade: ',run,decade,decades[decade].size(),decades[decade])
       old=True
       for fileName in [rf.fileName for rf in decades[decade].runFileList]:
         if (time.time()-os.stat(fileName).st_mtime)/60/60 < 1:
@@ -77,8 +77,8 @@ for run,decades in availableDecades.iteritems():
       if old:
         merge(decades[decade],cfg)
       else:
-        print '** TOO NEW:        ',run,decade,decades[decade].size(),decades[decade]
+        print('** TOO NEW:        ',run,decade,decades[decade].size(),decades[decade])
     else:
-      print 'Incomplete Decade: ',run,decade,decades[decade],expectedDecades[run][decade]
-    print
+      print('Incomplete Decade: ',run,decade,decades[decade],expectedDecades[run][decade])
+    print()
 

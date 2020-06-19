@@ -9,6 +9,7 @@ SWIF_PROBLEMS=[
 'SWIF-SYSTEM-ERROR',
 'AUGER-FAILED',
 'AUGER-OUTPUT',
+'AUGER-CANCELLED'
 ]
 
 SWIFJSONKEYS=[
@@ -54,13 +55,13 @@ SWIFJSONKEYS=[
 def getWorkflowNames():
   workflows=[]
   for line in subprocess.check_output([SWIF,'list']).splitlines():
-    line=line.strip()
+    line=line.decode('UTF-8').strip()
     if line.find('workflow_name')==0:
       workflows.append(line.split('=')[1].strip())
   return workflows
 
 def deleteWorkflow(name):
-  print subprocess.check_output([SWIF,'cancel','-delete','-workflow',name])
+  print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
 
 class SwifStatus():
 
@@ -79,11 +80,11 @@ class SwifStatus():
 
   def loadStatus(self):
     cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
-    self.status=json.loads(subprocess.check_output(cmd))
+    self.status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
 
   def loadDetails(self):
     cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
-    self.details=json.loads(subprocess.check_output(cmd))
+    self.details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
 
   def getTagValues(self,tag):
     vals=[]
@@ -108,11 +109,11 @@ class SwifStatus():
     for job in self.details['jobs']:
       if 'tags' not in job:
         continue
-      for key,val in job['tags'].items():
+      for key,val in list(job['tags'].items()):
         if key=='file': continue
         idx=-1
         for ii in range(len(tags)):
-          if key in tags[ii].keys():
+          if key in list(tags[ii].keys()):
             idx=ii
             break
         if idx<0:
@@ -133,7 +134,7 @@ class SwifStatus():
       modified = True
       while modified:
         modified = False
-        for key,val in stat.items():
+        for key,val in list(stat.items()):
           if val==None:
             del stat[key]
             modified = True
@@ -191,7 +192,7 @@ class SwifStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
-        for key,val in atag.items():
+        for key,val in list(atag.items()):
           if key==tag:
             if type(val) is list:
               return val[0]
@@ -206,7 +207,7 @@ class SwifStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
-        for key,val in atag.items():
+        for key,val in list(atag.items()):
           if key==tag:
             status['tags'].remove(atag)
             if type(val) is list:
@@ -236,7 +237,7 @@ class SwifStatus():
   def abandonProblems(self,types):
     ret=[]
     for problem in self.getProblems():
-      if problem not in types:
+      if problem not in types and 'ANY' not in types:
         continue
       retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
       ret.append(retryCmd)
@@ -299,7 +300,7 @@ class SwifStatus():
 
   def showPersistentProblems(self):
     for job in self.getPersistentProblems():
-      print(json.dumps(job,indent=2,separators=(',',': '),sort_keys=True))
+      print((json.dumps(job,indent=2,separators=(',',': '),sort_keys=True)))
 
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
@@ -308,5 +309,5 @@ if __name__ == '__main__':
 #  print(s.getPrettyStatus())
 #  print(s.getPrettyJsonStatus())
 #  s.showPersistentProblems();
-  print('\n'.join(s.getTagValues('run')))
+  print(('\n'.join(s.getTagValues('run'))))
 
