@@ -8,7 +8,7 @@ class SwifWorkflow(RunFileGroups):
 
   def __init__(self,name):
     RunFileGroups.__init__(self)
-    self.setPhaseSize(1000)
+    self.setPhaseSize(0)
     self.name=name
     self.jobs=[]
     self.phase=0

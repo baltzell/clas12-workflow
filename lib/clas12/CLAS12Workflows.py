@@ -64,7 +64,7 @@ class MinimalDependency(CLAS12Workflow):
         self.phase += 1
 
       # interpret phase size as #runs:
-      elif self.cfg['phaseSize']>0 and nruns>self.cfg['phaseSize']==0:
+      elif self.cfg['phaseSize']>0 and nruns>self.cfg['phaseSize']:
         nruns = 0
         self.phase += 1
 
@@ -121,14 +121,12 @@ class RollingRuns(CLAS12Workflow):
 
       if len(trainQ)>0:
         xx = trainQ.pop(0)
-        #print('TrainQueue '+str(xx))
         trainJobs = self.train(xx.phase,xx.jobs)
         trainJobs.extend(self.trainmerge(xx.phase,trainJobs))
         self.trainclean(xx.phase,trainJobs)
 
       if len(reconQ)>0:
         xx = reconQ.pop(0)
-        #print('ReconQueue '+str(xx))
         reconJobs=self.reconclara(xx.phase,xx.jobs)
         if self.cfg['model'].find('ana')>=0:
           trainQ.append(SwifPhase(xx.phase+1,reconJobs))
@@ -162,7 +160,7 @@ class RollingRuns(CLAS12Workflow):
           self.phase += 1
 
         # interpret phase size as #runs:
-        elif self.cfg['phaseSize']>0 and nruns%self.cfg['phaseSize']==0:
+        elif self.cfg['phaseSize']>0 and nruns>self.cfg['phaseSize']:
           nruns = 0
           nfiles = 0
           self.phase += 1
