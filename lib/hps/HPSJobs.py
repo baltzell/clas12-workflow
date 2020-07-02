@@ -10,6 +10,21 @@ logger=logging.getLogger(__name__)
 
 RunFileUtil.setFileRegex('.*hps[_A-Za-z]*_(\d+)\.evio\.(\d+)')
 
+class HPSJob(SwifJob):
+  def __init__(self,workflow,cfg):
+    SwifJob.__init__(self,workflow.name)
+    self.cfg=cfg
+    self.copyInputs=False
+    self.project='hallb-pro'
+    if self.cfg['logDir'] is None:
+      self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
+    else:
+      self.setLogDir(self.cfg['logDir']+'/'+workflow.name)
+    ChefUtil.mkdir(self.logDir)
+  def addOutput(self,local,remote):
+    SwifJob.addOutput(self,local,remote)
+    ChefUtil.mkdir(os.path.dirname(remote))
+
 #
 # 300K evio files in physrun2019 --> 900 TB
 # FEE skims are about 30 MB per evio file --> 9 TB
@@ -17,20 +32,13 @@ RunFileUtil.setFileRegex('.*hps[_A-Za-z]*_(\d+)\.evio\.(\d+)')
 # MUON is about 15% --> 30 TB
 # FCUP is 5% 
 #
-class EvioTriggerFilterJob(SwifJob):
+class EvioTriggerFilterJob(HPSJob):
   def __init__(self,workflow,cfg):
-    SwifJob.__init__(self,workflow.name)
-    self.cfg=cfg
-    self.copyInputs=False
+    HPSJob.__init__(self,workflow,cfg)
     self.setTime('4h')
     self.setRam('500MB')
     self.setDisk('10GB')
     self.project='hallb-pro'
-    self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
-    ChefUtil.mkdir(self.logDir)
-  def addOutput(self,local,remote):
-    SwifJob.addOutput(self,local,remote)
-    ChefUtil.mkdir(os.path.dirname(remote))
   def setCmd(self):
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
@@ -56,27 +64,72 @@ class EvioTriggerFilterJob(SwifJob):
     SwifJob.setCmd(self,cmd)
     job.addTag('run','%.6d'%rf1.runNumber)
 
+
+class ReconJob(HPSJob):
+  def __init__(self,workflow,cfg):
+    HPSJob.__init__(self,workflow,cfg)
+    self.setTime('12h')
+    self.setRam('1GB')
+    self.setDisk('10GB')
+  def setCmd(self):
+    inBasename = self.inputs[0]['local']
+    rf = RunFileUtil.RunFile(inBasename)
+    cmd = 'set echo ; ls -lhtr ;'
+    cmd = ' java -Xmx1024m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
+    cmd += ' -x %s -r -d %s -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
+    cmd += ' ; ls -lhtr'
+    job.addOutput('out.slcio','%s/%.6d/%s.lcio'%(self.cfg['outDir'],rf.runNumber,inBasename))
+    job.addTag('run','%.6d'%rf.runNumber)
+    SwifJob.setCmd(self,cmd)
+
 if __name__ == '__main__':
 
   cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
      epilog='(*) = required option for all models, from command-line or config file')
 
-  cli.add_argument('--trigger',metavar='NAME',help='trigger type, repeatable',action='append',default=[],choices=['fee','mult2','mult3','muon','fcup'])
-  cli.add_argument('--tag',    metavar='NAME',help='(*) e.g. pass1v0, automatically prefixed with runGroup and suffixed by model to define workflow name',  type=str, default=None,required=True)
-  cli.add_argument('--outDir', metavar='PATH',help='final data location', type=str,default=None,required=True)
-  cli.add_argument('--runs',   metavar='RUNS/PATH',help='(*) run numbers (e.g. "4013" or "4013,4015" or "3980,4000-4999"), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str,required=True)
+  cli.add_argument('--recon',    help='run recon',action='store_true',default=False)
+  cli.add_argument('--trigger',  metavar='NAME',help='trigger type, repeatable',action='append',default=[],choices=['fee','mult2','mult3','muon','fcup'])
+  cli.add_argument('--tag',      metavar='NAME',help='(*) e.g. pass1v0, automatically prefixed with runGroup and suffixed by model to define workflow name',  type=str, default=None,required=True)
+  cli.add_argument('--outDir',   metavar='PATH',help='final data location', type=str,default=None,required=True)
+  cli.add_argument('--logDir',   metavar='PATH',help='log directory', type=str,default=None,required=False)
+  cli.add_argument('--runs',     metavar='RUNS/PATH',help='(*) run numbers (e.g. "4013" or "4013,4015" or "3980,4000-4999"), or a file containing a list of run numbers.  This option is repeatable.', action='append', default=[], type=str,required=True)
+  cli.add_argument('--inputs',   metavar='PATH',type=str,default=None)
   cli.add_argument('--mergeSize',metavar='#',help='number of files to merge', default=10, type=int)
+  cli.add_argument('--jar',      metavar='PATH',help='path to hps-java-bin.jar',type=str,default=None)
+  cli.add_argument('--steer',    metavar='PATH',help='steering resource "path"',type=str,default='/org/hps/steering/recon/PhysicsRun2019FullRecon.lcsim')
+  cli.add_argument('--detector', metavar='NAME',help='detector name',type=str,default='HPS-PhysicsRun2019-v2-4pt5')
   args=cli.parse_args(sys.argv[1:])
 
+  if args.recon:
+    if len(args.trigger)>0:
+      cli.error('no can do both recon and trigger yet')
+    if args.jar is None:
+      cli.error('--recon requires --jar')
+    elif args.steer is None:
+      cli.error('--recon requires --steer')
+    if not os.path.isfile(args.jar):
+      cli.error('missing jar:  '+args.jar)
+    if args.mergeSize != 0:
+      cli.error('only mergeSize=0 supported for recon yet')
+  elif len(args.trigger)==0:
+    cli.error('must be trigger or recon')
+
   cfg={}
+  cfg['logDir'] = args.logDir
   cfg['runs']   = args.runs
   cfg['outDir'] = args.outDir
   cfg['mergeSize'] = args.mergeSize
   cfg['trigger'] = args.trigger
-  cfg['inputs'] = '/home/hps/users/baltzell/hps-2019-mss-prod.txt'
+  cfg['jar'] = args.jar
+  cfg['steer'] = args.steer
+  cfg['detector']= args.detector
+  if args.inputs is None:
+    cfg['inputs'] = '/home/hps/users/baltzell/hps-2019-mss-prod.txt'
+  else:
+    cfg['inputs'] = args.inputs
   cfg['mergePattern'] = 'hps_%.6d.evio.%.5d-%.5d'
 
-  workflow = SwifWorkflow('trigskim-'+args.tag)
+  workflow = SwifWorkflow(args.tag)
   workflow.addRuns(ChefUtil.getRunList(cfg['runs']))
   workflow.findFiles(cfg['inputs'])
   workflow.setPhaseSize(0)
@@ -95,7 +148,10 @@ if __name__ == '__main__':
     for ii,inp in enumerate(inputs):
       inps.append(inp)
       if len(inps)>=cfg['mergeSize'] or ii>=len(inputs)-1:
-        job=EvioTriggerFilterJob(workflow,cfg)
+        if args.recon:
+          job=ReconJob(workflow,cfg)
+        else:
+          job=EvioTriggerFilterJob(workflow,cfg)
         job.setPhase(phase)
         for inp in inps:
           job.addInput(os.path.basename(inp),inp)
@@ -114,5 +170,7 @@ if __name__ == '__main__':
           workflow.addJob(job)
         inps=[]
 
-  print(workflow.getJson())
+#  print(workflow.getJson())
+with open(workflow.name+'.json','w') as out:
+  out.write(workflow.getJson())
 
