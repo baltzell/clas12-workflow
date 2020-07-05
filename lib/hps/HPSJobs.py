@@ -15,7 +15,7 @@ class HPSJob(SwifJob):
     SwifJob.__init__(self,workflow.name)
     self.cfg=cfg
     self.copyInputs=False
-    self.project='hallb-pro'
+    self.project='hps'
     if self.cfg['logDir'] is None:
       self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
     else:
@@ -24,6 +24,23 @@ class HPSJob(SwifJob):
   def addOutput(self,local,remote):
     SwifJob.addOutput(self,local,remote)
     ChefUtil.mkdir(os.path.dirname(remote))
+
+class ReconJob(HPSJob):
+  def __init__(self,workflow,cfg):
+    HPSJob.__init__(self,workflow,cfg)
+    self.setTime('60h')
+    self.setRam('1GB')
+    self.setDisk('30GB')
+  def setCmd(self):
+    inBasename = self.inputs[0]['local']
+    rf = RunFileUtil.RunFile(inBasename)
+    cmd = 'set echo ; ls -lhtr ;'
+    cmd = ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
+    cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
+    cmd += ' || rm -f %s %s' %(inBasename,'out.slcio')
+    job.addOutput('out.slcio','%s/%.6d/%s.lcio'%(self.cfg['outDir'],rf.runNumber,inBasename))
+    job.addTag('run','%.6d'%rf.runNumber)
+    SwifJob.setCmd(self,cmd)
 
 #
 # 300K evio files in physrun2019 --> 900 TB
@@ -38,7 +55,6 @@ class EvioTriggerFilterJob(HPSJob):
     self.setTime('4h')
     self.setRam('500MB')
     self.setDisk('10GB')
-    self.project='hallb-pro'
   def setCmd(self):
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
@@ -63,24 +79,6 @@ class EvioTriggerFilterJob(HPSJob):
     cmd+='ls -lhtr ; '
     SwifJob.setCmd(self,cmd)
     job.addTag('run','%.6d'%rf1.runNumber)
-
-
-class ReconJob(HPSJob):
-  def __init__(self,workflow,cfg):
-    HPSJob.__init__(self,workflow,cfg)
-    self.setTime('12h')
-    self.setRam('1GB')
-    self.setDisk('10GB')
-  def setCmd(self):
-    inBasename = self.inputs[0]['local']
-    rf = RunFileUtil.RunFile(inBasename)
-    cmd = 'set echo ; ls -lhtr ;'
-    cmd = ' java -Xmx1024m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
-    cmd += ' -x %s -r -d %s -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
-    cmd += ' ; ls -lhtr'
-    job.addOutput('out.slcio','%s/%.6d/%s.lcio'%(self.cfg['outDir'],rf.runNumber,inBasename))
-    job.addTag('run','%.6d'%rf.runNumber)
-    SwifJob.setCmd(self,cmd)
 
 if __name__ == '__main__':
 
@@ -138,10 +136,10 @@ if __name__ == '__main__':
   phase,runsInThisPhase=0,0
 
   for inputs in workflow.getGroups():
-    if len(inputs)<100:
+    if not args.recon and len(inputs)<100:
       continue
     runsInThisPhase += 1
-    if runsInThisPhase > runsPerPhase:
+    if not args.recon and runsInThisPhase > runsPerPhase:
       runsInThisPhase = 0
       phase += 1
     inps=[]
