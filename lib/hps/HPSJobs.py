@@ -174,7 +174,7 @@ if __name__ == '__main__':
         if len(args.trigger)>0:
           job=EvioTriggerFilterJob(workflow,cfg)
         elif args.evio2lcio:
-          job=Evio2LcioJob(workflow,cfg)
+          job=EvioToLcioJob(workflow,cfg)
         else:
           job=HpsJavaJob(workflow,cfg)
         job.setPhase(phase)
