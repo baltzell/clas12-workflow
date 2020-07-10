@@ -8,7 +8,7 @@ from SwifWorkflow import SwifWorkflow
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
 logger=logging.getLogger(__name__)
 
-RunFileUtil.setFileRegex('.*hps[_A-Za-z]*_(\d+)\.evio\.(\d+).*')
+RunFileUtil.setFileRegex('.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*')
 
 class HPSJob(SwifJob):
   def __init__(self,workflow,cfg):
@@ -120,6 +120,7 @@ if __name__ == '__main__':
   cli.add_argument('--steer',    metavar='PATH',help='steering resource "path"',type=str,default='/org/hps/steering/recon/PhysicsRun2019FullRecon.lcsim')
   cli.add_argument('--detector', metavar='NAME',help='detector name',type=str,default='HPS-PhysicsRun2019-v2-4pt5')
   cli.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,default='')
+  cli.add_argument('--submit',   help='submit and run workflow automatically',default=False,action='store_true')
   args=cli.parse_args(sys.argv[1:])
 
   if len(args.trigger)>0:
@@ -195,7 +196,18 @@ if __name__ == '__main__':
           workflow.addJob(job)
         inps=[]
 
-#  print(workflow.getJson())
+logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\
+    (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))
+
+if os.path.exists(workflow.name+'.json'):
+  logger.critical('File already exists:  '+workflow.name+'.json')
+  sys.exit()
+
+logger.info('Writing workflow to ./'+workflow.name+'.json')
 with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
+
+if args.submit:
+  logger.info('Submitting %s.json with %d jobs ...\n'%(workflow.name,len(workflow.jobs)))
+  workflow.submitJson()
 
