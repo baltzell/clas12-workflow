@@ -22,6 +22,8 @@ class HPSJob(SwifJob):
       self.setLogDir(self.cfg['logDir']+'/'+workflow.name)
     ChefUtil.mkdir(self.logDir)
   def addOutput(self,local,remote):
+    if remote.endswith('.lcio'):
+      remote = remote[0:-5] + '.slcio'
     SwifJob.addOutput(self,local,remote)
     ChefUtil.mkdir(os.path.dirname(remote))
 
@@ -38,9 +40,7 @@ class EvioToLcioJob(HPSJob):
     cmd = ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
     cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
-    outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],rf.runNumber,self.cfg['outPrefix'],inBasename)
-    if not inBasename.endswith('.lcio'):
-      outPath += '.lcio'
+    outPath = '%s/%.6d/%s%s.slcio'%(self.cfg['outDir'],rf.runNumber,self.cfg['outPrefix'],inBasename)
     job.addOutput('out.slcio',outPath)
     job.addTag('run','%.6d'%rf.runNumber)
     SwifJob.setCmd(self,cmd)
@@ -59,8 +59,6 @@ class HpsJavaJob(HPSJob):
     cmd += ' %s -r -i %s -DoutputFile=out'%(self.cfg['steer'],inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],rf.runNumber,self.cfg['outPrefix'],inBasename)
-    if not inBasename.endswith('.lcio'):
-      outPath += '.lcio'
     job.addOutput('out.slcio',outPath)
     job.addTag('run','%.6d'%rf.runNumber)
     SwifJob.setCmd(self,cmd)
@@ -129,12 +127,14 @@ if __name__ == '__main__':
   else:
     if args.jar is None:
       cli.error('requires --jar')
-    elif args.steer is None:
+    if args.steer is None:
       cli.error('requires --steer')
     if not os.path.isfile(args.jar):
       cli.error('missing jar:  '+args.jar)
     if args.mergeSize != 0:
       cli.error('only mergeSize=0 supported for trigger yet')
+    if not args.evio2lcio and not args.outPrefix:
+      cli.error('--outPrefix is required for this mode')
 
   cfg={}
   cfg['logDir'] = args.logDir
