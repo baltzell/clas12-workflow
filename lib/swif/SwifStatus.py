@@ -296,6 +296,7 @@ class SwifStatus():
             for att in job['attempts']:
               if 'exitcode' in att and att['exitcode']==0:
                 ret[job['tags']['mode']]['success'] += 1
+                break
     return ret
 
   def getPersistentProblems(self):
