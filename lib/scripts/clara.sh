@@ -39,7 +39,7 @@ fi
 hipocheck() {
     ( [ -e $1 ] && [ $(stat -L -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
         || \
-    ( echo "clara.sh:ERROR  Corrupt File: $1" 2>&1 && false )
+    ( echo "clara.sh: ERROR: Corrupt File: $1" 2>&1 && false )
 }
 
 # run-clara uses some of these to store info during job:
@@ -55,7 +55,7 @@ ls -lt
 # check inputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $xx || ( rm -f *.hipo && exit 501)
+    hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
 done
 
 # run clara:
@@ -70,15 +70,13 @@ $CLARA_HOME/lib/clara/run-clara \
         ./clara.yaml \
         ./filelist.txt
 claraexit=$?
+ls -lt
 
 # check outputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $outprefix$xx || ( rm -f *.hipo && exit 502 )
+    hipocheck $outprefix$xx || ( rm -f *.hipo && false ) || exit 102
 done
-
-# remove this later:
-#ls -lt
 
 # if all else is well, use exit code from run-clara:
 exit $claraexit

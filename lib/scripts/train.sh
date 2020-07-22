@@ -22,7 +22,7 @@ done
 
 shift $((OPTIND-1))
 if [[ $# -ne 1 ]]; then
-    echo "usage: clara.sh [ OPTIONS ] jobname"
+    echo "usage: train.sh [ OPTIONS ] jobname"
     exit 1
 fi
 jobname=$1
@@ -56,13 +56,13 @@ for line in open('clara.yaml','r').readlines():
 print(' '.join(sorted(set(map(str,ids)))))
 EOF`
 
-echo "Train IDs:  "$trainids
+echo "train.sh: INFO: Train IDs:  "$trainids
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
     ( [ -e $1 ] && [ $(stat -L -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
         || \
-    ( echo "clara.sh:ERROR  Corrupt File: $1" 2>&1 && false )
+    ( echo "train.sh: ERROR: Corrupt File: $1" 2>&1 && false )
 }
 
 # run-clara uses some of these to store info during job:
@@ -78,7 +78,7 @@ ls -lt
 # check inputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $xx || ( rm -f *.hipo && exit 501)
+    hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
 done
 
 # run clara:
@@ -93,7 +93,6 @@ $CLARA_HOME/lib/clara/run-clara \
         ./clara.yaml \
         ./filelist.txt
 claraexit=$?
-
 ls -lt
 
 # check and rename outputs:
@@ -103,11 +102,10 @@ do
     do
         yy=./skim_${xx}_${nn}.hipo
         zz=./skim${nn}_${xx}
-        hipocheck $yy || ( rm -f *.hipo && exit 502 )
+        hipocheck $yy || ( rm -f *.hipo && false ) || exit 102
         mv -f $yy $zz
     done
 done
-
 ls -lt
 
 # if all else is well, use exit code from run-clara:
