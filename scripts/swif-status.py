@@ -24,6 +24,11 @@ def processWorkflow(workflow,args):
     print(('\n'.join(status.findMissingOutputs())))
     return
 
+  if args.stats:
+    print(status.summarize())
+    #print(('\n'.join(status.summarize())))
+    return
+
   # print details of jobs with problems:
   if args.problems:
     status.showPersistentProblems()
@@ -80,18 +85,20 @@ if __name__ == '__main__':
 #  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
 #  cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
   cli.add_argument('--clas12mon',metavar='TAG',help='write matching workflows to clas12mon (repeatable)',type=str,default=[],action='append')
-  cli.add_argument('--delete',  help='delete workflow',   action='store_true',default=False)
+  cli.add_argument('--delete',   help='delete workflow',   action='store_true',default=False)
   cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=PROBLEMS)
   cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows)', action='append',default=[])
-  cli.add_argument('--missing', help='find missing outpuf files', action='store_true',default=False)
+  cli.add_argument('--missing',  help='find missing outpuf files', action='store_true',default=False)
+  cli.add_argument('--stats',    help='show completion status of each workflow component', action='store_true',default=False)
 
   args = cli.parse_args()
 
   if args.save and not args.logdir:
     cli.error('Must define --logdir if using the --save option')
 
-  if args.missing and len(args.workflow)==0:
-    cli.error('Must define --workflow if using the --missing option')
+  if len(args.workflow)==0:
+    if args.missing or args.stats:
+      cli.error('The --workflow option is requred if using the --missing or --stats options')
 
 #  if args.publish and not args.webdir:
 #    sys.exit('ERROR:  must define --webdir if using the --publish option')

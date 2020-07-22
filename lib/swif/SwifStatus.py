@@ -278,6 +278,26 @@ class SwifStatus():
                       ret.append(out['remote'])
     return ret
 
+  def summarize(self):
+    ret={}
+    if self.details is None:
+      self.loadDetails()
+    if 'jobs' in self.details:
+      for job in self.details['jobs']:
+        if 'tags' in job and 'mode' in job['tags']:
+          if job['tags']['mode'] not in ret:
+            ret[job['tags']['mode']] = {}
+            ret[job['tags']['mode']]['jobs'] = 0
+            ret[job['tags']['mode']]['success'] = 0
+          ret[job['tags']['mode']]['jobs'] += 1
+      for job in self.details['jobs']:
+        if 'tags' in job and 'mode' in job['tags']:
+          if 'attempts' in job:
+            for att in job['attempts']:
+              if 'exitcode' in att and att['exitcode']==0:
+                ret[job['tags']['mode']]['success'] += 1
+    return ret
+
   def getPersistentProblems(self):
     problemJobs=[]
     if self.details is None:
