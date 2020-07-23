@@ -87,8 +87,8 @@ if __name__ == '__main__':
   cli.add_argument('--clas12mon',metavar='TAG',help='write matching workflows to clas12mon (repeatable)',type=str,default=[],action='append')
   cli.add_argument('--delete',   help='delete workflow',   action='store_true',default=False)
   cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=PROBLEMS)
-  cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows)', action='append',default=[])
-  cli.add_argument('--missing',  help='find missing outpuf files', action='store_true',default=False)
+  cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows!)', action='append',default=[])
+  cli.add_argument('--missing',  help='find missing output files', action='store_true',default=False)
   cli.add_argument('--stats',    help='show completion status of each workflow component', action='store_true',default=False)
 
   args = cli.parse_args()
@@ -105,6 +105,8 @@ if __name__ == '__main__':
 
   if len(args.workflow)==0:
     args.workflow=getWorkflowNames()
+    if args.delete and 'YES' != raw_input('Really delete all workflows?  If so, type "YES" and press return ...'):
+        sys.exit('Aborted.')
 
   if args.list:
     print('\n'.join(args.workflow))
