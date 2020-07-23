@@ -1,4 +1,4 @@
-import os,sys,json,subprocess,getpass,datetime
+import os,sys,json,subprocess,getpass,datetime,collections
 
 SWIF='/site/bin/swif'
 
@@ -279,24 +279,30 @@ class SwifStatus():
     return ret
 
   def summarize(self):
-    ret={}
+    ret=collections.OrderedDict()
+    ret['total']={'jobs':0,'success':0}
     if self.details is None:
       self.loadDetails()
     if 'jobs' in self.details:
       for job in self.details['jobs']:
-        if 'tags' in job and 'mode' in job['tags']:
-          if job['tags']['mode'] not in ret:
-            ret[job['tags']['mode']] = {}
-            ret[job['tags']['mode']]['jobs'] = 0
-            ret[job['tags']['mode']]['success'] = 0
-          ret[job['tags']['mode']]['jobs'] += 1
-      for job in self.details['jobs']:
-        if 'tags' in job and 'mode' in job['tags']:
-          if 'attempts' in job:
-            for att in job['attempts']:
-              if 'exitcode' in att and att['exitcode']==0:
-                ret[job['tags']['mode']]['success'] += 1
-                break
+        mode = 'unknown'
+        if 'tags' in job:
+          if 'mode' in job['tags']:
+            mode = job['tags']['mode']
+        if mode not in ret:
+          ret[mode] = {'jobs':0,'success':0}
+        ret[mode]['jobs'] += 1
+        ret['total']['jobs'] += 1
+        if 'status' in job:
+          if job['status']=='succeeded':
+            ret[mode]['success'] += 1
+            ret['total']['success'] += 1
+    return ret
+
+  def __str__(self):
+    ret=''
+    for k,v in self.summarize().items():
+      ret+='%10s:  %8d / %8d = %6.2f%%\n'%(k,v['success'],v['jobs'],float(v['success'])/v['jobs']*100)
     return ret
 
   def getPersistentProblems(self):

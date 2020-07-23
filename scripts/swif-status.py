@@ -25,8 +25,7 @@ def processWorkflow(workflow,args):
     return
 
   if args.stats:
-    print(status.summarize())
-    #print(('\n'.join(status.summarize())))
+    print(status)
     return
 
   # print details of jobs with problems:
