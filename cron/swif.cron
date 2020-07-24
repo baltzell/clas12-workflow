@@ -1,5 +1,5 @@
 # NOTE:  This is a template.  To make it operational:
-# 1) Assign $MAILTO to your personal email address
+# 1) Assign $MAILTO to your personal email address;  it can also be a comma-separated list of email addresses
 # 2) Assign $LOCKFILE to a full file path in the $HOME of the account that will be running this cronjob
 # 3) Assign $SCRIPT to the full path of cron/swif-cron.sh in clas12-workflow
 # 
