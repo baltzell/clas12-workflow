@@ -11,7 +11,11 @@ class CLAS12Job(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
     self.abbreviations={'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'}
-    self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
+    if cfg['ccdbsqlite'] is None:
+      self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
+    else:
+      self.addEnv('CCDB_CONNECTION','sqlite:///clas12.sqlite')
+      self.addInput('clas12.sqlite',cfg['ccdbsqlite'])
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
     self.project=cfg['project']

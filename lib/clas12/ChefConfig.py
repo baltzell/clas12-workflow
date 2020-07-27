@@ -39,6 +39,7 @@ CFG['solenoid']     = None
 CFG['postproc']     = False
 CFG['recharge']     = False
 CFG['schema']       = ''
+CFG['ccdbsqlite']   = None
 CFG['claraLogDir']  = None
 CFG['logDir']       = '/farm_out/'+getpass.getuser()
 CFG['submit']       = False
@@ -99,6 +100,8 @@ class ChefConfig(collections.OrderedDict):
       if self[k] != None and cfg[k] != None:
         if self[k] != cfg[k]:
           return False
+    if self['ccdbsqlite'] != cfg['ccdbsqlite']:
+      return False
     return True
 
   def __ne__(self,cfg):
@@ -205,6 +208,8 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler (unnecessary if decoding was done with 6.5.6 or later)', action='store_true', default=None)
+
+    cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
@@ -348,6 +353,11 @@ class ChefConfig(collections.OrderedDict):
     # set user-defined regex for input files:
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
+
+    if self['ccdbsqlite'] is not None:
+      self['ccdbsqlite'] = os.path.abspath(self['ccdbsqlite'])
+      if not os.path.isfile(self['ccdbsqlite']):
+        self.cli.error('--ccdbsqlite file does not exist:  '+self['ccdbsqlite'])
 
     # let user specify version number instead of path:
     if self['coatjava'] is not None and not self['coatjava'].startswith('/'):
