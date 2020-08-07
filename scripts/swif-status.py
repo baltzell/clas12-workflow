@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,subprocess,argparse,logging
+import re,sys,subprocess,argparse,logging
 from SwifStatus import getWorkflowNames,deleteWorkflow,SWIF_PROBLEMS
 from CLAS12SwifStatus import CLAS12SwifStatus,getHeader
 from Matcher import matchAny
@@ -21,11 +21,13 @@ def processWorkflow(workflow,args):
 #      status.moveJobLogs()
 
   if args.missing:
+    print('\nMissing outputs in '+workflow+':')
     print(('\n'.join(status.findMissingOutputs())))
     return
 
   if args.stats:
-    print(status)
+    print('\nStatus summary for '+workflow+':')
+    print(status),
     return
 
   # print details of jobs with problems:
@@ -86,7 +88,7 @@ if __name__ == '__main__':
   cli.add_argument('--clas12mon',metavar='TAG',help='write matching workflows to clas12mon (repeatable)',type=str,default=[],action='append')
   cli.add_argument('--delete',   help='delete workflow',   action='store_true',default=False)
   cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',   action='append',default=[],choices=PROBLEMS)
-  cli.add_argument('--workflow', metavar='NAME',help='workflow name (else all workflows!)', action='append',default=[])
+  cli.add_argument('--workflow', metavar='NAME',help='workflow name (or regex) else all workflows', action='append',default=[])
   cli.add_argument('--missing',  help='find missing output files', action='store_true',default=False)
   cli.add_argument('--stats',    help='show completion status of each workflow component', action='store_true',default=False)
 
@@ -95,23 +97,25 @@ if __name__ == '__main__':
   if args.save and not args.logdir:
     cli.error('Must define --logdir if using the --save option')
 
+  workflows=[]
   if len(args.workflow)==0:
-    if args.missing or args.stats:
-      cli.error('The --workflow option is requred if using the --missing or --stats options')
+    workflows.extend(getWorkflowNames())
+    if args.delete and 'YES' != raw_input('Really delete all workflows?  If so, type "YES" and press return ...'):
+        sys.exit('Aborted.')
+  else:
+    for x in getWorkflowNames():
+      for y in args.workflow:
+        if re.match('^'+y+'$',x) is not None:
+          workflows.append(x)
 
 #  if args.publish and not args.webdir:
 #    sys.exit('ERROR:  must define --webdir if using the --publish option')
 
-  if len(args.workflow)==0:
-    args.workflow=getWorkflowNames()
-    if args.delete and 'YES' != raw_input('Really delete all workflows?  If so, type "YES" and press return ...'):
-        sys.exit('Aborted.')
-
   if args.list:
-    print('\n'.join(args.workflow))
+    print('\n'.join(workflows))
 
   else:
-    for workflow in args.workflow:
+    for workflow in workflows:
       if args.delete:
         deleteWorkflow(workflow)
       else:
