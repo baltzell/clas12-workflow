@@ -31,7 +31,7 @@ class EvioToLcioJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
     self.setTime('60h')
-    self.setRam('1GB')
+    self.setRam('1300MB')
     self.setDisk('30GB')
   def setCmd(self):
     inBasename = self.inputs[0]['local']
