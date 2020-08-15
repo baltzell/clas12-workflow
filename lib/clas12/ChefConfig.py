@@ -100,7 +100,7 @@ class ChefConfig(collections.OrderedDict):
       if self[k] != None and cfg[k] != None:
         if self[k] != cfg[k]:
           return False
-    if self['ccdbsqlite'] != cfg['ccdbsqlite']:
+    if 'ccdbsqlite' in self and 'ccdbsqlite' in cfg and self['ccdbsqlite'] != cfg['ccdbsqlite']:
       return False
     return True
 
