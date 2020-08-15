@@ -302,7 +302,7 @@ class SwifStatus():
   def __str__(self):
     ret=''
     for k,v in self.summarize().items():
-      ret+='%10s:  %8d / %8d = %6.2f%%\n'%(k,v['success'],v['jobs'],float(v['success'])/v['jobs']*100)
+      ret+='%10s:  %8d / %8d = %6.4f%%\n'%(k,v['success'],v['jobs'],float(v['success'])/v['jobs']*100)
     return ret
 
   def getPersistentProblems(self):
