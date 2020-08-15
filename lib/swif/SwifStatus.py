@@ -278,30 +278,30 @@ class SwifStatus():
                       ret.append(out['remote'])
     return ret
 
-  def summarize(self):
-    ret=collections.OrderedDict()
-    ret['total']={'jobs':0,'success':0}
+  def getSummaryData(self,tag):
+    data=collections.OrderedDict()
+    data['total']={'jobs':0,'success':0}
     if self.details is None:
       self.loadDetails()
     if 'jobs' in self.details:
       for job in self.details['jobs']:
         mode = 'unknown'
         if 'tags' in job:
-          if 'mode' in job['tags']:
-            mode = job['tags']['mode']
-        if mode not in ret:
-          ret[mode] = {'jobs':0,'success':0}
-        ret[mode]['jobs'] += 1
-        ret['total']['jobs'] += 1
+          if tag in job['tags']:
+            mode = job['tags'][tag]
+        if mode not in data:
+          data[mode] = {'jobs':0,'success':0}
+        data[mode]['jobs'] += 1
+        data['total']['jobs'] += 1
         if 'status' in job:
           if job['status']=='succeeded':
-            ret[mode]['success'] += 1
-            ret['total']['success'] += 1
-    return ret
+            data[mode]['success'] += 1
+            data['total']['success'] += 1
+    return data
 
-  def __str__(self):
+  def summarize(self,tag):
     ret=''
-    for k,v in self.summarize().items():
+    for k,v in self.getSummaryData(tag).items():
       ret+='%10s:  %8d / %8d = %6.4f%%\n'%(k,v['success'],v['jobs'],float(v['success'])/v['jobs']*100)
     return ret
 

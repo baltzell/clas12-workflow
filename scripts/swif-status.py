@@ -25,9 +25,12 @@ def processWorkflow(workflow,args):
     print(('\n'.join(status.findMissingOutputs())))
     return
 
-  if args.stats:
+  if args.stats or args.runstats:
     print('\nStatus summary for '+workflow+':')
-    print(status),
+    if args.stats:
+      print(status.summarize('mode')),
+    if args.runstats:
+      print(status.summarize('run')),
     return
 
   # print details of jobs with problems:
@@ -91,6 +94,7 @@ if __name__ == '__main__':
   cli.add_argument('--workflow', metavar='NAME',help='workflow name (or regex) else all workflows', action='append',default=[])
   cli.add_argument('--missing',  help='find missing output files', action='store_true',default=False)
   cli.add_argument('--stats',    help='show completion status of each workflow component', action='store_true',default=False)
+  cli.add_argument('--runstats', help='show completion status of each run number', action='store_true',default=False)
 
   args = cli.parse_args()
 
