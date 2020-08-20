@@ -4,7 +4,7 @@ if [ -e /group/clas12/packages/setup.sh ]
 then
     source /group/clas12/packages/setup.sh
     module load rcdb
-    module load root
+    module load root/6.14.04
 else
     echo WARNING:  Cannot find RCDB installation.
 fi
