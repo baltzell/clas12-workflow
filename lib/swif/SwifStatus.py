@@ -5,11 +5,13 @@ SWIF='/site/bin/swif'
 # FIXME:  incomplete/incorrect
 SWIF_PROBLEMS=[
 'SWIF-MISSING-OUTPUT',
-'SWIF-USER-ERROR',
+'SWIF-USER-NON-ZERO',
 'SWIF-SYSTEM-ERROR',
 'AUGER-FAILED',
 'AUGER-OUTPUT',
-'AUGER-CANCELLED'
+'AUGER-CANCELLED',
+'AUGER-TIMEOUT',
+'AUGER-SUBMIT',
 ]
 
 SWIFJSONKEYS=[
@@ -65,12 +67,17 @@ def deleteWorkflow(name):
 
 class SwifStatus():
 
-  def __init__(self,name):
+  def __init__(self,name,filename=None):
     self.name=name
     self.status=None
     self.details=None
     self.tagsMerged=False
     self.user=getpass.getuser()
+    #if filename is not None:
+    #  if os.path.isfile(filename):
+    #    self.details = json.load(open(filename,'r'))
+    #  else:
+    #    print('Error reading file:  '+filename)
 
   def loadStatusFromString(self,string):
     self.status=json.loads(string)
@@ -184,6 +191,55 @@ class SwifStatus():
         continue
       problems.extend(status['problem_types'].split(','))
     return problems
+
+  def tallyAllProblems(self):
+    data=collections.OrderedDict()
+    if self.details is None:
+      self.loadDetails()
+    if 'jobs' in self.details:
+      for job in self.details['jobs']:
+        if 'attempts' in job:
+          for attempt in job['attempts']:
+            if 'problem' in attempt:
+              node='unknown'
+              if 'auger_node' in attempt:
+                node=attempt['auger_node']
+              if attempt['problem'] not in data:
+                data[attempt['problem']]={'count':0,'counts':{}}
+              if node not in data[attempt['problem']]['counts']:
+                data[attempt['problem']]['counts'][node]=0
+              data[attempt['problem']]['count']+=1
+              data[attempt['problem']]['counts'][node]+=1
+    return data
+
+  def summarizeProblems(self,pernode=False):
+    if self.details is None:
+      self.loadDetails()
+    ret=''
+    data=sorted(self.tallyAllProblems().items())
+    # yuk, FIXME
+    if pernode:
+      nodes={}
+      for k,v in data:
+        for node in v['counts']:
+          if node not in nodes:
+            nodes[node]=dict(zip(SWIF_PROBLEMS,[0]*len(SWIF_PROBLEMS)))
+          nodes[node][k]+=v['counts'][node]
+      fmt='%12s '+(' '.join(['%20s']*len(SWIF_PROBLEMS)))
+      x=['Node']
+      x.extend(sorted(SWIF_PROBLEMS))
+      ret+=fmt%tuple(x)
+      fmt='%12s '+' '.join(['%20d']*len(SWIF_PROBLEMS))
+      for node in sorted(nodes.keys()):
+        if sum(nodes[node].values())==0:
+          continue
+        x=[node]
+        x.extend([nodes[node][k] for k in sorted(SWIF_PROBLEMS)])
+        ret+='\n'+fmt%tuple(x)
+      ret+='\n\n'
+    for k,v in data:
+      ret+='%20s :  %8d\n'%(k,v['count'])
+    return ret
 
   def getTagValue(self,tag):
     if not self.tagsMerged:

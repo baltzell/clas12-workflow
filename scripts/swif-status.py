@@ -26,11 +26,16 @@ def processWorkflow(workflow,args):
     return
 
   if args.stats or args.runstats:
-    print('\nStatus summary for '+workflow+':')
+    print('\nCompletion status summary for '+workflow+':')
     if args.stats:
       print(status.summarize('mode')),
     if args.runstats:
       print(status.summarize('run')),
+    return
+
+  if args.problemstats or args.problemnodes:
+    print('\nProblem summary for '+workflow+':')
+    print(status.summarizeProblems(args.problemnodes))
     return
 
   # print details of jobs with problems:
@@ -81,7 +86,7 @@ if __name__ == '__main__':
   cli.add_argument('--retry',   help='retry problem jobs',action='store_true',default=False)
   cli.add_argument('--save',    help='save to logs',      action='store_true',default=False)
   cli.add_argument('--details', help='show job details',  action='store_true',default=False)
-  cli.add_argument('--problems',help='show problem jobs', action='store_true',default=False)
+  cli.add_argument('--problems',help='show jobs whose most recent attempt was problematic', action='store_true',default=False)
   cli.add_argument('--quiet',   help='do not print retries', action='store_true',default=False)
 #  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
   cli.add_argument('--logdir',  metavar='PATH',help='local log directory'+df, type=str,default=None)
@@ -95,11 +100,18 @@ if __name__ == '__main__':
   cli.add_argument('--missing',  help='find missing output files', action='store_true',default=False)
   cli.add_argument('--stats',    help='show completion status of each workflow component', action='store_true',default=False)
   cli.add_argument('--runstats', help='show completion status of each run number', action='store_true',default=False)
+  cli.add_argument('--problemstats', help='show summary of all problems that have occured during the workflow', default=False,action='store_true')
+  cli.add_argument('--problemnodes', help='show summary of all problems per node that have occured during the workflow', default=False,action='store_true')
+  #cli.add_argument('--input',    help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
 
   args = cli.parse_args()
 
   if args.save and not args.logdir:
     cli.error('Must define --logdir if using the --save option')
+
+  #if args.input:
+  #  print (SwifStatus(args.input.replace('.json',''),args.input).summarizeProblems())
+  #  sys.exit()
 
   workflows=[]
   if len(args.workflow)==0:
