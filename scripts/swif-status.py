@@ -38,9 +38,13 @@ def processWorkflow(workflow,args):
     print(status.summarizeProblems(args.problemnodes))
     return
 
-  if len(args.jobs4run)>0:
-    print('\nJobs associated with run numbers: '+','.join([str(x) for x in args.jobs4run]))
-    print('\n'.join(status.getJobNamesByRun(args.jobs4run)))
+  if len(args.listrun)>0:
+    print('\nJobs associated with run numbers: '+','.join([str(x) for x in args.listrun]))
+    print('\n'.join(status.getJobNamesByRun(args.listrun)))
+    return
+
+  if len(args.abandonrun)>0:
+    print(status.abandonJobsByRun(args.abandonrun))
     return
 
   # print details of jobs with problems:
@@ -107,7 +111,8 @@ if __name__ == '__main__':
   cli.add_argument('--runstats', help='show completion status of each run number', action='store_true',default=False)
   cli.add_argument('--problemstats', help='show summary of all problems that have occured during the workflow', default=False,action='store_true')
   cli.add_argument('--problemnodes', help='show summary of all problems per node that have occured during the workflow', default=False,action='store_true')
-  cli.add_argument('--jobs4run',   metavar='#', help='list all job names associated with particular run numbers', action='append', default=[], type=int)
+  cli.add_argument('--listrun',   metavar='#', help='list all job names associated with particular run numbers', action='append', default=[], type=int)
+  cli.add_argument('--abandonrun', metavar='#', help='abandon all jobs associated with particular run numbers', action='append', default=[], type=int)
   #cli.add_argument('--input',    help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
 
   args = cli.parse_args()

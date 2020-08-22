@@ -338,7 +338,7 @@ class SwifStatus():
     ret={}
     if self.details is None:
       self.loadDetails()
-    if'jobs' in self.details:
+    if 'jobs' in self.details:
       for job in self.details['jobs']:
         if 'name' not in job or 'tags' not in job:
           continue
@@ -358,6 +358,18 @@ class SwifStatus():
       for r,f in data['run'].items():
         if int(r) in runs:
           ret.extend(f)
+    return ret
+
+  def abandonJobsByRun(self,runs):
+    ret=''
+    files=self.getJobNamesByRun(runs)
+    if len(files)>0:
+      cmd=[SWIF,'abandon-jobs','-workflow',self.name,'-names']
+      cmd.extend(files)
+      ret+=' '.join(cmd)
+      ret+='\n'+subprocess.check_output(cmd)
+    else:
+      ret+='No files found for run numbers:  '+','.join(runs)
     return ret
 
   def getSummaryData(self,tag):
