@@ -2,7 +2,7 @@ import os,sys,json,subprocess,getpass,datetime,collections
 
 SWIF='/site/bin/swif'
 
-# FIXME:  incomplete/incorrect
+# FIXME:  incomplete?
 SWIF_PROBLEMS=[
 'SWIF-MISSING-OUTPUT',
 'SWIF-USER-NON-ZERO',
@@ -332,6 +332,32 @@ class SwifStatus():
                   if 'remote' in out:
                     if not os.path.exists(out['remote']):
                       ret.append(out['remote'])
+    return ret
+
+  def getJobNamesByTag(self,tags):
+    ret={}
+    if self.details is None:
+      self.loadDetails()
+    if'jobs' in self.details:
+      for job in self.details['jobs']:
+        if 'name' not in job or 'tags' not in job:
+          continue
+        for tag in tags:
+          if tag in job['tags']:
+            if tag not in ret:
+              ret[tag]={}
+            if job['tags'][tag] not in ret[tag]:
+              ret[tag][job['tags'][tag]]=[]
+            ret[tag][job['tags'][tag]].append(job['name'])
+    return ret
+
+  def getJobNamesByRun(self,runs):
+    ret=[]
+    data=self.getJobNamesByTag(['run'])
+    if 'run' in data:
+      for r,f in data['run'].items():
+        if int(r) in runs:
+          ret.extend(f)
     return ret
 
   def getSummaryData(self,tag):
