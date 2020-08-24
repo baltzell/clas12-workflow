@@ -201,15 +201,20 @@ class SwifStatus():
         if 'attempts' in job:
           for attempt in job['attempts']:
             if 'problem' in attempt:
-              node='unknown'
+              problem,node,mode=attempt['problem'],'unknown','unknown'
               if 'auger_node' in attempt:
                 node=attempt['auger_node']
-              if attempt['problem'] not in data:
-                data[attempt['problem']]={'count':0,'counts':{}}
-              if node not in data[attempt['problem']]['counts']:
-                data[attempt['problem']]['counts'][node]=0
-              data[attempt['problem']]['count']+=1
-              data[attempt['problem']]['counts'][node]+=1
+              if 'tags' in job and 'mode' in job['tags']:
+                mode=job['tags']['mode']
+              if problem not in data:
+                data[problem]={'count':0,'counts':{'nodes':{},'modes':{}}}
+              if node not in data[problem]['counts']['nodes']:
+                data[problem]['counts']['nodes'][node]=0
+              if mode not in data[problem]['counts']['modes']:
+                data[problem]['counts']['modes'][mode]=0
+              data[problem]['count']+=1
+              data[problem]['counts']['nodes'][node]+=1
+              data[problem]['counts']['modes'][mode]+=1
     return data
 
   def summarizeProblems(self,pernode=False):
@@ -217,14 +222,19 @@ class SwifStatus():
       self.loadDetails()
     ret=''
     data=sorted(self.tallyAllProblems().items())
-    # yuk, FIXME
+    # YUK! FIXME
     if pernode:
-      nodes={}
+      data2={'nodes':{},'modes':{}}
+      nodes,modes={},{}
       for k,v in data:
-        for node in v['counts']:
+        for node in v['counts']['nodes']:
           if node not in nodes:
             nodes[node]=dict(zip(SWIF_PROBLEMS,[0]*len(SWIF_PROBLEMS)))
-          nodes[node][k]+=v['counts'][node]
+          nodes[node][k]+=v['counts']['nodes'][node]
+        for mode in v['counts']['modes']:
+          if mode not in modes:
+            modes[mode]=dict(zip(SWIF_PROBLEMS,[0]*len(SWIF_PROBLEMS)))
+          modes[mode][k]+=v['counts']['modes'][mode]
       fmt='%12s '+(' '.join(['%20s']*len(SWIF_PROBLEMS)))
       x=['Node']
       x.extend(sorted(SWIF_PROBLEMS))
@@ -237,6 +247,12 @@ class SwifStatus():
         x.extend([nodes[node][k] for k in sorted(SWIF_PROBLEMS)])
         ret+='\n'+fmt%tuple(x)
       ret+='\n\n'
+    for k,v in data:
+      ret+='%20s :'%k
+      for mode,count in v['counts']['modes'].items():
+        ret+=' %s:%d'%(mode,count)
+      ret+='\n'
+    ret+='\n'
     for k,v in data:
       ret+='%20s :  %8d\n'%(k,v['count'])
     return ret
