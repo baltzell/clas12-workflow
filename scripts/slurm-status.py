@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys,pwd,grp,argparse,datetime,getpass
-
+import ROOT
 from SlurmStatus import SlurmStatus
 from SlurmStatus import SlurmQuery
 
@@ -16,6 +16,7 @@ cli.add_argument('-m',metavar='string',help='match any in job names (repeatable)
 cli.add_argument('-s',metavar='string',help='match job state (repeatable)', type=str, default=[], action='append', choices=SlurmStatus._STATES)
 cli.add_argument('-w',metavar='#.#',help='minimum wall time in hours',type=float,default=None)
 cli.add_argument('-W',metavar='#.#',help='maximum wall time in hours',type=float,default=None)
+cli.add_argument('-g',help='generate plots',default=False,action='store_true')
 
 args=cli.parse_args(sys.argv[1:])
 
@@ -38,6 +39,8 @@ if args.e is not None:
   except:
     cli.error('Invalid date format:  '+args.e)
 
+canvases=[]
+
 for user in args.u:
   try:
     pwd.getpwnam(user)
@@ -55,4 +58,11 @@ for user in args.u:
   if len(args.s)>0:
     sq.states=args.s
   print(sq)
+  if args.g:
+    canvases.append(sq.getCanvas('cputime'))
+    canvases.append(sq.getCanvas('walltime'))
+
+if args.g:
+  print('Done.  Press any key to close.')
+  input()
 

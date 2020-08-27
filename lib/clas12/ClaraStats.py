@@ -13,6 +13,7 @@ class ClaraStats:
   def __init__(self):
     # importing ROOT is slow, wait until necessary
     self.ROOT=__import__('ROOT')
+    #import ROOTConfig
     self.template=self.ROOT.TH1F('h',';Average Event Time per Core (ms)',100,0,2500)
     self.template.GetYaxis().SetTickLength(0)
     self.template.GetXaxis().CenterTitle()

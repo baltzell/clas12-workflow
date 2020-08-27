@@ -1,5 +1,7 @@
 import json,requests,datetime,re,sys
 
+from JobSpecs import getNodeFlavor
+from JobSpecs import JobSpecs
 import Matcher
 
 #'https://scicomp.jlab.org/scicomp/farmCjob?type=query&user=baltzell&from=2019-11-01&to=2019-11-10&states=SUCCESS'
@@ -237,7 +239,7 @@ class SlurmQuery():
       for ii,xx in enumerate(self.data):
         if 'name' not in xx:
           continue
-        if not Matcher.matchAny(xx['name'],self.matchAny) or not Matcher.matchAll(xx['name'],self.matchAll):
+        if not Matcher.matchAny(xx['name'],[x.strip() for x in self.matchAny]) or not Matcher.matchAll(xx['name'],[x.strip() for x in self.matchAll]):
           self.data.pop(ii)
           pruned=True
           break
@@ -268,6 +270,75 @@ class SlurmQuery():
 
   def getJson(self):
     return json.dumps(self.get(),indent=2,separators=(',',': '))
+
+  def getHistos(self,varname):
+    prefs={}
+    prefs['cputime']={'scale':60*60,'title':'CPU Hours Per Core Per Job'}
+    prefs['walltime']={'scale':60*60,'title':'Wall Hours Per Job'}
+    _COLORS =[1,  2,    4,    3,    94,  51]
+    _THREADS=[1,12, 20,   16,   24,   32]
+    _FILLS  =[0,0,  3007, 3003, 3004, 3005]
+    from ROOT import TH1D
+    histos,mini,maxi,scale,title={},0,-99999,1,varname
+    if varname in prefs:
+      scale=prefs[varname]['scale']
+      title=prefs[varname]['title']
+    if len(self.myData)>0:
+      for datum in self.myData:
+        datum=datum.data
+        if 'hostname' in datum and 'coreCount' in datum and varname in datum:
+          flavor=getNodeFlavor(datum['hostname'])
+          if flavor is None: continue
+          try:
+            val=float(datum[varname])/scale
+            if varname is 'cputime':
+              val/=datum['coreCount']
+            if float(val)>maxi:
+              maxi=float(val)
+          except:
+            pass
+      for datum in self.myData:
+        datum=datum.data
+        if 'hostname' in datum and 'coreCount' in datum and varname in datum:
+          flavor=getNodeFlavor(datum['hostname'])
+          if flavor is None: continue
+          try:
+            val=float(datum[varname])/scale
+            if varname is 'cputime':
+              val/=datum['coreCount']
+            if flavor not in histos:
+              histos[flavor]=TH1D(flavor+varname,';'+varname,100,mini,maxi)
+              histos[flavor].GetXaxis().SetTitle(title)
+              color=_COLORS[JobSpecs._FLAVORS.index(flavor)]
+              histos[flavor].SetTitle('%sx%d'%(flavor,datum['coreCount']))
+              histos[flavor].SetLineColor(color)
+              fill=_FILLS[_THREADS.index(threads)]
+              if fill>0:
+                histos[flavor].SetFillStyle(fill)
+                histos[flavor].SetFillColor(color)
+            histos[flavor].Fill(float(val))
+          except:
+            pass
+      maxi=0
+      for h in histos.values():
+        if h.GetBinContent(h.GetMaximumBin())>maxi:
+          maxi=h.GetBinContent(h.GetMaximumBin())
+      for h in histos.values():
+        h.SetMaximum(maxi*1.1)
+    return histos
+
+  def getCanvas(self,varname):
+    from ROOT import TCanvas
+    import ROOTConfig
+    histos=self.getHistos(varname)
+    canvas=TCanvas(varname,'',700,500)
+    dopt='H'
+    for h in histos.values():
+      h.Draw(dopt)
+      dopt='SAMEH'
+    canvas.BuildLegend(0.75,0.95-len(histos.values())*0.04,0.92,0.95)
+    canvas.Update()
+    return histos,canvas
 
   def __str__(self):
     ret=''

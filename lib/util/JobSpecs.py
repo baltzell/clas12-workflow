@@ -2,6 +2,12 @@ import re,os,subprocess
 
 from JobErrors import SlurmErrors
 
+def getNodeFlavor(hostname):
+  for flavor in JobSpecs._FLAVORS:
+    if hostname.find(flavor)==0:
+      return flavor
+  return None
+
 class JobSpecs:
 
   _FLAVORS=['farm19','farm18','farm16','farm14','farm13','qcd12s']
