@@ -275,6 +275,7 @@ class SlurmQuery():
     prefs={}
     prefs['cputime']={'scale':60*60,'title':'CPU Hours Per Core Per Job'}
     prefs['walltime']={'scale':60*60,'title':'Wall Hours Per Job'}
+    prefs['cputime/walltime']={'scale':1,'title':'CPU/Wall Time Ratio'}
     _COLORS =[1,  2,    4,    3,    94,  51]
     _THREADS=[1,12, 20,   16,   24,   32]
     _FILLS  =[0,0,  3007, 3003, 3004, 3005]
@@ -283,42 +284,57 @@ class SlurmQuery():
     if varname in prefs:
       scale=prefs[varname]['scale']
       title=prefs[varname]['title']
+    if varname.count('/')==1:
+      varnames=varname.split('/')
+    else:
+      varnames=[varname]
     if len(self.myData)>0:
       for datum in self.myData:
         datum=datum.data
-        if 'hostname' in datum and 'coreCount' in datum and varname in datum:
-          flavor=getNodeFlavor(datum['hostname'])
-          if flavor is None: continue
-          try:
-            val=float(datum[varname])/scale
-            if varname is 'cputime':
-              val/=datum['coreCount']
-            if float(val)>maxi:
-              maxi=float(val)
-          except:
-            pass
+        if 'hostname' not in datum or 'coreCount' not in datum:
+          continue
+        if getNodeFlavor(datum['hostname']) is None:
+          continue
+        if False in [v in datum for v in varnames]:
+          continue
+        try:
+          val=float(datum[varnames[0]])/scale
+          if len(varnames)==2:
+            val/=float(datum[varnames[1]])
+          if varnames[0]=='cputime':
+            val/=datum['coreCount']
+          if float(val)>maxi:
+            maxi=float(val)
+        except:
+          pass
       for datum in self.myData:
         datum=datum.data
-        if 'hostname' in datum and 'coreCount' in datum and varname in datum:
-          flavor=getNodeFlavor(datum['hostname'])
-          if flavor is None: continue
-          try:
-            val=float(datum[varname])/scale
-            if varname is 'cputime':
-              val/=datum['coreCount']
-            if flavor not in histos:
-              histos[flavor]=TH1D(flavor+varname,';'+varname,100,mini,maxi)
-              histos[flavor].GetXaxis().SetTitle(title)
-              color=_COLORS[JobSpecs._FLAVORS.index(flavor)]
-              histos[flavor].SetTitle('%sx%d'%(flavor,datum['coreCount']))
-              histos[flavor].SetLineColor(color)
-              fill=_FILLS[_THREADS.index(threads)]
-              if fill>0:
-                histos[flavor].SetFillStyle(fill)
-                histos[flavor].SetFillColor(color)
-            histos[flavor].Fill(float(val))
-          except:
-            pass
+        if 'hostname' not in datum or 'coreCount' not in datum:
+          continue
+        flavor=getNodeFlavor(datum['hostname'])
+        if flavor is None:
+          continue
+        if False in [v in datum for v in varnames]:
+          continue
+        try:
+          val=float(datum[varnames[0]])/scale
+          if len(varnames)==2:
+            val/=float(datum[varnames[1]])
+          if varnames[0]=='cputime':
+            val/=datum['coreCount']
+          if flavor not in histos:
+            histos[flavor]=TH1D(flavor+varname,';'+varname,100,mini,maxi)
+            histos[flavor].GetXaxis().SetTitle(title)
+            color=_COLORS[JobSpecs._FLAVORS.index(flavor)]
+            histos[flavor].SetTitle('%sx%d'%(flavor,datum['coreCount']))
+            histos[flavor].SetLineColor(color)
+            fill=_FILLS[_THREADS.index(threads)]
+            if fill>0:
+              histos[flavor].SetFillStyle(fill)
+              histos[flavor].SetFillColor(color)
+          histos[flavor].Fill(float(val))
+        except:
+          pass
       maxi=0
       for h in histos.values():
         if h.GetBinContent(h.GetMaximumBin())>maxi:
