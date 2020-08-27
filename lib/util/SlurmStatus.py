@@ -259,7 +259,7 @@ class SlurmQuery():
       #print response.content
       return None
     try:
-      self.data=json.loads(response.content)
+      self.data=json.loads(response.content.decode('UTF-8'))
     except:
       return None
     self.pruneProjects()

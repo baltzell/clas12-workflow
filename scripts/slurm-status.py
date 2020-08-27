@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sys,pwd,grp,argparse,datetime,getpass
-import ROOT
 from SlurmStatus import SlurmStatus
 from SlurmStatus import SlurmQuery
 
