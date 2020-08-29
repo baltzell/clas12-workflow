@@ -192,11 +192,12 @@ class SlurmQuery():
     self.end=None
     self.dayDelta=7
     self.states=[]
-    self.data={}
+    self.data=None
     self.myData=[]
     self.statuses=[]
     self.matchAny=[]
     self.matchAll=[]
+    self.summary=None
     self.minimumWallHours=None
     self.maximumWallHours=None
     self.states=SlurmStatus._STATES
@@ -216,7 +217,7 @@ class SlurmQuery():
     self.end=day
     self.start=self.end+datetime.timedelta(days=-self.dayDelta)
 
-  def pruneProjects(self):
+  def _pruneProjects(self):
     if self.data is None or self.project is None:
       return
     while True:
@@ -231,7 +232,7 @@ class SlurmQuery():
       if not pruned:
         break
 
-  def pruneJobNames(self):
+  def _pruneJobNames(self):
     if self.data is None:
       return
     while True:
@@ -247,25 +248,23 @@ class SlurmQuery():
         break
 
   def get(self):
-    self.data=None
-    url=SlurmQuery._URL+'?type=query&user='+self.user
-    url+='&from='+self.start.strftime('%Y-%m-%d')
-    url+='&to='+self.end.strftime('%Y-%m-%d')
-    url+='&states='+'+'.join(self.states)
-    response=requests.get(url)
-    if int(response.status_code)!=200:
-      print('Server error.')
-      #print url
-      #print response.content
-      return None
-    try:
-      self.data=json.loads(response.content.decode('UTF-8'))
-    except:
-      return None
-    self.pruneProjects()
-    self.pruneJobNames()
-    for xx in self.data:
-      self.myData.append(SlurmStatus(self.user,xx))
+    if self.data is None:
+      url=SlurmQuery._URL+'?type=query&user='+self.user
+      url+='&from='+self.start.strftime('%Y-%m-%d')
+      url+='&to='+self.end.strftime('%Y-%m-%d')
+      url+='&states='+'+'.join(self.states)
+      response=requests.get(url)
+      if int(response.status_code)!=200:
+        print('Server error.')
+        return None
+      try:
+        self.data=json.loads(response.content.decode('UTF-8'))
+      except:
+        return None
+      self._pruneProjects()
+      self._pruneJobNames()
+      for xx in self.data:
+        self.myData.append(SlurmStatus(self.user,xx))
     return self.data
 
   def getJson(self):
@@ -356,8 +355,19 @@ class SlurmQuery():
     canvas.Update()
     return histos,canvas
 
+  def size(self):
+    self.get()
+    return len(self.myData)
+
+  def getSummary(self):
+    self.get()
+    if self.summary is None:
+      dog=str(self)
+    return self.summary
+
   def __str__(self):
     ret=''
+    self.summary=''
     self.get()
     if len(self.myData)>0:
       ret+=self.myData[0].getHeader()
@@ -388,15 +398,15 @@ class SlurmQuery():
       for ii in range(len(cpus)):
         wall+=walls[ii]*cores[ii]
       if wall>0:
-        ret += '\n'
-        ret += 'Job Count       : %d\n'%len(cores)
-        ret += 'CPU Count       : %d\n'%sum(cores)
-        ret += 'CPU Days        : %.1f\n'%(sum(cpus)/60/60/24)
-        ret += 'Wall Days       : %.1f\n'%(wall/60/60/24)
-        ret += 'CPU/Wall        : %.3f\n'%(sum(cpus)/wall)
-        ret += 'MemUsed/Req     : %.3f\n'%(float(sum(mused))/sum(mreqd))
-        ret += 'MemReq/Slot(GB) : %.3f\n'%(float(sum(mreqd))/1e9/sum(cores))
-        ret += 'MemUsed/Job(GB) : %.3f\n'%(sum(mused)/1e9/len(mused))
+        self.summary += '\n'
+        self.summary += 'Job Count       : %d\n'%len(cores)
+        self.summary += 'CPU Count       : %d\n'%sum(cores)
+        self.summary += 'CPU Days        : %.1f\n'%(sum(cpus)/60/60/24)
+        self.summary += 'Wall Days       : %.1f\n'%(wall/60/60/24)
+        self.summary += 'CPU/Wall        : %.3f\n'%(sum(cpus)/wall)
+        self.summary += 'MemUsed/Req     : %.3f\n'%(float(sum(mused))/sum(mreqd))
+        self.summary += 'MemReq/Slot(GB) : %.3f\n'%(float(sum(mreqd))/1e9/sum(cores))
+        self.summary += 'MemUsed/Job(GB) : %.3f\n'%(sum(mused)/1e9/len(mused))
     return ret
 
 if __name__ == '__main__':

@@ -56,7 +56,10 @@ for user in args.u:
     sq.setDayEnd(args.e)
   if len(args.s)>0:
     sq.states=args.s
-  print(sq)
+  if len(str(sq))>0:
+    print(sq),
+    if len(args.u)==1:
+      print(sq.getSummary())
   if args.g:
     canvases.append(sq.getCanvas('cputime'))
     canvases.append(sq.getCanvas('walltime'))
