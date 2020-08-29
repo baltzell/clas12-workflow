@@ -6,6 +6,7 @@ import CLAS12Workflows
 
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.dirname(os.path.realpath(__file__)).rstrip('lib/clas12')
+_JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
 
 CHOICES={
     'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
@@ -68,7 +69,7 @@ def fullModel(model):
 class ChefConfig(collections.OrderedDict):
 
   def __str__(self):
-    return json.dumps(self,indent=2,separators=(',',': '),sort_keys=False)
+    return json.dumps(self,**_JSONFORMAT)
 
   def __init__(self,args):
     if isinstance(args,dict):
@@ -91,7 +92,7 @@ class ChefConfig(collections.OrderedDict):
       if self.args.show:
         c=copy.deepcopy(collections.OrderedDict(self))
         c.pop('ignored')
-        print((json.dumps(c,indent=2,separators=(',',': '),sort_keys=False)))
+        print((json.dumps(c,**_JSONFORMAT)))
         sys.exit()
 
   def __eq__(self,cfg):
@@ -111,7 +112,7 @@ class ChefConfig(collections.OrderedDict):
     c=copy.deepcopy(collections.OrderedDict(self))
     c.pop('inputs')
     c.pop('runs')
-    return json.dumps(c,indent=2,separators=(',',': '),sort_keys=False)
+    return json.dumps(c,**_JSONFORMAT)
 
   def append(self,cfg):
     for k,v in list(cfg.items()):

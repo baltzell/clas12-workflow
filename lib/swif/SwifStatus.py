@@ -54,6 +54,8 @@ SWIFJSONKEYS=[
 'current_ts',
 ]
 
+_JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
+
 def getWorkflowNames():
   workflows=[]
   for line in subprocess.check_output([SWIF,'list']).splitlines():
@@ -67,38 +69,50 @@ def deleteWorkflow(name):
 
 class SwifStatus():
 
-  def __init__(self,name,filename=None):
+  def __init__(self,name):
     self.name=name
-    self.status=None
-    self.details=None
+    self.__status=None
+    self.__details=None
     self.tagsMerged=False
     self.user=getpass.getuser()
-    #if filename is not None:
-    #  if os.path.isfile(filename):
-    #    self.details = json.load(open(filename,'r'))
-    #  else:
-    #    print('Error reading file:  '+filename)
-
-  def loadStatusFromString(self,string):
-    self.status=json.loads(string)
 
   def setUser(self,user):
     self.user=user
 
-  def loadStatus(self):
-    cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
-    self.status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
+  def getStatus(self,source=None):
+    if self.__status is None:
+      if source is None:
+        cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
+        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
+      elif isinstance(source,list) or isinstance(source,dict):
+        self.__status=source
+      elif os.path.isfile(source):
+        self.__status=json.load(open(source,'r'))
+      elif isinstance(source,str):
+        self.__status=json.loads(source)
+      else:
+        raise TypeError('Cannot set SwifStatus.status')
+    return self.__status
 
-  def loadDetails(self):
-    cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
-    self.details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
+  def getDetails(self,source=None):
+    if self.__details is None:
+      if source is None:
+        cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
+        self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
+      elif isinstance(source,list) or isinstance(source,dict):
+        self.__details=source
+      elif os.path.isfile(source):
+        self.__details=json.load(open(source,'r'))
+      elif isinstance(source,str):
+        self.__details=json.loads(source)
+      else:
+        raise TypeError('Cannot set SwifStatus.details')
+    return self.__details
 
   def getTagValues(self,tag):
     vals=[]
-    if self.details is None:
-      self.loadDetails()
-    if 'jobs' in self.details:
-      for job in self.details['jobs']:
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
         if 'tags' in job and tag in job['tags']:
           if job['tags'][tag] not in vals:
             vals.append(job['tags'][tag])
@@ -106,14 +120,10 @@ class SwifStatus():
 
   # pull user-defined swif tags from all jobs into the global status
   def mergeTags(self):
-    if self.status is None:
-      self.loadStatus()
-    if self.details is None:
-      self.loadDetails()
-    if 'jobs' not in self.details:
+    if 'jobs' not in self.getDetails():
       return
     tags=[]
-    for job in self.details['jobs']:
+    for job in self.getDetails()['jobs']:
       if 'tags' not in job:
         continue
       for key,val in list(job['tags'].items()):
@@ -128,15 +138,13 @@ class SwifStatus():
           tags.append({key:[]})
         if val not in tags[idx][key]:
           tags[idx][key].append(val)
-    for stat in self.status:
+    for stat in self.getStatus():
       stat['tags']=tags
     self.tagsMerged=True
 
   # return a copy of the status with all null entries removed:
   def getPrunedStatus(self):
-    if self.status is None:
-      self.loadStatus()
-    status = list(self.status)
+    status = list(self.getStatus())
     for stat in status:
       modified = True
       while modified:
@@ -149,25 +157,17 @@ class SwifStatus():
     return status
 
   def getPrunedJsonStatus(self):
-    if self.status is None:
-      self.loadStatus()
     return json.dumps(self.getPrunedStatus())
 
   def getPrettyJsonStatus(self):
-    if self.status is None:
-      self.loadStatus()
-    return json.dumps(self.getPrunedStatus(),indent=2,separators=(',',': '),sort_keys=True)
+    return json.dumps(self.getPrunedStatus(),**_JSONFORMAT)
 
   def getPrettyJsonDetails(self):
-    if self.details is None:
-      self.loadDetails()
-    return json.dumps(self.details,indent=2,separators=(',',': '),sort_keys=True)
+    return json.dumps(self.getDetails(),**_JSONFORMAT)
 
   def getPrettyStatus(self):
-    if self.status is None:
-      self.loadStatus()
     statuses=[]
-    for status in self.status:
+    for status in self.getStatus():
       for key in SWIFJSONKEYS:
         if key not in status:
           continue
@@ -181,10 +181,8 @@ class SwifStatus():
     return '\n'.join(statuses)
 
   def getProblems(self):
-    if self.status is None:
-      self.loadStatus()
     problems=[]
-    for status in self.status:
+    for status in self.getStatus():
       if 'problem_types' not in status:
         continue
       if status['problem_types'] is None:
@@ -194,10 +192,8 @@ class SwifStatus():
 
   def tallyAllProblems(self):
     data=collections.OrderedDict()
-    if self.details is None:
-      self.loadDetails()
-    if 'jobs' in self.details:
-      for job in self.details['jobs']:
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
         if 'attempts' in job:
           for attempt in job['attempts']:
             if 'problem' in attempt:
@@ -218,8 +214,6 @@ class SwifStatus():
     return data
 
   def summarizeProblems(self,pernode=False):
-    if self.details is None:
-      self.loadDetails()
     ret=''
     data=sorted(self.tallyAllProblems().items())
     # YUK! FIXME
@@ -260,7 +254,7 @@ class SwifStatus():
   def getTagValue(self,tag):
     if not self.tagsMerged:
       self.mergeTags()
-    for status in self.status:
+    for status in self.getStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
@@ -275,7 +269,7 @@ class SwifStatus():
   def removeTag(self,tag):
     if not self.tagsMerged:
       self.mergeTags()
-    for status in self.status:
+    for status in self.getStatus():
       if 'tags' not in status:
         continue
       for atag in status['tags']:
@@ -289,9 +283,7 @@ class SwifStatus():
     return None
 
   def isComplete(self):
-    if self.status is None:
-      self.loadStatus()
-    for status in self.status:
+    for status in self.getStatus():
       if 'jobs' in status and 'succeeded' in status:
         return status['jobs']>0 and status['jobs']==status['succeeded']
     return False
@@ -336,10 +328,8 @@ class SwifStatus():
 
   def findMissingOutputs(self):
     ret=[]
-    if self.details is None:
-      self.loadDetails()
-    if 'jobs' in self.details:
-      for job in self.details['jobs']:
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
         if 'attempts' in job:
           for att in job['attempts']:
             if 'exitcode' in att and att['exitcode']==0:
@@ -352,10 +342,8 @@ class SwifStatus():
 
   def getJobNamesByTag(self,tags):
     ret={}
-    if self.details is None:
-      self.loadDetails()
-    if 'jobs' in self.details:
-      for job in self.details['jobs']:
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
         if 'name' not in job or 'tags' not in job:
           continue
         for tag in tags:
@@ -391,10 +379,8 @@ class SwifStatus():
   def getSummaryData(self,tag):
     data=collections.OrderedDict()
     data['total']={'jobs':0,'success':0}
-    if self.details is None:
-      self.loadDetails()
-    if 'jobs' in self.details:
-      for job in self.details['jobs']:
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
         mode = 'unknown'
         if 'tags' in job:
           if tag in job['tags']:
@@ -415,29 +401,32 @@ class SwifStatus():
       ret+='%10s:  %8d / %8d = %6.4f%%\n'%(k,v['success'],v['jobs'],float(v['success'])/v['jobs']*100)
     return ret
 
-  def getPersistentProblems(self):
-    problemJobs=[]
-    if self.details is None:
-      self.loadDetails()
-    for job in self.details['jobs']:
-      job = json.loads(json.dumps(job))
-      if 'attempts' not in job:
-        continue
-      nproblems = 0
-      # go in reverse order on attempts, since we're
-      # looking for jobs that still have problems
-      for attempt in job['attempts'][::-1]:
-        if 'problem' in attempt:
-          nproblems += 1
-        else:
-          break
-      if nproblems > 0:
-        problemJobs.append(job)
-    return problemJobs
+  def getPersistentProblems(self,problem='ANY'):
+    jobs=[]
+    for job in self.getDetails()['jobs']:
+      if 'attempts' in job:
+        # only look at the last attempt:
+        if 'problem' in job['attempts'][-1]:
+          if problem=='ANY' or job['attempts'][-1]['problem']==problem:
+            jobs.append(job)
+    return jobs
 
-  def showPersistentProblems(self):
-    for job in self.getPersistentProblems():
-      print((json.dumps(job,indent=2,separators=(',',': '),sort_keys=True)))
+  def getPersistentProblemInputs(self,problem='ANY'):
+    ret=[]
+    for job in self.getPersistentProblems(problem):
+      if 'inputs' in job:
+        for x in job['inputs']:
+          ignore=False
+          for suff in ['.sh','.yaml','.json','.sqlite']:
+            if x['local'].endswith(suff):
+              ignore=True
+              break
+          if not ignore:
+            ret.append(x['remote'])
+    return ret
+
+  def getPersistentProblemJobs(self,problem='ANY'):
+    return json.dumps(self.getPersistentProblems(problem),**_JSONFORMAT)
 
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
