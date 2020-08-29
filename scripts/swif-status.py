@@ -69,11 +69,11 @@ def processWorkflow(workflow,args):
       if 'SWIF-USER-NON-ZERO' in status.getProblems():
         sunzinps=status.getPersistentProblemInputs('SWIF-USER-NON-ZERO')
       res = status.retryProblems()
-      if len(sunzinps)>0:
-        print('\n\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunzinps))
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
-        print(res)
+        print('\n'+str(res))
+      if len(sunzinps)>0:
+        print('\n\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunzinps))
 
   # otherwise always print status:
   else:
