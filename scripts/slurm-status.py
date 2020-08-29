@@ -60,10 +60,10 @@ for user in args.u:
     print(sq),
     if len(args.u)==1:
       print(sq.getSummary())
-  if args.g:
-    canvases.append(sq.getCanvas('cputime'))
-    canvases.append(sq.getCanvas('walltime'))
-    canvases.append(sq.getCanvas('cputime/walltime'))
+    if args.g:
+      canvases.append(sq.getCanvas('cputime'))
+      canvases.append(sq.getCanvas('walltime'))
+      canvases.append(sq.getCanvas('cputime/walltime'))
 
 if args.g:
   print('Done.  Press any key to close.')
