@@ -73,7 +73,7 @@ def processWorkflow(workflow,args):
         print(status.getPrettyStatus())
         print('\n'+str(res))
       if len(sunzinps)>0 and len(sunzinps)<11:
-        print('\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunzinps))
+        print('\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunzinps)+'\n')
 
   # otherwise always print status:
   else:
