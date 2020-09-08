@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os,sys,logging,argparse
 
-import RunFileUtil,HPSJobs
+import RunFileUtil,HPSJobs,ChefUtil
 from SwifWorkflow import SwifWorkflow
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
