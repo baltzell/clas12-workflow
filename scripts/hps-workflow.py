@@ -6,8 +6,6 @@ from SwifWorkflow import SwifWorkflow
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
 
-RunFileUtil.setFileRegex('.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*')
-
 cli=argparse.ArgumentParser(description='Generate a HPS SWIF workflow.')#,
 #     epilog='(*) = required option for all models, from command-line or config file')
 
@@ -44,6 +42,8 @@ else:
       cli.error('--outPrefix is required for evio2lcio')
     if not args.detector:
       cli.error('--detector is required for evio2lcio')
+
+RunFileUtil.setFileRegex('.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*')
 
 cfg={}
 cfg['logDir'] = args.logDir
