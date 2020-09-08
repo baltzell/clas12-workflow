@@ -11,6 +11,6 @@ fi
 
 # put clas12-workflow/lib in $PYTHONPATH
 d="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export PYTHONPATH=${d}/lib/clas12:${d}/lib/swif:${d}/lib/util:${PYTHONPATH}
+export PYTHONPATH=${d}/lib/clas12:${d}/lib/hps:${d}/lib/swif:${d}/lib/util:${PYTHONPATH}
 export PATH=${d}/scripts:${PATH}
 

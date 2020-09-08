@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os,sys,logging,argparse
 
-import RunFileUtil
+import RunFileUtil,HPSJobs
 from SwifWorkflow import SwifWorkflow
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
@@ -83,11 +83,11 @@ for inputs in workflow.getGroups():
     inps.append(inp)
     if len(inps)>=cfg['mergeSize'] or ii>=len(inputs)-1:
       if len(args.trigger)>0:
-        job=EvioTriggerFilterJob(workflow,cfg)
+        job=HPSJobs.EvioTriggerFilterJob(workflow,cfg)
       elif args.evio2lcio:
-        job=EvioToLcioJob(workflow,cfg)
+        job=HPSJobs.EvioToLcioJob(workflow,cfg)
       else:
-        job=HpsJavaJob(workflow,cfg)
+        job=HPSJobs.HpsJavaJob(workflow,cfg)
       job.setPhase(phase)
       for inp in inps:
         job.addInput(os.path.basename(inp),inp)
