@@ -5,7 +5,7 @@ from SlurmStatus import SlurmQuery
 
 project_groups={'clas12':'clas12','clas':'clas','hps':'hps'}
 
-cli=argparse.ArgumentParser(description='Query SLURM job status archive.')
+cli=argparse.ArgumentParser(description='Query SLURM job status archive.',epilog='Note, to pass argument values that start with a dash, use the "=" syntax, e.g. "slurm-status.py -m=-123-".')
 cli.add_argument('-u',metavar='user',help='username (repeatable), default is current user unless project is defined', type=str, default=[], action='append')
 cli.add_argument('-p',metavar='project',help='project name (e.g. clas/clas12/hps/hallb-pro)', type=str, default=None, choices=list(project_groups.keys()))
 cli.add_argument('-d',metavar='#',help='number of days to span (default=7)', type=int, default=7)

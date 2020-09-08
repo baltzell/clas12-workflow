@@ -7,7 +7,7 @@ from ClaraStats import ClaraStats
 import Matcher
 import LogFinder
 
-cli=argparse.ArgumentParser(description='Collect job statistics from CLARA logs.')
+cli=argparse.ArgumentParser(description='Collect job statistics from CLARA logs.',epilog='Note, to pass argument values that start with a dash, use the "=" syntax, e.g. "clara-log-ana.py -m=-123-".')
 cli.add_argument('-i',help='draw histos interactively',default=False,action='store_true')
 cli.add_argument('-r',help='reload the log caches',default=False,action='store_true')
 cli.add_argument('-v',help='verbose mode',default=False,action='store_true')
@@ -31,16 +31,14 @@ for path in args.p:
       basename=path
       if path.find('/')>=0:
         basename=path.split('/').pop()
-      if Matcher.matchAll(basename,[x.strip() for x in args.M]):
-        if Matcher.matchAny(basename,[x.strip() for x in args.m]):
-          logfiles.append(path)
+      if Matcher.matchAll(basename,args.M) and Matcher.matchAny(basename,args.m):
+        logfiles.append(path)
   elif os.path.isdir(path):
     for d,x,files in os.walk(path):
       for f in files:
         if f.endswith('orch.log') or f.endswith('.out'):
-          if Matcher.matchAll(f,[x.strip() for x in args.M]):
-            if Matcher.matchAny(f,[x.strip() for x in args.m]):
-              logfiles.append(d+'/'+f)
+          if Matcher.matchAll(f,args.M) and Matcher.matchAny(f,args.m):
+            logfiles.append(d+'/'+f)
 
 if len(logfiles)==0:
   sys.exit('ERROR:  Found no valid log files.  Check path.')

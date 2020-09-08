@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import re,sys,subprocess,argparse,logging
+import sys,subprocess,argparse,logging
+import Matcher
 from SwifStatus import getWorkflowNames,deleteWorkflow,SWIF_PROBLEMS
 from CLAS12SwifStatus import CLAS12SwifStatus,getHeader
-from Matcher import matchAny
 
 logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
 logger=logging.getLogger(__name__)
@@ -22,6 +22,10 @@ def processWorkflow(workflow,args):
 #  if args.joblogs:
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
+
+  if args.delete:
+    deleteWorkflow(workflow)
+    return
 
   if args.missing:
     print('\nMissing outputs in '+workflow+':')
@@ -91,70 +95,74 @@ def processWorkflow(workflow,args):
     status.saveLog()
     if args.details:
       status.saveDetails()
+#    if args.publish:
+#      subprocess.check_output(['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir])
 
-  if len(args.clas12mon)>0 and matchAny(getHeader(workflow)['tag'],args.clas12mon):
+  if len(args.clas12mon)>0 and Matcher.matchAny(getHeader(workflow)['tag'],args.clas12mon):
     status.saveDatabase()
+
 
 if __name__ == '__main__':
 
   df='\n(default=%(default)s)'
 
-  cli = argparse.ArgumentParser('Do SWIF stuff.',epilog='Valid PROBLEMs: '+','.join(PROBLEMS))
-  cli.add_argument('--list',    help='list workflows',    action='store_true',default=False)
-  cli.add_argument('--retry',   help='retry problem jobs',action='store_true',default=False)
-  cli.add_argument('--save',    help='save to logs',      action='store_true',default=False)
-  cli.add_argument('--details', help='show job details',  action='store_true',default=False)
-  cli.add_argument('--quiet',   help='do not print retries', action='store_true',default=False)
-#  cli.add_argument('--joblogs', help='move job logs when complete', action='store_true',default=False)
-  cli.add_argument('--logdir',  metavar='PATH',help='local log directory'+df, type=str,default=None)
-#  cli.add_argument('--publish', help='rsync to www dir',  action='store_true',default=False)
-#  cli.add_argument('--webdir',  help='rsync target dir'+df,    type=str,default=None)
-#  cli.add_argument('--webhost', help='rsync target host'+df,   type=str,default='jlabl5')
-  cli.add_argument('--clas12mon',metavar='TAG',help='write matching workflows to clas12mon (repeatable)',type=str,default=[],action='append')
-  cli.add_argument('--delete',   help='delete workflow',   action='store_true',default=False)
-  cli.add_argument('--workflow', metavar='NAME',help='workflow name (or regex) else all workflows', action='append',default=[])
-  cli.add_argument('--missing',  help='find missing output files', action='store_true',default=False)
-  cli.add_argument('--stats',    help='show completion status of each workflow component', action='store_true',default=False)
-  cli.add_argument('--runstats', help='show completion status of each run number', action='store_true',default=False)
-  cli.add_argument('--problemstats', help='show summary of all problems that have occured during the workflow', default=False,action='store_true')
-  cli.add_argument('--problemnodes', help='show summary of all problems per node that have occured during the workflow', default=False,action='store_true')
-  cli.add_argument('--listrun',   metavar='#', help='list all job names associated with particular run numbers', action='append', default=[], type=int)
-  cli.add_argument('--abandonrun', metavar='#', help='abandon all jobs associated with particular run numbers', action='append', default=[], type=int)
-  cli.add_argument('--abandon',  help='abandon problem jobs (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=PROBLEMS)
-  cli.add_argument('--problems',help='show jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
-#  cli.add_argument('--input',    help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
+  cli = argparse.ArgumentParser('Do SWIF stuff.',epilog='Valid PROBLEMs: '+','.join(PROBLEMS)+'\n\nNote, to pass argument values that start with a dash, use the "=" syntax, e.g. "swif-status.py -m=-123-".')
+  cli.add_argument('--list',         help='list workflows',    action='store_true',default=False)
+  cli.add_argument('--retry',        help='retry problem jobs',action='store_true',default=False)
+  cli.add_argument('--save',         help='save to logs',      action='store_true',default=False)
+  cli.add_argument('--details',      help='show job details',  action='store_true',default=False)
+  cli.add_argument('--quiet',        help='do not print retries', action='store_true',default=False)
+  cli.add_argument('--logdir',       help='local log directory'+df, metavar='PATH',type=str,default=None)
+  cli.add_argument('--clas12mon',    help='write matching workflows to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
+  cli.add_argument('--delete',       help='delete workflow', action='store_true',default=False)
+  cli.add_argument('--workflow',     help='workflow name (or regex) else all workflows', metavar='NAME', action='append',default=[])
+  cli.add_argument('--missing',      help='find missing output files', action='store_true',default=False)
+  cli.add_argument('--stats',        help='show completion status of each workflow component', action='store_true',default=False)
+  cli.add_argument('--runStats',     help='show completion status of each run number', action='store_true',default=False)
+  cli.add_argument('--problemStats', help='show summary of all problems that have occured during the workflow', default=False,action='store_true')
+  cli.add_argument('--problemNodes', help='show summary of all problems per node that have occured during the workflow', default=False,action='store_true')
+  cli.add_argument('--listRun',      help='list all job names associated with particular run numbers', metavar='#', action='append', default=[], type=int)
+  cli.add_argument('--abandonRun',   help='abandon all jobs associated with particular run numbers', metavar='#', action='append', default=[], type=int)
+  cli.add_argument('--abandon',      help='abandon problem jobs (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=PROBLEMS)
+  cli.add_argument('--problems',     help='show jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
+  cli.add_argument('--matchAll',     help='match workflow names containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
+  cli.add_argument('--matchAny',     help='match workflow names containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
+#  cli.add_argument('--joblogs',    help='move job logs when complete', action='store_true',default=False)
+#  cli.add_argument('--publish',    help='rsync to www dir', action='store_true',default=False)
+#  cli.add_argument('--webdir',     help='rsync target dir'+df, type=str,default=None)
+#  cli.add_argument('--webhost',    help='rsync target host'+df, type=str,default='jlabl5')
+#  cli.add_argument('--input',      help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
 
   args = cli.parse_args()
+
+#  if args.publish and not args.webdir:
+#    sys.exit('ERROR:  must define --webdir if using the --publish option')
+
+  if len(args.workflow)>0:
+    if len(args.matchAll)>0 or len(args.matchAny)>0:
+      cli.error('--workflow not supported in conjuction with either --matchAll or --matchAny')
 
   if args.save and not args.logdir:
     cli.error('Must define --logdir if using the --save option')
 
+  # generate the list of workflows to process:
   workflows=[]
-  if len(args.workflow)==0:
-    workflows.extend(getWorkflowNames())
-    if args.delete and 'YES' != raw_input('Really delete all workflows?  If so, type "YES" and press return ...'):
-        sys.exit('Aborted.')
-#  elif args.input:
-#    workflow.append(args.input.replace('.json'))
-  else:
-    for x in getWorkflowNames():
-      for y in args.workflow:
-        if re.match('^'+y+'$',x) is not None:
-          workflows.append(x)
+  for wf in getWorkflowNames():
+    if len(args.workflow)==0:
+      if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
+        workflows.append(wf)
+    elif wf in args.workflow:
+      workflows.append(wf)
 
-#  if args.publish and not args.webdir:
-#    sys.exit('ERROR:  must define --webdir if using the --publish option')
+  # require user input before deleting workflows:
+  if args.delete and len(workflows)>0:
+    if 'YES' != raw_input('Really delete these workflows?\n'+'\n'.join(workflows)+'\nIf so, type "YES" and press return ...'):
+      sys.exit('Aborted')
 
   if args.list:
     print('\n'.join(workflows))
 
   else:
     for workflow in workflows:
-      if args.delete:
-        deleteWorkflow(workflow)
-      else:
-        processWorkflow(workflow,args)
-#        if args.save and args.publish:
-#          rsyncCmd=['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir]
-#          subprocess.check_output(rsyncCmd)
+      processWorkflow(workflow,args)
 

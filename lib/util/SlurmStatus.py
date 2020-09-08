@@ -240,7 +240,7 @@ class SlurmQuery():
       for ii,xx in enumerate(self.data):
         if 'name' not in xx:
           continue
-        if not Matcher.matchAny(xx['name'],[x.strip() for x in self.matchAny]) or not Matcher.matchAll(xx['name'],[x.strip() for x in self.matchAll]):
+        if not Matcher.matchAny(xx['name'],self.matchAny) or not Matcher.matchAll(xx['name'],self.matchAll):
           self.data.pop(ii)
           pruned=True
           break
