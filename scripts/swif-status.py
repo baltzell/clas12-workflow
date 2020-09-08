@@ -40,18 +40,18 @@ def processWorkflow(workflow,args):
       print(status.summarize('run')),
     return
 
-  if args.problemstats or args.problemnodes:
+  if args.problemStats or args.problemNodes:
     print('\nProblem summary for '+workflow+':')
-    print(status.summarizeProblems(args.problemnodes))
+    print(status.summarizeProblems(args.problemNodes))
     return
 
-  if len(args.listrun)>0:
-    print('\nJobs associated with run numbers: '+','.join([str(x) for x in args.listrun]))
-    print('\n'.join(status.getJobNamesByRun(args.listrun)))
+  if len(args.listRun)>0:
+    print('\nJobs associated with run numbers: '+','.join([str(x) for x in args.listRun]))
+    print('\n'.join(status.getJobNamesByRun(args.listRun)))
     return
 
-  if len(args.abandonrun)>0:
-    print(status.abandonJobsByRun(args.abandonrun))
+  if len(args.abandonRun)>0:
+    print(status.abandonJobsByRun(args.abandonRun))
     return
 
   # print details of jobs with problems:
