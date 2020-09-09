@@ -32,7 +32,7 @@ def processWorkflow(workflow,args):
     print(('\n'.join(status.findMissingOutputs())))
     return
 
-  if args.stats or args.runstats:
+  if args.stats or args.runStats:
     print('\nCompletion status summary for '+workflow+':')
     if args.stats:
       print(status.summarize('mode')),
