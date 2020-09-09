@@ -58,9 +58,9 @@ class HpsJavaJob(HPSJob):
     cmd = 'set echo ; ls -lhtr ;'
     cmd = ' java -Xmx896m -Xms512m -jar %s %s'%(self.cfg['jar'],self.cfg['steer'])
     if runno is not None:
-      cmd += '-R %d'%runno
+      cmd += ' -R %d'%runno
     if self.cfg['detector'] is not None:
-      cmd += '-d '+self.cfg['detector']
+      cmd += ' -d '+self.cfg['detector']
     cmd += ' -r -i %s -DoutputFile=out'%(inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
