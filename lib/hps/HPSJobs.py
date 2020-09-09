@@ -4,6 +4,8 @@ import RunFileUtil
 import ChefUtil
 from SwifJob import SwifJob
 
+_LOGGER=logging.getLogger(__name__)
+
 class HPSJob(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow.name)
@@ -36,7 +38,7 @@ class EvioToLcioJob(HPSJob):
     inBasename = self.inputs[0]['local']
     runno = self.getRun(inBasename)
     if runno is None:
-      logging.critical('Cannot determine run number from filename, and not provided by user.')
+      _LOGGER.critical('Cannot determine run number from filename, and not provided by user.')
     cmd = 'set echo ; ls -lhtr ;'
     cmd = ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
     cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
