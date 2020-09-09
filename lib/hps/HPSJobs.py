@@ -44,8 +44,8 @@ class EvioToLcioJob(HPSJob):
     cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s.slcio'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
-    job.addOutput('out.slcio',outPath)
-    job.addTag('run','%.6d'%runno)
+    self.addOutput('out.slcio',outPath)
+    self.addTag('run','%.6d'%runno)
     SwifJob.setCmd(self,cmd)
 
 class HpsJavaJob(HPSJob):
@@ -66,8 +66,8 @@ class HpsJavaJob(HPSJob):
     cmd += ' -r -i %s -DoutputFile=out'%(inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
-    job.addOutput('out.slcio',outPath)
-    job.addTag('run','%.6d'%runno)
+    self.addOutput('out.slcio',outPath)
+    self.addTag('run','%.6d'%runno)
     SwifJob.setCmd(self,cmd)
 
 #
