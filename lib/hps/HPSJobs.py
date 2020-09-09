@@ -4,8 +4,6 @@ import RunFileUtil
 import ChefUtil
 from SwifJob import SwifJob
 
-logger=logging.getLogger(__name__)
-
 class HPSJob(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow.name)

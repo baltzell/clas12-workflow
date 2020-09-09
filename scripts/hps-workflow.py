@@ -5,6 +5,7 @@ import RunFileUtil,HPSJobs,ChefUtil
 from SwifWorkflow import SwifWorkflow
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
+logger=logging.getLogger(__name__)
 
 cli=argparse.ArgumentParser(description='Generate a HPS SWIF workflow.')#,
 #     epilog='(*) = required option for all models, from command-line or config file')
