@@ -23,6 +23,7 @@ cli.add_argument('--steer',    metavar='PATH',help='steering resource "path"',ty
 cli.add_argument('--detector', metavar='NAME',help='detector name',type=str,default=None)#'HPS-PhysicsRun2019-v2-4pt5')
 cli.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,default='')
 cli.add_argument('--runno',    metavar='#',help='override run number from input filename',type=int,default=None)
+cli.add_argument('--hours',    metavar='#',help='job time request in hours (default = (2)24 for (non-)evio2lcio jobs)',type=int,default=None)
 cli.add_argument('--submit',   help='submit and run workflow automatically',default=False,action='store_true')
 args=cli.parse_args(sys.argv[1:])
 

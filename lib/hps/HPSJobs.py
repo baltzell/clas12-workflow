@@ -31,7 +31,9 @@ class HPSJob(SwifJob):
 class EvioToLcioJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
-    self.setTime('60h')
+    self.setTime('24h')
+    if self.cfg['hours'] is not None:
+      self.setTime('%dh'%self.cfg['hours'])
     self.setRam('1300MB')
     self.setDisk('30GB')
   def setCmd(self):
@@ -52,6 +54,8 @@ class HpsJavaJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
     self.setTime('2h')
+    if self.cfg['hours'] is not None:
+      self.setTime('%dh'%self.cfg['hours'])
     self.setRam('1GB')
     self.setDisk('10GB')
   def setCmd(self):
