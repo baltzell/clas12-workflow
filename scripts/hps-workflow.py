@@ -59,6 +59,7 @@ cfg['steer'] = args.steer
 cfg['detector']= args.detector
 cfg['outPrefix'] = args.outPrefix
 cfg['runno'] = args.runno
+cfg['hours'] = args.hours
 
 if args.inputs is None:
   cfg['inputs'] = '/home/hps/users/baltzell/hps-2019-mss-prod.txt'
