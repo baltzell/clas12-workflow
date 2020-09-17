@@ -39,11 +39,12 @@ else:
     cli.error('missing jar:  '+args.jar)
   if args.mergeSize != 0:
     cli.error('only mergeSize=0 supported for trigger yet')
-  if not args.evio2lcio:
-    if not args.outPrefix:
-      cli.error('--outPrefix is required for evio2lcio')
+  if args.evio2lcio:
     if not args.detector:
       cli.error('--detector is required for evio2lcio')
+  else:
+    if not args.outPrefix:
+      cli.error('--outPrefix is required for non-evio2lcio')
 
 RunFileUtil.setFileRegex('.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*')
 
