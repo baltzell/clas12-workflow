@@ -9,9 +9,9 @@ _LOGGER=logging.getLogger(__name__)
 class HPSJob(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow.name)
-    self.cfg=cfg
-    self.copyInputs=False
-    self.project='hps'
+    self.cfg = cfg
+    self.copyInputs = False
+    self.project = 'hps'
     if self.cfg['logDir'] is None:
       self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
     else:
@@ -84,6 +84,9 @@ class HpsJavaJob(HPSJob):
 class EvioTriggerFilterJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
+    # FIXME:  software from Maurk's personal location
+    self.exe='/home/holtrop/bin/HPS_Trigger_Filter'
+    self.addEnv('LD_LIBRARY_PATH','/home/holtrop/lib:/apps/root/6.12.06/lib')
     self.setRam('500MB')
     self.setDisk('10GB')
     self.setTime('4h')
@@ -93,24 +96,25 @@ class EvioTriggerFilterJob(HPSJob):
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
     outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
-    cmd ='setenv LD_LIBRARY_PATH /home/holtrop/lib:/apps/root/6.12.06/lib ; '
-    cmd+='set echo ; ls -lhtr ; '
+    r = rf1.runNumber
+    # FIXME:  this doesn't have proper error checking on exit codes
+    cmd += 'set echo ; ls -lhtr ; '
     if 'fcup' in self.cfg['trigger']:
-      cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T fcup -o out_fcup.evio ./*.evio* ;'
-      self.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fcup_')))
+      cmd += '%s -T fcup -o out_fcup.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_fcup_')))
     if 'muon' in self.cfg['trigger']:
-      cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T muon -E -o out_muon.evio ./*.evio* ;'
-      self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_muon_')))
+      cmd += '%s -T muon -E -o out_muon.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_muon_')))
     if 'fee' in self.cfg['trigger']:
-      cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T FEE -o out_fee.evio ./*.evio* ;'
-      self.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fee_')))
+      cmd += '%s -T FEE -o out_fee.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_fee_')))
     if 'mult2' in self.cfg['trigger']:
-      cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 16 -o out_mult2.evio ./*.evio* ;'
-      self.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult2_')))
+      cmd += '%s -T 16 -o out_mult2.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_mult2_')))
     if 'mult3' in self.cfg['trigger']:
-      cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 17 -o out_mult3.evio ./*.evio* ;'
-      self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult3_')))
-    cmd+='ls -lhtr ; '
+      cmd += '%s -T 17 -o out_mult3.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_mult3_')))
+    cmd += 'ls -lhtr ; '
     self.addTag('run','%.6d'%rf1.runNumber)
     SwifJob.setCmd(self,cmd)
 
