@@ -31,18 +31,18 @@ class HPSJob(SwifJob):
 class EvioToLcioJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
+    self.setRam('1300MB')
+    self.setDisk('30GB')
     self.setTime('24h')
     if self.cfg['hours'] is not None:
       self.setTime('%dh'%self.cfg['hours'])
-    self.setRam('1300MB')
-    self.setDisk('30GB')
   def setCmd(self):
     inBasename = self.inputs[0]['local']
     runno = self.getRun(inBasename)
     if runno is None:
       _LOGGER.critical('Cannot determine run number from filename, and not provided by user.')
     cmd = 'set echo ; ls -lhtr ;'
-    cmd = ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
+    cmd += ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
     cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s.slcio'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
@@ -53,16 +53,16 @@ class EvioToLcioJob(HPSJob):
 class HpsJavaJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
+    self.setRam('1GB')
+    self.setDisk('10GB')
     self.setTime('2h')
     if self.cfg['hours'] is not None:
       self.setTime('%dh'%self.cfg['hours'])
-    self.setRam('1GB')
-    self.setDisk('10GB')
   def setCmd(self):
     inBasename = self.inputs[0]['local']
     runno = self.getRun(inBasename)
     cmd = 'set echo ; ls -lhtr ;'
-    cmd = ' java -Xmx896m -Xms512m -jar %s %s'%(self.cfg['jar'],self.cfg['steer'])
+    cmd += ' java -Xmx896m -Xms512m -jar %s %s'%(self.cfg['jar'],self.cfg['steer'])
     if runno is not None:
       cmd += ' -R %d'%runno
     if self.cfg['detector'] is not None:
@@ -84,31 +84,33 @@ class HpsJavaJob(HPSJob):
 class EvioTriggerFilterJob(HPSJob):
   def __init__(self,workflow,cfg):
     HPSJob.__init__(self,workflow,cfg)
-    self.setTime('4h')
     self.setRam('500MB')
     self.setDisk('10GB')
+    self.setTime('4h')
+    if self.cfg['hours'] is not None:
+      self.setTime('%dh'%self.cfg['hours'])
   def setCmd(self):
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
-    outfile = cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
+    outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
     cmd ='setenv LD_LIBRARY_PATH /home/holtrop/lib:/apps/root/6.12.06/lib ; '
     cmd+='set echo ; ls -lhtr ; '
     if 'fcup' in self.cfg['trigger']:
       cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T fcup -o out_fcup.evio ./*.evio* ;'
-      job.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fcup_')))
+      self.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fcup_')))
     if 'muon' in self.cfg['trigger']:
       cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T muon -E -o out_muon.evio ./*.evio* ;'
-      job.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_muon_')))
+      self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_muon_')))
     if 'fee' in self.cfg['trigger']:
       cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T FEE -o out_fee.evio ./*.evio* ;'
-      job.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fee_')))
+      self.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_fee_')))
     if 'mult2' in self.cfg['trigger']:
       cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 16 -o out_mult2.evio ./*.evio* ;'
-      job.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult2_')))
+      self.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult2_')))
     if 'mult3' in self.cfg['trigger']:
       cmd+='/home/holtrop/bin/HPS_Trigger_Filter -T 17 -o out_mult3.evio ./*.evio* ;'
-      job.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult3_')))
+      self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_','hps_mult3_')))
     cmd+='ls -lhtr ; '
+    self.addTag('run','%.6d'%rf1.runNumber)
     SwifJob.setCmd(self,cmd)
-    job.addTag('run','%.6d'%rf1.runNumber)
 
