@@ -136,8 +136,11 @@ class ReconJob(CLAS12Job):
           cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
         if self.cfg['postproc']:
+          opts = '-d 1 -q 1'
+          if self.cfg['helflip']:
+            opts += ' -f 1'
           # postprocessing must run from the same coatjava as clara for bankdefs:
-          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
+          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
           cmd += ' && %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
           cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
           cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
