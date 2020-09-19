@@ -34,6 +34,7 @@ cli_evio2lcio.add_argument('--detector', metavar='NAME',help='(*) detector name'
 cli_evio2lcio.add_argument('--steer',    metavar='RESOURCE',help='steering resource (default=%s)'%RECONSTEER,type=str,default=RECONSTEER)
 cli_evio2lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,default='')
 cli_evio2lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
+cli_evio2lcio.add_argument('--java',     metavar='#',help='override system java version (choices=11.0.2/14.0.2)',type=str,default=None,choices=['11.0.2','14.0.2'])
 
 cli_lcio = subclis.add_parser('lcio',epilog='(*) = required')
 cli_lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-java-bin.jar',type=str,required=True)
@@ -41,6 +42,7 @@ cli_lcio.add_argument('--steer',    metavar='RESOURCE',help='(*) steering resour
 cli_lcio.add_argument('--detector', metavar='NAME',help='detector name',type=str,default=None)
 cli_lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,required=True)
 cli_lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
+cli_lcio.add_argument('--java',     metavar='#',help='override system java version (choices=11/14)',type=int,default=None,choices=[11,14])
 
 args=cli.parse_args(sys.argv[1:])
 
@@ -55,6 +57,9 @@ if 'jar' in cfg:
   cfg['jar'] = os.path.abspath(cfg['jar'])
   if not os.path.isfile(cfg['jar']):
     cli.error('missing jar file:  '+cfg['jar'])
+
+if 'java' in cfg and cfg['java'] is not None:
+  cfg['java']='/group/clas12/packages/jdk/'+cfg['java']
 
 RunFileUtil.setFileRegex(FILEREGEX)
 

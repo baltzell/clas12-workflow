@@ -17,6 +17,9 @@ class HPSJob(SwifJob):
     else:
       self.setLogDir(self.cfg['logDir']+'/'+workflow.name)
     ChefUtil.mkdir(self.logDir)
+    if 'java' in self.cfg and self.cfg['java'] is not None:
+      self.addEnv('JAVA_HOME',self.cfg['java'])
+      self.addEnv('PATH',self.cfg['java']+'/bin:${PATH}')
   def addOutput(self,local,remote):
     if remote.endswith('.lcio'):
       remote = remote[0:-5] + '.slcio'
