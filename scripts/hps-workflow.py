@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os,sys,logging,argparse
 
-import RunFileUtil,HPSJobs,ChefUtil
+import RunFileUtil,HPSJobs,ChefUtil,JarUtil
 from SwifWorkflow import SwifWorkflow
 
 MERGEPATTERN='hps_%.6d.evio.%.5d-%.5d'
@@ -58,8 +58,16 @@ if 'jar' in cfg:
   if not os.path.isfile(cfg['jar']):
     cli.error('missing jar file:  '+cfg['jar'])
 
-if 'java' in cfg and cfg['java'] is not None:
+if cfg.get('java') is not None:
   cfg['java']='/group/clas12/packages/jdk/'+cfg['java']
+
+if cfg.get('steer') is not None:
+  if not JarUtil.contains(cfg.get('jar'),cfg['steer']):
+    cli.error('steering resource not found in jar:  '+cfg['steer'])
+
+if cfg.get('detector') is not None:
+  if not JarUtil.contains(cfg.get('jar'),cfg['detector']):
+    cli.error('detector not found in jar:  '+cfg['detector'])
 
 RunFileUtil.setFileRegex(FILEREGEX)
 
