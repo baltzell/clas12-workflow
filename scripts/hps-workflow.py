@@ -8,6 +8,7 @@ MERGEPATTERN='hps_%.6d.evio.%.5d-%.5d'
 FILEREGEX='.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*'
 RECONSTEER='/org/hps/steering/recon/PhysicsRun2019FullRecon.lcsim'
 TRIGGERS=['fee','mult2','mult3','muon','fcup']
+JAVAS=['11.0.2','14.0.2']
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
 logger=logging.getLogger(__name__)
@@ -34,7 +35,7 @@ cli_evio2lcio.add_argument('--detector', metavar='NAME',help='(*) detector name'
 cli_evio2lcio.add_argument('--steer',    metavar='RESOURCE',help='steering resource (default=%s)'%RECONSTEER,type=str,default=RECONSTEER)
 cli_evio2lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,default='')
 cli_evio2lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
-cli_evio2lcio.add_argument('--java',     metavar='#',help='override system java version (choices=11.0.2/14.0.2)',type=str,default=None,choices=['11.0.2','14.0.2'])
+cli_evio2lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=str,default=None,choices=JAVAS)
 
 cli_lcio = subclis.add_parser('lcio',epilog='(*) = required')
 cli_lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-java-bin.jar',type=str,required=True)
@@ -42,7 +43,7 @@ cli_lcio.add_argument('--steer',    metavar='RESOURCE',help='(*) steering resour
 cli_lcio.add_argument('--detector', metavar='NAME',help='detector name',type=str,default=None)
 cli_lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,required=True)
 cli_lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
-cli_lcio.add_argument('--java',     metavar='#',help='override system java version (choices=11/14)',type=int,default=None,choices=[11,14])
+cli_lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=int,default=None,choices=JAVAS)
 
 args=cli.parse_args(sys.argv[1:])
 
