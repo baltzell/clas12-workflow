@@ -397,6 +397,7 @@ class SlurmQuery():
       wall=0
       for ii in range(len(cpus)):
         wall+=walls[ii]*cores[ii]
+      ret+=self.myData[0].getHeader()
       if wall>0:
         self.summary += '\n'
         self.summary += 'Job Count       : %d\n'%len(cores)
