@@ -5,9 +5,10 @@ from RcdbManager import RcdbManager
 _RCDB=None
 _LOGGER=logging.getLogger(__name__)
 
-DEFAULT_EVIO_BYTES=2e9    # 
+DEFAULT_EVIO_BYTES=2e9    # 2 GB EVIO file 
 DEFAULT_DECODED_BYTES=4e9 # from five 2GB EVIO files
 DEFAULT_DST_BYTES=1.5e9   # from five 2GB EVIO files
+DEFAULT_RECON_TIME=1.2    # Hz
 
 _DIRSMADE=[]
 def mkdir(path,tag=None):
@@ -108,14 +109,20 @@ def getReconFileBytes(schema,decodedfile):
   else:                 s *= 4.0
   return s
 
-def getReconDiskReq(schema,decodedfile):
+def getReconDiskReq(schema,decodedfile,nfiles=1):
   s = 0
   if os.path.isfile(decodedfile):
     s += getFileBytes(decodedfile)
   else:
     s += DEFAULT_DECODED_BYTES
   s += getReconFileBytes(schema,decodedfile)
-  return str(int(s/1e9)+1)+'GB'
+  return str(int(s*nfiles/1e9)+1)+'GB'
+
+def getReconSeconds(decodedfile,nthreads,nfiles=1):
+  t = 24*60*60
+  if os.path.isfile(decodedfile):
+    t = int(2*countHipoEvents(decodedfile)*DEFAULT_RECON_TIME*nfiles/nthreads)
+  return t
 
 def getTrainDiskReq(schema,reconfiles):
   s = 0
@@ -174,12 +181,13 @@ def countHipoEvents(filename):
   x=subprocess.check_output(['hipo-utils','-info',filename])
   for line in reversed(x.decode('UTF-8').split('\n')):
     cols=line.strip().split()
-    if len(cols)==3 and line.strip().find('Entries = ')==0:
+    if len(cols)==7 and cols[2]=='number' and cols[3]=='of' and cols[4]=='events':
       try:
-        return int(cols[2])
+        return int(cols[6])
       except:
         _LOGGER.error('invalid entries from hipo-utils')
         return None
+    break
   _LOGGER.error('cannot find entries from hipo-utils')
   return None
 

@@ -109,13 +109,18 @@ class ReconJob(CLAS12Job):
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
     self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
-    # TODO: choose time based on #events:
     self.setTime('24h')
     self.setDisk('20GB')
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
+    self.reqsSet=False
   def addInputData(self,filename):
-    self.setDisk(ChefUtil.getReconDiskReq(self.cfg['reconYaml'],filename))
+    if not self.reqsSet:
+      self.setDisk(ChefUtil.getReconDiskReq(self.cfg['reconYaml'],filename,len(self.inputData)))
+      hours = int(ChefUtil.getReconSeconds(filename,self.cfg['threads'],len(self.inputData))/60/60)
+      if hours > 72: hours = 72
+      if hours > 24: self.setTime('%dh'%hours)
+      self.reqsSet=True
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))

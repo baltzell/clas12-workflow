@@ -29,14 +29,17 @@ class CLAS12Job(SwifJob):
     return int(self.getTag('run'))
 
   def addInputData(self,filename,auger=True):
-    basename=filename.split('/').pop()
-    self.inputData.append(filename)
-    if auger: self.addInput(basename,filename)
-    runno=RunFile(filename).runNumber
-    fileno=RunFile(filename).fileNumber
-    self.setRun(runno)
-    if self.getTag('file') is None:
-      self.addTag('file','%.5d'%fileno)
+    if isinstance(filename,list):
+      for x in filename: self.addInputData(x,auger)
+    else:
+      basename=filename.split('/').pop()
+      self.inputData.append(filename)
+      if auger: self.addInput(basename,filename)
+      runno=RunFile(filename).runNumber
+      fileno=RunFile(filename).fileNumber
+      self.setRun(runno)
+      if self.getTag('file') is None:
+        self.addTag('file','%.5d'%fileno)
 
   def doReadme(self,directory):
     # put it on /cache if it's /mss:

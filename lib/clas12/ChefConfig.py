@@ -33,6 +33,7 @@ CFG['decDir']       = None
 CFG['trainDir']     = None
 CFG['phaseSize']    = -1
 CFG['mergeSize']    = 5
+CFG['reconSize']    = 1
 CFG['trainSize']    = 30
 CFG['threads']      = 16
 CFG['torus']        = None
@@ -137,7 +138,7 @@ class ChefConfig(collections.OrderedDict):
         yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
         if os.path.isfile(yamlprefix+self[x]+'.yaml'):
           self[x] = yamlprefix+self[x]+'.yaml'
-          _LOGGER.warning('Using stock yaml: '+self[x])
+          _LOGGER.info('Using stock yaml: '+self[x])
         else:
           _LOGGER.critical('Nonexistent stock yaml: '+self[x])
           sys.exit()
@@ -205,7 +206,8 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, while negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
-    cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
+    cli.add_argument('--trainSize', metavar='#',help='number of files per train job', type=int, default=None)
+    cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler (unnecessary if decoding was done with 6.5.6 or later)', action='store_true', default=None)
@@ -319,6 +321,9 @@ class ChefConfig(collections.OrderedDict):
     if self['model']!='dec' and self['model']!='decmrg':
       if self['outDir'] is None:
         self.cli.error('"outDir" must be specified for this workflow.')
+
+    if self['reconSize']<1:
+      self.cli.error('Invalid reconSize:  '+str(self['reconSize']))
 
     # before switchingn to run-phasing, phaseSize of 0 meant 1 run per phase,
     # swap it here to keep that meaning the same:
