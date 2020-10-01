@@ -118,9 +118,13 @@ for inputs in workflow.getGroups():
 logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\
   (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))
 
+if len(workflow.jobs)<1:
+  logger.critical('Found zero jobs to create')
+  sys.exit(1)
+
 if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')
-  sys.exit()
+  sys.exit(1)
 
 logger.info('Writing workflow to ./'+workflow.name+'.json')
 with open(workflow.name+'.json','w') as out:
@@ -129,5 +133,4 @@ with open(workflow.name+'.json','w') as out:
 if args.submit:
   logger.info('Submitting %s.json with %d jobs ...\n'%(workflow.name,len(workflow.jobs)))
   workflow.submitJson()
-
 
