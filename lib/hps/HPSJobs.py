@@ -101,7 +101,7 @@ class EvioTriggerFilterJob(HPSJob):
     outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
     r = rf1.runNumber
     # FIXME:  this doesn't have proper error checking on exit codes
-    cmd += 'set echo ; ls -lhtr ; '
+    cmd = 'set echo ; ls -lhtr ; '
     if 'fcup' in self.cfg['trigger']:
       cmd += '%s -T fcup -o out_fcup.evio ./*.evio* ;'%self.exe
       self.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_fcup_')))
