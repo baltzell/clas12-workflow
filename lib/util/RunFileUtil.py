@@ -132,7 +132,8 @@ class RunFileGroups(collections.OrderedDict):
     _LOGGER.info('Adding directory '+dirName+' ...')
     for dirpath,dirnames,filenames in os.walk(dirName):
       for filename in filenames:
-        self.addFile(dirpath+'/'+filename)
+        if not filename.startswith('.'):
+          self.addFile(dirpath+'/'+filename)
 
   def findFiles(self,data):
 
