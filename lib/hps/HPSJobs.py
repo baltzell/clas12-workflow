@@ -46,7 +46,10 @@ class EvioToLcioJob(HPSJob):
       _LOGGER.critical('Cannot determine run number from filename, and not provided by user.')
     cmd = 'set echo ; ls -lhtr ;'
     cmd += ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
-    cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
+    steer = '-x %s'%self.cfg['steer']
+    if not self.cfg['steerIsFile']:
+      steer += ' -r'
+    cmd += ' %s -d %s -e 1000 -DoutputFile=out %s'%(steer,self.cfg['detector'],inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s.slcio'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     self.addOutput('out.slcio',outPath)
@@ -70,7 +73,9 @@ class HpsJavaJob(HPSJob):
       cmd += ' -R %d'%runno
     if self.cfg['detector'] is not None:
       cmd += ' -d '+self.cfg['detector']
-    cmd += ' -r -i %s -DoutputFile=out'%(inBasename)
+    if not self.cfg['steerIsFile']:
+      cmd += ' -r'
+    cmd += ' -i %s -DoutputFile=out'%(inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     self.addOutput('out.slcio',outPath)

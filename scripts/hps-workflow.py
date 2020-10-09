@@ -63,8 +63,19 @@ if cfg.get('java') is not None:
   cfg['java']='/group/clas12/packages/jdk/'+cfg['java']
 
 if cfg.get('steer') is not None:
-  if not JarUtil.contains(cfg.get('jar'),cfg['steer']):
-    cli.error('steering resource not found in jar:  '+cfg['steer'])
+
+  if os.path.isfile(cfg['steer']):
+
+    cfg['steer'] = os.path.abspath(cfg['steer'])
+    cfg['steerIsFile'] = True
+    cli.info('interpreting --steer as a file:  '+cfg['steer'])
+
+  elif JarUtil.contains(cfg.get('jar'),cfg['steer']):
+    cfg['steerIsFile'] = False
+    cli.info('interpreting --steer as a jar resource:  '+cfg['steer'])
+
+  else:
+    cli.error('--steer not found as a file nor jar resource:  '+cfg['steer'])
 
 if cfg.get('detector') is not None:
   if not JarUtil.contains(cfg.get('jar'),cfg['detector']):
