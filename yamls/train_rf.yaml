@@ -10,6 +10,8 @@ services:
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: RF
 configuration:
+  custom-names:
+    1: rf
   io-services:
     writer:
       compression: 2
