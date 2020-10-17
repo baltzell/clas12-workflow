@@ -324,6 +324,8 @@ class ChefConfig(collections.OrderedDict):
     # swap it here to keep that meaning the same:
     if self['phaseSize']==0:
       self['phaseSize']=1
+    if self['phaseSize']>1 and self['phaseSize']<3000:
+      _LOGGER.warning('Increasing user-requested positive "phaseSize" to 3000')
 
     # print workflow dependency model info:
     if self['phaseSize']<0:
