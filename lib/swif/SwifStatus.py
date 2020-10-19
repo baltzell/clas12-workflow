@@ -337,7 +337,9 @@ class SwifStatus():
                 for out in job['outputs']:
                   if 'remote' in out:
                     if not os.path.exists(out['remote']):
-                      ret.append(out['remote'])
+                      if out['remote'].startswith('/cache/'):
+                        if not os.path.exists('/mss/'+out['remote'][7:]):
+                          ret.append(out['remote'])
     return ret
 
   def getJobNamesByTag(self,tags):
