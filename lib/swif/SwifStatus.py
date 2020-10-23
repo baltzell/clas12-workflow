@@ -312,7 +312,7 @@ class SwifStatus():
     ret=[]
     if 'AUGER-TIMEOUT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-time','add','60m'])
+      modifyCmd.extend(['-time','add','300m'])
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
       ret.append(modifyCmd)
