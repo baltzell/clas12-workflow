@@ -39,6 +39,7 @@ CFG['torus']        = None
 CFG['solenoid']     = None
 CFG['postproc']     = False
 CFG['recharge']     = False
+CFG['helflip']      = False
 CFG['schema']       = ''
 CFG['ccdbsqlite']   = None
 CFG['claraLogDir']  = None
@@ -97,7 +98,7 @@ class ChefConfig(collections.OrderedDict):
 
   def __eq__(self,cfg):
     # equality is based only on things that would change the output data
-    for k in ['clara','coatjava','reconYaml','trainYaml','outDir','mergeSize']:
+    for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','postproc','helflip','recharge']:
       if self[k] != None and cfg[k] != None:
         if self[k] != cfg[k]:
           return False
@@ -209,6 +210,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler (unnecessary if decoding was done with 6.5.6 or later)', action='store_true', default=None)
+    cli.add_argument('--helflip',  help='flip offline helicity', action='store_true', default=None)
 
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
 
@@ -418,11 +420,16 @@ class ChefConfig(collections.OrderedDict):
       if self['postproc']:
         if cjv < '6b.4.1':
           self.cli.error('Post-processing requires coatjava>6b.4.1')
+        # FIXME:  when we have a release supporting helflip
+        if self['helflip'] and cjv < 'nightly':
+          self.cli.error('Post-processing helflip requires FIXME')
         for run in self['runs']:
           if run>11000 and cjv < '6b.5.0':
             self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
       if self['recharge'] and cjv < '6.5.6':
         self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
+      if self['helflip']:
+        self.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
 
 if __name__ == '__main__':

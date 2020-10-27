@@ -16,14 +16,20 @@ class CoatjavaVersion():
     self._parse(self.string)
 
   def _parse(self,path):
-    m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
-    if m is None:
-      m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
-    if m is not None:
-      self.major=int(m.group(1))
-      self.minor=int(m.group(3))
-      self.small=int(m.group(4))
-      self.version=m.group().strip('_')
+    if os.path.basename(path).endswith('nightly'):
+      self.major=999
+      self.minor=999
+      self.small=999
+      self.version='nightly'
+    else:
+      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
+      if m is None:
+        m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
+      if m is not None:
+        self.major=int(m.group(1))
+        self.minor=int(m.group(3))
+        self.small=int(m.group(4))
+        self.version=m.group().strip('_')
     if self.version is None or not self.string.endswith(self.version):
       raise ValueError('Cannot determine coatjava version: '+path)
 
