@@ -39,6 +39,7 @@ CFG['torus']        = None
 CFG['solenoid']     = None
 CFG['postproc']     = False
 CFG['recharge']     = False
+CFG['helflip']      = False
 CFG['schema']       = ''
 CFG['ccdbsqlite']   = None
 CFG['claraLogDir']  = None
@@ -425,6 +426,8 @@ class ChefConfig(collections.OrderedDict):
             self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
       if self['recharge'] and cjv < '6.5.6':
         self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
+      if self['helflip']:
+        self.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
 
 if __name__ == '__main__':
