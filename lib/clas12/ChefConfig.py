@@ -99,7 +99,7 @@ class ChefConfig(collections.OrderedDict):
   def __eq__(self,cfg):
     # equality is based only on things that would change the output data
     for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','postproc','helflip','recharge']:
-      if self[k] != None and cfg[k] != None:
+      if self.get(k) != None and cfg.get(k) != None:
         if self[k] != cfg[k]:
           return False
     if 'ccdbsqlite' in self and 'ccdbsqlite' in cfg and self['ccdbsqlite'] != cfg['ccdbsqlite']:
