@@ -99,6 +99,7 @@ class DecodingJob(CLAS12Job):
 class ReconJob(CLAS12Job):
   THRD_MEM_REQ={0:0,   16:12, 20:14, 24:16, 32:16}
   THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
+  HOURS,DISK = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
@@ -113,14 +114,22 @@ class ReconJob(CLAS12Job):
     self.setDisk('20GB')
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
-    self.reqsSet=False
   def addInputData(self,filename):
-    if not self.reqsSet:
-      self.setDisk(ChefUtil.getReconDiskReq(self.cfg['reconYaml'],filename,len(self.inputData)))
-      hours = int(ChefUtil.getReconSeconds(filename,self.cfg['threads'],len(self.inputData))/60/60)
-      if hours > 72: hours = 72
-      if hours > 24: self.setTime('%dh'%hours)
-      self.reqsSet=True
+    # here we choose request increment based on the first file:
+    if HOURS is None or DISK is None:
+      DISK = ChefUtil.getReconDiskBytes(self.cfg['reconYaml'],filename,len(self.inputData))
+      HOURS = int(ChefUtil.getReconSeconds(filename,self.cfg['threads'],len(self.inputData))/60/60)
+      if HOURS > 72:
+        HOURS = 72
+      if HOURS > 24:
+        HOURS = 24
+      if DISK < 20e9:
+        DISK = 20e9
+      if DISK > 100e9:
+        _LOGGER.critical('Huge disk requirement: '+DISK)
+    # then we update the request when every file is added:
+    self.setTime( '%dh'  % int(HOURS*len(self.inputData)))
+    self.setDisk( '%dGB' % ( int(DISK*len(self.inputData)/1e9)+1 ) )
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))

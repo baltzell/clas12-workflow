@@ -8,7 +8,8 @@ _LOGGER=logging.getLogger(__name__)
 DEFAULT_EVIO_BYTES=2e9    # 2 GB EVIO file 
 DEFAULT_DECODED_BYTES=4e9 # from five 2GB EVIO files
 DEFAULT_DST_BYTES=1.5e9   # from five 2GB EVIO files
-DEFAULT_RECON_TIME=1.2    # Hz
+DEFAULT_RECON_TIME=1.5    # seconds per event
+DEFAULT_EVENTS=5*7e5      # events in a file
 
 _DIRSMADE=[]
 def mkdir(path,tag=None):
@@ -109,20 +110,20 @@ def getReconFileBytes(schema,decodedfile):
   else:                 s *= 4.0
   return s
 
-def getReconDiskReq(schema,decodedfile,nfiles=1):
+def getReconDiskBytes(schema,decodedfile,nfiles=1):
   s = 0
   if os.path.isfile(decodedfile):
     s += getFileBytes(decodedfile)
   else:
     s += DEFAULT_DECODED_BYTES
   s += getReconFileBytes(schema,decodedfile)
-  return str(int(s*nfiles/1e9)+1)+'GB'
+  return s
 
 def getReconSeconds(decodedfile,nthreads,nfiles=1):
-  t = 24*60*60
+  nevents = DEFAULT_EVENTS
   if os.path.isfile(decodedfile):
-    t = int(2*countHipoEvents(decodedfile)*DEFAULT_RECON_TIME*nfiles/nthreads)
-  return t
+    nevents = countHipoEvents(decodedfile)
+  return int(2 * nevents * DEFAULT_RECON_TIME * nfiles / nthreads)
 
 def getTrainDiskReq(schema,reconfiles):
   s = 0
