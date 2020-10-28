@@ -68,11 +68,11 @@ if cfg.get('steer') is not None:
 
     cfg['steer'] = os.path.abspath(cfg['steer'])
     cfg['steerIsFile'] = True
-    cli.warning('interpreting --steer as a file:  '+cfg['steer'])
+    logger.warning('interpreting --steer as a file:  '+cfg['steer'])
 
   elif JarUtil.contains(cfg.get('jar'),cfg['steer']):
     cfg['steerIsFile'] = False
-    cli.warning('interpreting --steer as a jar resource:  '+cfg['steer'])
+    logger.warning('interpreting --steer as a jar resource:  '+cfg['steer'])
 
   else:
     cli.error('--steer not found as a file nor jar resource:  '+cfg['steer'])
