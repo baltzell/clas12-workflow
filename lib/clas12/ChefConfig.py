@@ -209,7 +209,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--trainSize', metavar='#',help='number of files per train', type=int, default=None)
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
-    cli.add_argument('--recharge', help='rebuild RUN::scaler (unnecessary if decoding was done with 6.5.6 or later)', action='store_true', default=None)
+    cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
     cli.add_argument('--helflip',  help='flip offline helicity', action='store_true', default=None)
 
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
