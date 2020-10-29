@@ -34,7 +34,7 @@ cli_evio2lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-ja
 cli_evio2lcio.add_argument('--detector', metavar='NAME',help='(*) detector name',type=str,required=True)
 cli_evio2lcio.add_argument('--steer',    metavar='RESOURCE',help='steering resource (default=%s)'%RECONSTEER,type=str,default=RECONSTEER)
 cli_evio2lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,default='')
-cli_evio2lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
+cli_evio2lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=-1)
 cli_evio2lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=str,default=None,choices=JAVAS)
 
 cli_lcio = subclis.add_parser('lcio',epilog='(*) = required')
@@ -42,7 +42,7 @@ cli_lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-java-bi
 cli_lcio.add_argument('--steer',    metavar='RESOURCE',help='(*) steering resource (e.g. %s)'%RECONSTEER,type=str,required=True)
 cli_lcio.add_argument('--detector', metavar='NAME',help='detector name',type=str,default=None)
 cli_lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,required=True)
-cli_lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
+cli_lcio.add_argument('--runno',    metavar='#',help='pass run number to java command via -R #, and use filename if # not specified',type=int,default=None,nargs='?',const='-1')
 cli_lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=int,default=None,choices=JAVAS)
 
 args=cli.parse_args(sys.argv[1:])

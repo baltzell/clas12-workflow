@@ -1,4 +1,4 @@
-import os,logging,getpass
+import os,sys,logging,getpass
 
 import RunFileUtil
 import ChefUtil
@@ -27,8 +27,11 @@ class HPSJob(SwifJob):
     ChefUtil.mkdir(os.path.dirname(remote))
   def getRun(self,filename):
     ret = self.cfg['runno']
-    if ret is None:
+    if ret is None or ret<0:
       ret = RunFileUtil.RunFile(filename).runNumber
+      if ret is None:
+        _LOGGER.critical('Cannot determine run number from file name, must be specified by --runno')
+        sys.exit(1)
     return ret
 
 class EvioToLcioJob(HPSJob):
@@ -42,8 +45,6 @@ class EvioToLcioJob(HPSJob):
   def setCmd(self):
     inBasename = self.inputs[0]['local']
     runno = self.getRun(inBasename)
-    if runno is None:
-      _LOGGER.critical('Cannot determine run number from filename, and not provided by user.')
     cmd = 'set echo ; ls -lhtr ;'
     cmd += ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
     steer = '-x %s'%self.cfg['steer']
@@ -69,7 +70,7 @@ class HpsJavaJob(HPSJob):
     runno = self.getRun(inBasename)
     cmd = 'set echo ; ls -lhtr ;'
     cmd += ' java -Xmx896m -Xms512m -jar %s %s'%(self.cfg['jar'],self.cfg['steer'])
-    if runno is not None:
+    if self.cfg['runno'] is not None:
       cmd += ' -R %d'%runno
     if self.cfg['detector'] is not None:
       cmd += ' -d '+self.cfg['detector']
