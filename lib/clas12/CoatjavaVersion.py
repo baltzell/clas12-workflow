@@ -22,7 +22,11 @@ class CoatjavaVersion():
       self.small=999
       self.version='nightly'
     else:
-      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
+      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',os.path.basename(path))
+      if m is None:
+        m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',os.path.basename(path))
+      if m is None:
+        m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
       if m is None:
         m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
       if m is not None:

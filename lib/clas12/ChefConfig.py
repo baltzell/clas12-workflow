@@ -420,9 +420,8 @@ class ChefConfig(collections.OrderedDict):
       if self['postproc']:
         if cjv < '6b.4.1':
           self.cli.error('Post-processing requires coatjava>6b.4.1')
-        # FIXME:  when we have a release supporting helflip
-        if self['helflip'] and cjv < 'nightly':
-          self.cli.error('Post-processing helflip requires FIXME')
+        if self['helflip'] and cjv < '6.5.11':
+          self.cli.error('Post-processing helflip requires 6.5.11')
         for run in self['runs']:
           if run>11000 and cjv < '6b.5.0':
             self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
