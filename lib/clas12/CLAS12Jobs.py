@@ -119,20 +119,20 @@ class ReconJob(CLAS12Job):
     self.addInput('clara.yaml',cfg['reconYaml'])
   def addInputData(self,filename):
     # here we choose request increment based on the first file:
-    if HOURS is None or DISK is None:
-      DISK = ChefUtil.getReconDiskBytes(self.cfg['reconYaml'],filename,len(self.inputData))
-      HOURS = int(ChefUtil.getReconSeconds(filename,self.cfg['threads'],len(self.inputData))/60/60)
-      if HOURS > 72:
-        HOURS = 72
-      if HOURS > 24:
-        HOURS = 24
-      if DISK < 20e9:
-        DISK = 20e9
-      if DISK > 100e9:
+    if self.HOURS is None or self.DISK is None:
+      self.DISK = ChefUtil.getReconDiskBytes(self.cfg['reconYaml'],filename,len(self.inputData))
+      self.HOURS = int(ChefUtil.getReconSeconds(filename,self.cfg['threads'],len(self.inputData))/60/60)
+      if self.HOURS > 72:
+        self.HOURS = 72
+      if self.HOURS > 24:
+        self.HOURS = 24
+      if self.DISK < 20e9:
+        self.DISK = 20e9
+      if self.DISK > 100e9:
         _LOGGER.critical('Huge disk requirement: '+DISK)
     # then we update the request when every file is added:
-    self.setTime( '%dh'  % int(HOURS*len(self.inputData)))
-    self.setDisk( '%dGB' % ( int(DISK*len(self.inputData)/1e9)+1 ) )
+    self.setTime( '%dh'  % int(self.HOURS*len(self.inputData)))
+    self.setDisk( '%dGB' % ( int(self.DISK*len(self.inputData)/1e9)+1 ) )
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
