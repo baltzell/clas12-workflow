@@ -27,9 +27,9 @@ def processWorkflow(workflow,args):
     deleteWorkflow(workflow)
     return
 
-  if args.missing:
+  if args.missing or args.missingTape:
     print('\nMissing outputs in '+workflow+':')
-    print(('\n'.join(status.findMissingOutputs())))
+    print(('\n'.join(status.findMissingOutputs(args.missingTape))))
     return
 
   if args.stats or args.runStats:
@@ -117,6 +117,7 @@ if __name__ == '__main__':
   cli.add_argument('--delete',       help='delete workflow', action='store_true',default=False)
   cli.add_argument('--workflow',     help='workflow name (or regex) else all workflows', metavar='NAME', action='append',default=[])
   cli.add_argument('--missing',      help='find missing output files', action='store_true',default=False)
+  cli.add_argument('--missingTape',  help='same as --missing, but assumeg /mss if they were originally written to /cache', action='store_true',default=False)
   cli.add_argument('--stats',        help='show completion status of each workflow component', action='store_true',default=False)
   cli.add_argument('--runStats',     help='show completion status of each run number', action='store_true',default=False)
   cli.add_argument('--problemStats', help='show summary of all problems that have occured during the workflow', default=False,action='store_true')

@@ -312,7 +312,7 @@ class SwifStatus():
     ret=[]
     if 'AUGER-TIMEOUT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-time','add','60m'])
+      modifyCmd.extend(['-time','add','300m'])
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
       ret.append(modifyCmd)
@@ -326,7 +326,14 @@ class SwifStatus():
       ret.append(subprocess.check_output(modifyCmd))
     return ret
 
-  def findMissingOutputs(self):
+  def exists(self,path,tape=False):
+    ret = os.path.exists(path)
+    if tape or not ret:
+      if path.startswith('/cache/'):
+        ret = os.path.exists('/mss/'+path[7:])
+    return ret
+
+  def findMissingOutputs(self,tape=False):
     ret=[]
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
@@ -336,7 +343,7 @@ class SwifStatus():
               if 'outputs' in job:
                 for out in job['outputs']:
                   if 'remote' in out:
-                    if not os.path.exists(out['remote']):
+                    if not self.exists(out['remote'],tape):
                       ret.append(out['remote'])
     return ret
 

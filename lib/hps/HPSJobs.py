@@ -1,4 +1,4 @@
-import os,logging,getpass
+import os,sys,logging,getpass
 
 import RunFileUtil
 import ChefUtil
@@ -27,8 +27,11 @@ class HPSJob(SwifJob):
     ChefUtil.mkdir(os.path.dirname(remote))
   def getRun(self,filename):
     ret = self.cfg['runno']
-    if ret is None:
+    if ret is None or ret<0:
       ret = RunFileUtil.RunFile(filename).runNumber
+      if ret is None:
+        _LOGGER.critical('Cannot determine run number from file name, must be specified by --runno')
+        sys.exit(1)
     return ret
 
 class EvioToLcioJob(HPSJob):
@@ -42,11 +45,12 @@ class EvioToLcioJob(HPSJob):
   def setCmd(self):
     inBasename = self.inputs[0]['local']
     runno = self.getRun(inBasename)
-    if runno is None:
-      _LOGGER.critical('Cannot determine run number from filename, and not provided by user.')
     cmd = 'set echo ; ls -lhtr ;'
     cmd += ' java -Xmx896m -Xms512m -cp %s org.hps.evio.EvioToLcio'%self.cfg['jar']
-    cmd += ' -x %s -r -d %s -e 1000 -DoutputFile=out %s'%(self.cfg['steer'],self.cfg['detector'],inBasename)
+    steer = '-x %s'%self.cfg['steer']
+    if not self.cfg['steerIsFile']:
+      steer += ' -r'
+    cmd += ' %s -d %s -e 1000 -DoutputFile=out %s'%(steer,self.cfg['detector'],inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s.slcio'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     self.addOutput('out.slcio',outPath)
@@ -66,11 +70,13 @@ class HpsJavaJob(HPSJob):
     runno = self.getRun(inBasename)
     cmd = 'set echo ; ls -lhtr ;'
     cmd += ' java -Xmx896m -Xms512m -jar %s %s'%(self.cfg['jar'],self.cfg['steer'])
-    if runno is not None:
+    if self.cfg['runno'] is not None:
       cmd += ' -R %d'%runno
     if self.cfg['detector'] is not None:
       cmd += ' -d '+self.cfg['detector']
-    cmd += ' -r -i %s -DoutputFile=out'%(inBasename)
+    if not self.cfg['steerIsFile']:
+      cmd += ' -r'
+    cmd += ' -i %s -DoutputFile=out'%(inBasename)
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     self.addOutput('out.slcio',outPath)
@@ -101,7 +107,7 @@ class EvioTriggerFilterJob(HPSJob):
     outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
     r = rf1.runNumber
     # FIXME:  this doesn't have proper error checking on exit codes
-    cmd += 'set echo ; ls -lhtr ; '
+    cmd = 'set echo ; ls -lhtr ; '
     if 'fcup' in self.cfg['trigger']:
       cmd += '%s -T fcup -o out_fcup.evio ./*.evio* ;'%self.exe
       self.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_fcup_')))

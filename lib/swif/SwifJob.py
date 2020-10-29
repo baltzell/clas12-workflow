@@ -84,6 +84,12 @@ class SwifJob:
   def setTime(self,time):
     self.time=time
 
+  def setHours(self,hours):
+    if hours > 72:
+      self.time = '72h'
+    else:
+      self.time = '%.0fh'%hours
+
   def setCmd(self,cmd):
     self.cmd=cmd
 

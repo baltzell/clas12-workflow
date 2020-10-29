@@ -34,7 +34,7 @@ cli_evio2lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-ja
 cli_evio2lcio.add_argument('--detector', metavar='NAME',help='(*) detector name',type=str,required=True)
 cli_evio2lcio.add_argument('--steer',    metavar='RESOURCE',help='steering resource (default=%s)'%RECONSTEER,type=str,default=RECONSTEER)
 cli_evio2lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,default='')
-cli_evio2lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
+cli_evio2lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=-1)
 cli_evio2lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=str,default=None,choices=JAVAS)
 
 cli_lcio = subclis.add_parser('lcio',epilog='(*) = required')
@@ -42,7 +42,7 @@ cli_lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-java-bi
 cli_lcio.add_argument('--steer',    metavar='RESOURCE',help='(*) steering resource (e.g. %s)'%RECONSTEER,type=str,required=True)
 cli_lcio.add_argument('--detector', metavar='NAME',help='detector name',type=str,default=None)
 cli_lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,required=True)
-cli_lcio.add_argument('--runno',    metavar='#',help='override run numbers from input filenames',type=int,default=None)
+cli_lcio.add_argument('--runno',    metavar='#',help='pass run number to java command via -R #, and use filename if # not specified',type=int,default=None,nargs='?',const='-1')
 cli_lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=int,default=None,choices=JAVAS)
 
 args=cli.parse_args(sys.argv[1:])
@@ -63,8 +63,19 @@ if cfg.get('java') is not None:
   cfg['java']='/group/clas12/packages/jdk/'+cfg['java']
 
 if cfg.get('steer') is not None:
-  if not JarUtil.contains(cfg.get('jar'),cfg['steer']):
-    cli.error('steering resource not found in jar:  '+cfg['steer'])
+
+  if os.path.isfile(cfg['steer']):
+
+    cfg['steer'] = os.path.abspath(cfg['steer'])
+    cfg['steerIsFile'] = True
+    logger.warning('interpreting --steer as a file:  '+cfg['steer'])
+
+  elif JarUtil.contains(cfg.get('jar'),cfg['steer']):
+    cfg['steerIsFile'] = False
+    logger.warning('interpreting --steer as a jar resource:  '+cfg['steer'])
+
+  else:
+    cli.error('--steer not found as a file nor jar resource:  '+cfg['steer'])
 
 if cfg.get('detector') is not None:
   if not JarUtil.contains(cfg.get('jar'),cfg['detector']):
@@ -118,9 +129,13 @@ for inputs in workflow.getGroups():
 logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\
   (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))
 
+if len(workflow.jobs)<1:
+  logger.critical('Found zero jobs to create')
+  sys.exit(1)
+
 if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')
-  sys.exit()
+  sys.exit(1)
 
 logger.info('Writing workflow to ./'+workflow.name+'.json')
 with open(workflow.name+'.json','w') as out:
@@ -129,5 +144,4 @@ with open(workflow.name+'.json','w') as out:
 if args.submit:
   logger.info('Submitting %s.json with %d jobs ...\n'%(workflow.name,len(workflow.jobs)))
   workflow.submitJson()
-
 

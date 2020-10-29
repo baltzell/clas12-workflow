@@ -41,7 +41,10 @@ class DecodeAndMergeJob(CLAS12Job):
   def addInputData(self,eviofiles):
     # FIXME:  this assume 2 GB EVIO file
     self.setDisk('%.0fGB'%(int(ChefUtil.DEFAULT_EVIO_BYTES*1.4)/1e9*len(eviofiles)+1))
-    self.setTime('%.0fh'%(len(eviofiles)+2))
+    hours = len(eviofiles)+2
+    if hours < 12:
+      hours = 12
+    self.setHours(hours)
     decodedfiles=[]
     for eviofile in eviofiles:
       CLAS12Job.addInputData(self,eviofile)
@@ -142,17 +145,19 @@ class ReconJob(CLAS12Job):
     if self.cfg['postproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
+        # postprocessing must run from the same coatjava as clara for bankdefs:
         if self.cfg['recharge']:
-          # postprocessing must run from the same coatjava as clara for bankdefs:
           cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
           cmd += ' && %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
           cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
           cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
         if self.cfg['postproc']:
-          # postprocessing must run from the same coatjava as clara for bankdefs:
-          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
-          cmd += ' && %s/plugins/clas12/bin/postprocess -d 1 -q 1 -o pp.hipo %s'%(self.cfg['clara'],x)
+          opts = '-d 1 -q 1'
+          if self.cfg['helflip']:
+            opts += ' -f 1'
+          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
+          cmd += ' && %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
           cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
           cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
