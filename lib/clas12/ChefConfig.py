@@ -3,6 +3,7 @@ import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
 import CLAS12Workflows
+import ClaraYaml
 
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.dirname(os.path.realpath(__file__)).rstrip('lib/clas12')
@@ -408,6 +409,8 @@ class ChefConfig(collections.OrderedDict):
       self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
     if self['reconYaml'] is not None:
       self['schema']=ChefUtil.getSchemaName(self['reconYaml'])
+      if not ClaraYaml.checkIntegrity(self['reconYaml'],self['clara']):
+        self.cli.error('"reconYaml" has bugs')
     self._checkYamls()
 
     # parse run list:

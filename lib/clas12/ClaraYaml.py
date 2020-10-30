@@ -8,13 +8,19 @@ _LOGGER=logging.getLogger(__name__)
 _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 
 #
-# Checks:
+# Checks whether:
 #
-# whether every service has a configuration section
-# whether every service has a CCDB timestamp/variation
-# whether timestamps have correct format
-# whether all classes exist in jars
-# whether there's spaces in any names
+# every service has a configuration section
+# every service has a CCDB timestamp/variation
+# timestamps have correct format
+# all classes exist in jars
+# all variations exist in CCDB
+# there's spaces in any names
+#
+
+def checkIntegrity(yamlfile,clara):
+  cy = ClaraYaml(yamlfile,clara)
+  return cy.checkIntegrity()
 
 class ClaraYaml:
 
