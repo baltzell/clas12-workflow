@@ -16,14 +16,19 @@ class JarContents:
     if not os.path.isfile(filename):
       _LOGGER.critical('File does not exist:  '+filename)
     else:
-      p = subprocess.Popen(['jar','tf',filename],stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+      p = subprocess.Popen(['jar','tf',filename],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True)
       for line in iter(p.stdout.readline, ''):
         self.data.append(line.strip().strip('/'))
       p.wait()
   def __str__(self):
     return '\n'.join(self.data)
   def contains(self,path):
-    return path.strip('/') in self.data
+    if path.strip('/') not in self.data:
+      if path.strip('/').replace('/','.') not in self.data:
+        if path.strip('/').replace('.','/')+'.class' not in self.data:
+          return False
+    return True
+
 
 if __name__ == '__main__':
   import sys
