@@ -28,7 +28,7 @@ class ClaraYaml:
     self.filename = yamlfile
     self.clara = clara
     self.ccdb = ccdb.AlchemyProvider()
-    self.jars = self.getJars()
+    self.jars = None
     self.names = []
     with open(yamlfile,'r') as f:
       self.yaml = yaml.safe_load(f)
@@ -42,6 +42,8 @@ class ClaraYaml:
     return jars
 
   def findClass(self,name):
+    if self.jars is None:
+      self.jars = self.getJars()
     for jar,contents in self.jars.items():
       if contents.contains(name):
         return True
