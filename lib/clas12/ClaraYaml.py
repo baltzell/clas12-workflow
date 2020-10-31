@@ -48,6 +48,8 @@ class ClaraYaml:
     return False
 
   def checkIntegrity(self):
+    if not self.checkAscii(self.filename):
+      return False
     if 'services' not in self.yaml:
       _LOGGER.critical('\'services\' not in YAML: '+self.filename)
       return False
@@ -117,6 +119,17 @@ class ClaraYaml:
         _LOGGER.warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)
     return True
 
+  def checkAscii(self,filename):
+    with open(filename,'r') as f:
+      lineno = 0
+      for line in f.readlines():
+        lineno += 1
+        try:
+          line.encode('ascii')
+        except:
+          _LOGGER.critical('Non-ASCII characters (line %d: %s )found in YAML: %s'%(lineno,line.strip(),self.filename))
+          return False
+    return True
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
