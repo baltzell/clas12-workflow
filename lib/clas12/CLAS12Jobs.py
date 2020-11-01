@@ -102,7 +102,7 @@ class DecodingJob(CLAS12Job):
 class ReconJob(CLAS12Job):
   THRD_MEM_REQ={0:0,   16:12, 20:14, 24:16, 32:16}
   THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
-  HOURS,DISK = None,None
+  HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
@@ -117,26 +117,37 @@ class ReconJob(CLAS12Job):
     self.setDisk('20GB')
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
+    self.nfiles = 0
+  def setRequestIncrements(self,filename):
+    self.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
+    self.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
+    self.BYTES_INC += ChefUtil.DEFAULT_DECODED_BYTES
+  def setRequests(self):
+    gb = int((self.BYTES_INC/1e9*self.nfiles)+1)
+    hr = int(self.HOURS_INC*self.nfiles+1)
+    if hr > 72:
+      _LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
+      sys.exit(2)
+    if gb > 100:
+      _LOGGER.critical('Huge disk requirement (%s GB), need fewer files.'%str(gb))
+      sys.exit(2)
+    if hr < 24:
+      hr = 24
+    if gb < 10:
+      gb = 10
+    self.setTime( '%dh'  % hr)
+    self.setDisk( '%dGB' % gb)
   def addInputData(self,filename):
-    # here we choose request increment based on the first file:
-    if self.HOURS is None or self.DISK is None:
-      self.DISK = ChefUtil.getReconDiskBytes(self.cfg['reconYaml'],filename,len(self.inputData))
-      self.HOURS = int(ChefUtil.getReconSeconds(filename,self.cfg['threads'],len(self.inputData))/60/60)
-      if self.HOURS > 72:
-        self.HOURS = 72
-      if self.HOURS > 24:
-        self.HOURS = 24
-      if self.DISK < 20e9:
-        self.DISK = 20e9
-      if self.DISK > 100e9:
-        _LOGGER.critical('Huge disk requirement: '+DISK)
-    # then we update the request when every file is added:
-    self.setTime( '%dh'  % int(self.HOURS*len(self.inputData)))
-    self.setDisk( '%dGB' % ( int(self.DISK*len(self.inputData)/1e9)+1 ) )
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
     CLAS12Job.addOutputData(self,'rec_'+basename,outDir)
+    # here we choose request increment based on the first file:
+    if self.HOURS_INC is None or self.BYTES_INC is None:
+      self.setRequestIncrements(filename)
+    # and now update the resource requests when every file is added:
+    self.nfiles += 1
+    self.setRequests()
   def setCmd(self,hack):
     cmd = './clara.sh -t '+str(self.getCores())
     if self.cfg['claraLogDir'] is not None:
@@ -186,7 +197,7 @@ class TrainJob(CLAS12Job):
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
-      for y in ChefUtil.getTrainIndices(self.cfg['trainYaml']):
+      for y in ClaraYaml.getTrainIndices(self.cfg['trainYaml']):
         CLAS12Job.addOutputData(self,'skim%d_%s'%(y,basename),outDir)
   def setCmd(self,hack):
     cmd = './train.sh -t 12 '
@@ -214,7 +225,7 @@ class TrainMrgJob(CLAS12Job):
       inDir = self.cfg['workDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
     self.addOutputData(outDir,outDir,auger=False)
-    for trainName in list(ChefUtil.getTrainNames(self.cfg['trainYaml']).values()):
+    for trainName in list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
       ChefUtil.mkdir(outDir+'/'+trainName)
     cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))

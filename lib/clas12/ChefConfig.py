@@ -408,7 +408,7 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('rec')>=0 and self['reconYaml'] is None:
       self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
     if self['reconYaml'] is not None:
-      self['schema']=ChefUtil.getSchemaName(self['reconYaml'])
+      self['schema']=ClaraYaml.getSchemaName(self['reconYaml'])
       if not ClaraYaml.checkIntegrity(self['reconYaml'],self['clara']):
         self.cli.error('"reconYaml" has bugs')
     self._checkYamls()

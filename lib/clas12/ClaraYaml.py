@@ -8,7 +8,7 @@ _LOGGER=logging.getLogger(__name__)
 _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 
 #
-# Checks whether:
+# Checks recon YAMLs for whether:
 #
 # every service has a configuration section
 # every service has a CCDB timestamp/variation
@@ -17,17 +17,31 @@ _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 # all variations exist in CCDB
 # there's spaces in any names
 #
+# TODO: add full train YAML integrity checking
+#
 
 def checkIntegrity(yamlfile,clara):
   cy = ClaraYaml(yamlfile,clara)
   return cy.checkIntegrity()
+
+def getSchemaName(yamlfile):
+  cy = ClaraYaml(yamlfile,None)
+  return cy.getSchemaName()
+
+def getTrainNames(yamlfile):
+  cy = ClaraYaml(yamlfile,None)
+  return cy.getTrainNames()
+
+def getTrainIndices(yamlfile):
+  cy = ClaraYaml(yamlfile,None)
+  return cy.getTrainIndices()
 
 class ClaraYaml:
 
   def __init__(self,yamlfile,clara):
     self.filename = yamlfile
     self.clara = clara
-    self.ccdb = ccdb.AlchemyProvider()
+    self.ccdb = None
     self.jars = None
     self.names = []
     with open(yamlfile,'r') as f:
@@ -50,6 +64,7 @@ class ClaraYaml:
     return False
 
   def checkIntegrity(self):
+    _LOGGER.info('Checking YAML file:  '+self.filename)
     if not self.checkAscii(self.filename):
       return False
     if 'services' not in self.yaml:
@@ -64,6 +79,58 @@ class ClaraYaml:
     if not self.checkConfiguration(self.yaml['configuration']):
       return False
     return True
+
+  def getSchemaName(self):
+    ret = None
+    if 'configuration' in self.yaml:
+      c = self.yaml['configuration']
+      if 'io-services' in c:
+        c = c['io-services']
+        if 'writer' in c:
+          c = c['writer']
+          if 'schema_dir' in c:
+            s = c['schema_dir'].strip().strip('/').split('/').pop().strip('"')
+            if s == 'monitoring': s = 'mon'
+            if s == 'calibration' : s = 'calib'
+            ret = s
+    return ret
+
+  def getTrainIndices(self):
+    ret = []
+    if 'configuration' in self.yaml:
+      c = self.yaml['configuration']
+      if 'services' in c:
+        for name,val in c['services'].items():
+          if 'id' in val:
+            ret.append(int(val['id']))
+    return ret
+
+  def getTrainNames(self):
+    ret = {}
+    for x in self.getTrainIndices():
+      ret[x] = None
+    if 'configuration' in self.yaml:
+      c = self.yaml['configuration']
+      if 'custom-names' in c:
+        for key,val in c['custom-names'].items():
+          try:
+            key = int(key)
+          except:
+            _LOGGER.error('Non-integer wagon id in custom-names in train YAML: '+key)
+            sys.exit(42)
+          if key not in ret:
+            _LOGGER.error('Invalid wagon id in custom-names in train YAML:  '+str(key))
+            sys.exit(42)
+          ret[key] = val.strip()
+    # must be all-or-none:
+    if None in list(ret.values()):
+      for x,y in list(ret.items()):
+        if y is not None:
+          _LOGGER.error('Missing custom-name in train yaml:  '+str(ret))
+          sys.exit(42)
+      for x,y in list(ret.items()):
+        ret[x]='skim%d'%int(x)
+    return ret
 
   def checkService(self,service):
     if 'class' not in service:
@@ -88,6 +155,8 @@ class ClaraYaml:
     return True
 
   def checkVariation(self,variation):
+    if self.ccdb is None:
+      self.ccdb = ccdb.AlchemyProvider()
     self.ccdb.connect(_CCDBURI)
     for v in self.ccdb.get_variations():
       if variation == v.name.strip():

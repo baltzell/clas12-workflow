@@ -1,6 +1,7 @@
 import os,re,sys,subprocess,logging
 
 from RcdbManager import RcdbManager
+import ClaraYaml
 
 _RCDB=None
 _LOGGER=logging.getLogger(__name__)
@@ -9,7 +10,7 @@ DEFAULT_EVIO_BYTES=2e9    # 2 GB EVIO file
 DEFAULT_DECODED_BYTES=4e9 # from five 2GB EVIO files
 DEFAULT_DST_BYTES=1.5e9   # from five 2GB EVIO files
 DEFAULT_RECON_TIME=1.5    # seconds per event
-DEFAULT_EVENTS=5*7e5      # events in a file
+DEFAULT_EVENTS=5*7e4      # events in a file
 
 _DIRSMADE=[]
 def mkdir(path,tag=None):
@@ -44,63 +45,9 @@ def getFileBytes(path):
       return os.path.getsize(path)
   return None
 
-def getTrainIndices(yamlfile):
-  ids=[]
-  for line in open(yamlfile,'r').readlines():
-    if line.strip().find('#')==0:
-      continue
-    if line.strip().find('id: ')==0:
-      if int(line.strip().split()[1]) not in ids:
-        ids.append(int(line.strip().split()[1]))
-  return sorted(ids)
-
-def getTrainNames(yamlfile):
-  names={}
-  for x in getTrainIndices(yamlfile):
-    names[x]=None
-  # yaml parser does not come with stock python ...
-  section=False
-  for line in open(yamlfile,'r').readlines():
-    if line.strip().find('#')==0:
-      continue
-    if line.strip().find('custom-names:')==0:
-      section=True
-      continue
-    elif line.strip().endswith(':'):
-      section=False
-    if not section:
-      continue
-    cols=line.strip().split(':')
-    if len(cols)==2:
-      try:
-        thisid=int(cols[0])
-      except:
-        continue
-      if thisid not in names:
-        _LOGGER.error('Invalid wagon id in custom-names in train yaml:  '+line)
-      names[thisid]=cols[1].strip()
-  # must be all-or-none:
-  if None in list(names.values()):
-    for x,y in list(names.items()):
-      if y is not None:
-        _LOGGER.error('Missing custom-name in train yaml:  '+str(names))
-        sys.exit(42)
-    for x,y in list(names.items()):
-      names[x]='skim%d'%int(x)
-  return names
-
-def getSchemaName(yamlfile):
-  for line in open(yamlfile,'r').readlines():
-    if line.strip().find('schema_dir: ')==0:
-      s=line.strip().strip('/').split('/').pop().strip('"')
-      if   s=='monitoring':  s='mon'
-      elif s=='calibration': s='calib'
-      return s
-  return ''
-
 def getReconFileBytes(schema,decodedfile):
   if schema is not None and schema.startswith('/'):
-    schema=getSchemaName(schema)
+    schema=ClaraYaml.getSchemaName(schema)
   s = DEFAULT_DECODED_BYTES
   if decodedfile is not None and os.path.isfile(decodedfile):
     s = getFileBytes(decodedfile)
@@ -110,20 +57,12 @@ def getReconFileBytes(schema,decodedfile):
   else:                 s *= 4.0
   return s
 
-def getReconDiskBytes(schema,decodedfile,nfiles=1):
-  s = 0
-  if os.path.isfile(decodedfile):
-    s += getFileBytes(decodedfile)
-  else:
-    s += DEFAULT_DECODED_BYTES
-  s += getReconFileBytes(schema,decodedfile)
-  return s
-
-def getReconSeconds(decodedfile,nthreads,nfiles=1):
+def getReconSeconds(decodedfile):
   nevents = DEFAULT_EVENTS
   if os.path.isfile(decodedfile):
     nevents = countHipoEvents(decodedfile)
-  return int(2 * nevents * DEFAULT_RECON_TIME * nfiles / nthreads)
+  s = 2 * nevents * DEFAULT_RECON_TIME
+  return s
 
 def getTrainDiskReq(schema,reconfiles):
   s = 0

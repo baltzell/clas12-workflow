@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import re,os,sys,logging,subprocess,argparse
-import ChefUtil
+import ClaraYaml
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s] %(message)s')
 logger=logging.getLogger(__name__)
@@ -68,7 +68,7 @@ else:
 # retrieve train names from yaml file:
 trainNames=None
 if args.y is not None:
-  trainNames=ChefUtil.getTrainNames(args.y)
+  trainNames=ClaraYaml.getTrainNames(args.y)
 
 # call hipo-merge-runs.py once per trainIndex:
 for trainIndex in sorted(trainIndices):
