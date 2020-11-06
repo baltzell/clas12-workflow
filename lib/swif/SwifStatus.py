@@ -435,6 +435,16 @@ class SwifStatus():
   def getPersistentProblemJobs(self,problem='ANY'):
     return json.dumps(self.getPersistentProblems(problem),**_JSONFORMAT)
 
+  def getPersistentProblemLogs(self,problem='ANY'):
+    ret = []
+    for job in self.getPersistentProblems(problem):
+      if 'stdout' in job:
+        ret.append(job['stdout'].replace('file:',''))
+      if 'stderr' in job:
+        ret.append(job['stderr'].replace('file:',''))
+    return ret
+
+
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
 #  s.setUser('clas12-4')

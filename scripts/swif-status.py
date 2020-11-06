@@ -54,6 +54,14 @@ def processWorkflow(workflow,args):
     print(status.abandonJobsByRun(args.abandonRun))
     return
 
+  # print contents of logs from jobs problems:
+  if args.problemLogs:
+    for f in status.getPersistentProblemLogs(args.problems):
+      with open(f,'r') as f:
+        for line in f.readlines():
+          print(line.strip())
+    return
+
   # print details of jobs with problems:
   if args.problems:
     print(status.getPersistentProblemJobs(args.problems))
