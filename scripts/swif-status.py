@@ -57,6 +57,7 @@ def processWorkflow(workflow,args):
   # print contents of logs from jobs problems:
   if args.problemLogs:
     for f in status.getPersistentProblemLogs(args.problems):
+      print(f)
       with open(f,'r') as f:
         for line in f.readlines():
           print(line.strip())
