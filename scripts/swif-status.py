@@ -36,7 +36,7 @@ def processWorkflow(workflow,args):
     print('\nCompletion status summary for '+workflow+':')
     if args.stats:
       print(status.summarize('mode')),
-    if args.runstats:
+    if args.runStats:
       print(status.summarize('run')),
     return
 
