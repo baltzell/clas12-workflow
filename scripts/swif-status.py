@@ -135,6 +135,7 @@ if __name__ == '__main__':
   cli.add_argument('--abandonRun',   help='abandon all jobs associated with particular run numbers', metavar='#', action='append', default=[], type=int)
   cli.add_argument('--abandon',      help='abandon problem jobs (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=PROBLEMS)
   cli.add_argument('--problems',     help='show jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
+  cli.add_argument('--problemLogs',  help='print logs of all jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
   cli.add_argument('--matchAll',     help='match workflow names containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='match workflow names containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
 #  cli.add_argument('--joblogs',    help='move job logs when complete', action='store_true',default=False)
