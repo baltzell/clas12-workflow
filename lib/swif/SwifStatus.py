@@ -1,4 +1,4 @@
-import os,sys,json,subprocess,getpass,datetime,collections
+import os,sys,glob,json,subprocess,getpass,datetime,collections
 
 SWIF='/site/bin/swif'
 
@@ -435,13 +435,13 @@ class SwifStatus():
   def getPersistentProblemJobs(self,problem='ANY'):
     return json.dumps(self.getPersistentProblems(problem),**_JSONFORMAT)
 
-  def getPersistentProblemLogs(self,problem='ANY'):
+  def getPersistentProblemLogs(self,logdir=None):
     ret = []
-    for job in self.getPersistentProblems(problem):
-      if 'stdout' in job:
-        ret.append(job['stdout'].replace('file:',''))
-      if 'stderr' in job:
-        ret.append(job['stderr'].replace('file:',''))
+    if logdir is None:
+      logdir = '/farm_out/%s/%s'%(getpass.getuser(),self.name)
+    for job in self.getPersistentProblems():
+      if 'name' in job:
+        ret.extend(glob.glob('%s/%s*'%(logdir,job['name'])))
     return ret
 
 

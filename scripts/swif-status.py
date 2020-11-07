@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,subprocess,argparse,logging
+import os,sys,subprocess,argparse,logging
 import Matcher
 from SwifStatus import getWorkflowNames,deleteWorkflow,SWIF_PROBLEMS
 from CLAS12SwifStatus import CLAS12SwifStatus,getHeader
@@ -55,8 +55,8 @@ def processWorkflow(workflow,args):
     return
 
   # print contents of logs from jobs problems:
-  if args.problemLogs:
-    for f in status.getPersistentProblemLogs(args.problems):
+  if args.problemLogs is not False:
+    for f in status.getPersistentProblemLogs(args.problemLogs):
       print(f)
       with open(f,'r') as f:
         for line in f.readlines():
@@ -135,7 +135,7 @@ if __name__ == '__main__':
   cli.add_argument('--abandonRun',   help='abandon all jobs associated with particular run numbers', metavar='#', action='append', default=[], type=int)
   cli.add_argument('--abandon',      help='abandon problem jobs (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=PROBLEMS)
   cli.add_argument('--problems',     help='show jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
-  cli.add_argument('--problemLogs',  help='print logs of all jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
+  cli.add_argument('--problemLogs',  help='directory of log files', metavar='PATH',nargs='?',const=None,default=False)
   cli.add_argument('--matchAll',     help='match workflow names containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='match workflow names containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
 #  cli.add_argument('--joblogs',    help='move job logs when complete', action='store_true',default=False)
@@ -155,6 +155,10 @@ if __name__ == '__main__':
 
   if args.save and not args.logdir:
     cli.error('Must define --logdir if using the --save option')
+
+  if args.problemLogs is not False and args.problemLogs is not None:
+    if not os.path.isdir(args.problemLogs):
+      cli.error('optional argument to --problemLogs must be a directory')
 
   # generate the list of workflows to process:
   workflows=[]
