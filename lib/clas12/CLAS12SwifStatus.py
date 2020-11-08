@@ -59,10 +59,10 @@ class CLAS12SwifStatus(SwifStatus):
       statusFile.write(self.getPrettyJsonStatus())
       statusFile.close()
 
-  def findMissingOutputs(self):
+  def findMissingOutputs(self,tape=False):
     ret=[]
     # remove transient outputs:
-    for x in SwifStatus.findMissingOutputs(self):
+    for x in SwifStatus.findMissingOutputs(self,tape=False):
       if re.search('train/\d\d\d\d\d\d/skim\d',x) is None:
         ret.append(x)
     return ret
