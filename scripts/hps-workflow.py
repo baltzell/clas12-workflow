@@ -43,7 +43,7 @@ cli_lcio.add_argument('--steer',    metavar='RESOURCE',help='(*) steering resour
 cli_lcio.add_argument('--detector', metavar='NAME',help='detector name',type=str,default=None)
 cli_lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,required=True)
 cli_lcio.add_argument('--runno',    metavar='#',help='pass run number to java command via -R #, and use filename if # not specified',type=int,default=None,nargs='?',const='-1')
-cli_lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=int,default=None,choices=JAVAS)
+cli_lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=str,default=None,choices=JAVAS)
 
 args=cli.parse_args(sys.argv[1:])
 
