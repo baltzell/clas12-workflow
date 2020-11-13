@@ -55,6 +55,8 @@ class MinimalDependency(CLAS12Workflow):
 
     for xx in self.getGroups():
 
+      jput_jobs = []
+
       nruns += 1
       nfiles += len(xx)
 
@@ -74,14 +76,19 @@ class MinimalDependency(CLAS12Workflow):
           xx = self.decodemerge(self.phase,xx)
         else:
           xx = self.decode(self.phase,xx)
+        jput_jobs.extend(xx)
 
       if self.cfg['model'].find('rec')>=0:
         xx = self.reconclara(self.phase,xx)
+        jput_jobs.extend(xx)
 
       if self.cfg['model'].find('ana')>=0:
         xx = self.train(self.phase,xx)
         xx.extend(self.trainmerge(self.phase,xx))
+        jput_jobs.extend(xx)
         self.trainclean(self.phase,xx)
+
+      self.jput(self.phase+1,jput_jobs)
 
 
 class RollingRuns(CLAS12Workflow):
@@ -119,15 +126,19 @@ class RollingRuns(CLAS12Workflow):
 
     while True:
 
+      jput_jobs = []
+
       if len(trainQ)>0:
         xx = trainQ.pop(0)
         trainJobs = self.train(xx.phase,xx.jobs)
         trainJobs.extend(self.trainmerge(xx.phase,trainJobs))
+        jput_jobs.extend(trainJobs)
         self.trainclean(xx.phase,trainJobs)
 
       if len(reconQ)>0:
         xx = reconQ.pop(0)
         reconJobs=self.reconclara(xx.phase,xx.jobs)
+        jput_jobs.extend(reconJobs)
         if self.cfg['model'].find('ana')>=0:
           trainQ.append(SwifPhase(xx.phase+1,reconJobs))
 
@@ -137,6 +148,7 @@ class RollingRuns(CLAS12Workflow):
           decodeJobs = self.decodemerge(xx.phase,xx.jobs)
         else:
           decodeJobs = self.decode(xx.phase,xx.jobs)
+        jput_jobs.extend(decodeJobs)
         if self.cfg['model'].find('rec')>=0:
           reconQ.append(SwifPhase(xx.phase+1,decodeJobs))
 
@@ -164,6 +176,8 @@ class RollingRuns(CLAS12Workflow):
           nruns = 0
           nfiles = 0
           self.phase += 1
+
+      self.jput(self.phase+1,jput_jobs)
 
       if len(decodeQ)+len(reconQ)+len(trainQ) == 0:
         break

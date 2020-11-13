@@ -1,6 +1,7 @@
 import os,logging
 
 from SwifJob import SwifJob
+from SwifJob import JputJob
 from SwifWorkflow import SwifWorkflow
 import CLAS12Jobs
 import ChefUtil
@@ -135,6 +136,16 @@ class CLAS12Workflow(SwifWorkflow):
       jobs.append(job)
       self.addJob(job)
     return jobs
+
+  def jput(self,phase,jobs):
+    job=JputJob(self.name)
+    job.setPhase(phase)
+    job.addJputs(jobs)
+    if len(job.filenames) > 0:
+      job.setCmd()
+      self.addJob(job)
+      return [job]
+    return []
 
   #
   # decodemerge:  add jobs for decode+merge EVIO files

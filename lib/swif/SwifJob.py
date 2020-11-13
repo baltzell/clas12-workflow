@@ -6,7 +6,7 @@ class SwifJob:
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
-    self.abbreviations={}
+    self.abbreviations={'jput':'j'}
     self.env={}
     self.number=-1
     self.workflow=workflow
@@ -238,7 +238,7 @@ class SwifJob:
 
     return job
 
-  def getJson(self):
+  def toJson(self):
     jsonData = collections.OrderedDict()
     jsonData['os']=self.os
     jsonData['name']=self.getJobName()
@@ -263,7 +263,30 @@ class SwifJob:
     if self.logDir is not None:
       jsonData['stdout']='file:'+self.getLogPrefix()+'.out'
       jsonData['stderr']='file:'+self.getLogPrefix()+'.err'
-    return json.dumps(jsonData,**SwifJob.__JSONFORMAT)
+    return jsonData
+
+  def getJson(self):
+    return json.dumps(self.toJson(),**SwifJob.__JSONFORMAT)
+
+class JputJob(SwifJob):
+  def __init__(self,workflow):
+    SwifJob.__init__(self,workflow)
+    self.time='1h'
+    self.disk='500MB'
+    self.ram='500MB'
+    self.addTag('mode','jput')
+    self.filenames = []
+  def addJputs(self,jobs):
+    for j in jobs:
+      if 'output' in j.toJson():
+        for o in j.toJson()['output']:
+          if o['remote'].startswith('file:/cache'):
+#            print(o)
+#            print(j.getJson())
+            self.filenames.append(o['remote'][5:])
+  def setCmd(self):
+    cmd = '/site/bin/jcache put ' + ' '.join(self.filenames)
+    SwifJob.setCmd(self,cmd)
 
 if __name__ == '__main__':
   job=SwifJob('foobar')
