@@ -10,7 +10,7 @@ class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
-    self.abbreviations={'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'}
+    self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'})
     if cfg['ccdbsqlite'] is None:
       self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     else:

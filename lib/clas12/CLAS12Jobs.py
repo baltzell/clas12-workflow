@@ -6,6 +6,8 @@ from CLAS12Job import CLAS12Job
 
 _LOGGER=logging.getLogger(__name__)
 
+_DEBUG=False
+
 class MergingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
@@ -73,6 +75,8 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
+    if _DEBUG:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -97,6 +101,8 @@ class DecodingJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
+    if _DEBUG:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
@@ -125,6 +131,8 @@ class ReconJob(CLAS12Job):
     CLAS12Job.addOutputData(self,'rec_'+basename,outDir)
   def setCmd(self,hack):
     cmd = './clara.sh -t '+str(self.getCores())
+    if _DEBUG:
+      cmd += ' -n 5000'
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
