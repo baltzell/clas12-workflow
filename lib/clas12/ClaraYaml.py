@@ -165,11 +165,30 @@ class ClaraYaml:
     _LOGGER.critical('Could not find variation '+variation+' in CCDB in YAML: '+self.filename)
     return False
 
+  def checkTimestamp(self,timestamp):
+    m = re.match('\d\d/\d\d/\d\d\d\d$',timestamp)
+    if m is None:
+      m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',timestamp)
+    if m is None:
+      _LOGGER.critical('Invalid timestamp format '+timestamp+' in YAML: '+self.filename)
+      return False
+    return True
+
   def checkConfiguration(self,cfg):
     if 'io-services' not in cfg:
       return False
     if 'services' not in cfg:
       return False
+    timestamp,variation = None,None
+    if 'global' in cfg:
+      if 'timestamp' in cfg['global']:
+        timestamp = cfg['global']['timestamp']
+        if not self.checkTimestamp(timestamp):
+          return False
+      if 'variation' in cfg['global']:
+        variation = cfg['global']['variation']
+        if not self.checkVariation(variation):
+          return False
     for name,val in cfg['services'].items():
       if name not in self.names:
         _LOGGER.critical('Could not find '+name+' in service list in YAML: '+self.filename)
@@ -177,16 +196,12 @@ class ClaraYaml:
       if 'variation' in val:
         if not self.checkVariation(val['variation']):
           return False
-      else:
+      elif variation is None:
         _LOGGER.warning('No CCDB variation specified for '+name+' in YAML: '+self.filename)
       if 'timestamp' in val:
-        m = re.match('\d\d/\d\d/\d\d\d\d$',val['timestamp'])
-        if m is None:
-          m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',val['timestamp'])
-        if m is None:
-          _LOGGER.critical('Invalid timestamp format '+val['timestamp']+' for '+name+' in YAML: '+self.filename)
+        if not self.checkTimestamp(val['timestamp']):
           return False
-      else:
+      elif timestamp is None:
         _LOGGER.warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)
     return True
 
