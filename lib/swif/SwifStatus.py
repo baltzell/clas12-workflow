@@ -1,6 +1,6 @@
 import os,sys,glob,json,subprocess,getpass,datetime,collections
 
-SWIF='/site/bin/swif'
+SWIF='/site/bin/swif1'
 
 # FIXME:  incomplete?
 SWIF_PROBLEMS=[
