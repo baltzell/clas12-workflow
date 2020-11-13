@@ -21,20 +21,16 @@ _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 #
 
 def checkIntegrity(yamlfile,clara):
-  cy = ClaraYaml(yamlfile,clara)
-  return cy.checkIntegrity()
+  return ClaraYaml(yamlfile,clara).checkIntegrity()
 
 def getSchemaName(yamlfile):
-  cy = ClaraYaml(yamlfile,None)
-  return cy.getSchemaName()
+  return ClaraYaml(yamlfile,None).getSchemaName()
 
 def getTrainNames(yamlfile):
-  cy = ClaraYaml(yamlfile,None)
-  return cy.getTrainNames()
+  return ClaraYaml(yamlfile,None).getTrainNames()
 
 def getTrainIndices(yamlfile):
-  cy = ClaraYaml(yamlfile,None)
-  return cy.getTrainIndices()
+  return ClaraYaml(yamlfile,None).getTrainIndices()
 
 class ClaraYaml:
 
