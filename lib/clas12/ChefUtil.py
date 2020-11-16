@@ -59,8 +59,9 @@ def getReconFileBytes(schema,decodedfile):
 
 def getReconSeconds(decodedfile):
   nevents = DEFAULT_EVENTS
-  if os.path.isfile(decodedfile) and decodedfile.endswith('.hipo'):
-    nevents = countHipoEvents(decodedfile)
+  if os.path.isfile(decodedfile):
+    if decodedfile.endswith('.hipo') and not decodedfile.startswith('/mss'):
+      nevents = countHipoEvents(decodedfile)
   s = 2 * nevents * DEFAULT_RECON_TIME
   return s
 
