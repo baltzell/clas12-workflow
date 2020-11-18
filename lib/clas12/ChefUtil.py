@@ -65,15 +65,14 @@ def getReconSeconds(decodedfile):
   s = 2 * nevents * DEFAULT_RECON_TIME
   return s
 
-def getTrainDiskReq(schema,reconfiles):
+def getTrainDiskBytes(schema,reconfile):
   s = 0
-  for f in reconfiles:
-    if not os.path.isfile(f):
-      s += getReconFileBytes(schema,None)
-    else:
-      s += getFileBytes(f)
+  if not os.path.isfile(reconfile):
+    s += getReconFileBytes(schema,None)
+  else:
+    s += getFileBytes(reconfile)
   # this 1.5 assumes trains will be at most half of recon:
-  return '%.0fGB'%(1.5*s/1e9+1)
+  return 1.5*s
 
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'
