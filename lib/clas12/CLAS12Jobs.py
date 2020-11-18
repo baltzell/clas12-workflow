@@ -1,5 +1,6 @@
 import os,re,sys,logging
 
+import ClaraYaml
 import ChefUtil
 from RunFileUtil import RunFile
 from CLAS12Job import CLAS12Job
