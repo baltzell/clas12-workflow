@@ -64,7 +64,7 @@ for rfg in rfgs.getGroups():
   if args.d:
     continue
   try:
-    process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True)
     #while True:
     #  line = process.stdout.readline().rstrip()
     #  if not line:
