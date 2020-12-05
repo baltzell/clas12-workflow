@@ -64,14 +64,15 @@ for rfg in rfgs.getGroups():
   if args.d:
     continue
   try:
-    process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    process=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True)
     #while True:
     #  line = process.stdout.readline().rstrip()
     #  if not line:
     #    break
     #  print(line)
     for line in iter(process.stdout.readline, ''):
-      print((line.rstrip()))
+      if len(line.strip())>0:
+        print((line.rstrip()))
     process.wait()
     if process.returncode!=0 or ChefUtil.hipoIntegrityCheck(out)!=0:
       for o in outFiles: os.remove(o)
