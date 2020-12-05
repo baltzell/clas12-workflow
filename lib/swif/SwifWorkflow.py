@@ -1,8 +1,7 @@
 import tempfile,subprocess
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
-
-SWIF='/site/bin/swif'
+from SwifStatus import SWIF
 
 class SwifWorkflow(RunFileGroups):
 

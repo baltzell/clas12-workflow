@@ -1,5 +1,7 @@
 import os,sys,json,logging,collections
 
+from SwifStatus import SWIF
+
 class SwifJob:
 
   __JSONFORMAT={'indent':2,'separators':(',',': ')}
@@ -216,7 +218,7 @@ class SwifJob:
 
   def getShell(self):
 
-    job=('swif add-job -create -workflow '+self.workflow+' -slurm '
+    job=(SWIF+' add-job -create -workflow '+self.workflow+' -slurm '
       '-project '+self.project+' -track '+self.track+' '+' -os '+self.os+' '
       '-time '+self.time+' -cores '+str(self.cores)+' '
       '-disk '+self.disk+' -ram '+self.ram+' -shell '+self.shell)

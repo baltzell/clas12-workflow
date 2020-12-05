@@ -85,7 +85,7 @@ for trainIndex in sorted(trainIndices):
   cmd=[os.path.dirname(os.path.realpath(__file__))+'/hipo-merge-runs.py']
   cmd.extend(['-A','-i',inGlob,'-o',outStub])
   print((' '.join(cmd)))
-  p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+  p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True)
   #while True:
   #  line=p.stdout.readline().rstrip()
   #  if not line:
