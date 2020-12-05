@@ -71,7 +71,8 @@ for rfg in rfgs.getGroups():
     #    break
     #  print(line)
     for line in iter(process.stdout.readline, ''):
-      print((line.rstrip()))
+      if len(line.strip())>0:
+        print((line.rstrip()))
     process.wait()
     if process.returncode!=0 or ChefUtil.hipoIntegrityCheck(out)!=0:
       for o in outFiles: os.remove(o)

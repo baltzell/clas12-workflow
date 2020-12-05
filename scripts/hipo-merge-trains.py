@@ -92,7 +92,8 @@ for trainIndex in sorted(trainIndices):
   #    break
   #  print(line)
   for line in iter(p.stdout.readline, ''):
-    print((line.rstrip()))
+    if len(line.strip())>0:
+      print((line.rstrip()))
   p.wait()
   if p.returncode!=0:
     sys.exit(p.returncode)
