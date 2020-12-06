@@ -63,6 +63,11 @@ def processWorkflow(workflow,args):
           print(line.strip())
     return
 
+  # print inputs of jobs with problems:
+  if args.problemInputs:
+    print(('\n'.join(status.getPersistentProblemInputs(args.problemInputs))))
+    return
+
   # print details of jobs with problems:
   if args.problems:
     print(status.getPersistentProblemJobs(args.problems))
@@ -134,7 +139,8 @@ if __name__ == '__main__':
   cli.add_argument('--listRun',      help='list all job names associated with particular run numbers', metavar='#', action='append', default=[], type=int)
   cli.add_argument('--abandonRun',   help='abandon all jobs associated with particular run numbers', metavar='#', action='append', default=[], type=int)
   cli.add_argument('--abandon',      help='abandon problem jobs (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=PROBLEMS)
-  cli.add_argument('--problems',     help='show jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
+  cli.add_argument('--problems',     help='show details of jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
+  cli.add_argument('--problemInputs',help='generate list of input files for jobs with problems', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)
   cli.add_argument('--problemLogs',  help='directory of log files', metavar='PATH',nargs='?',const=None,default=False)
   cli.add_argument('--matchAll',     help='match workflow names containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='match workflow names containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
