@@ -99,7 +99,7 @@ class ClaraYaml:
         for name,val in c['services'].items():
           if 'id' in val:
             ret.append(int(val['id']))
-    return ret
+    return set(ret)
 
   def getTrainNames(self):
     ret = {}
