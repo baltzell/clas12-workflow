@@ -215,7 +215,7 @@ class TrainMrgJob(CLAS12Job):
     self.addEnv('COATJAVA',cfg['coatjava'])
     # FIXME: use `module load`, but need to know what version or wait until stable
     lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
-    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+'/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/ccdb/ccdb-1.07.00/python/')
+    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
     self.setRam('1000MB')
     self.addTag('mode','anamrg')
     self.setTime('12h')
