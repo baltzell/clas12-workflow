@@ -8,6 +8,9 @@ _COLORS =[1,  2,    4,    3,    94,  51]
 _THREADS=[12, 20,   16,   24,   32]
 _FILLS  =[0,  3007, 3003, 3004, 3005]
 
+_DCAI = ['DCAC','DCATB','MLT']
+_DCCONV = ['DCRPC','DCRTB']
+
 class ClaraStats:
 
   def __init__(self):
@@ -26,6 +29,7 @@ class ClaraStats:
     self.title=None
     self.errors={}
     self.slurmerrors={}
+    self.services={}
     self.flavors={}
     self.flavorlist=JobSpecs._FLAVORS
     self.expectedfiles=[]
@@ -79,6 +83,42 @@ class ClaraStats:
       else:
         ret+='N/A'
       ret+='\n'
+    ret+='\n'+self.getServices()+'\n'
+    return ret
+
+  def getServices(self):
+    ret='======================================================================\n'
+    services_ai,services_conv={},{}
+    total_ai,total_conv=0,0
+    for service,time in self.services.items():
+      if service in _DCAI or service in _DCCONV:
+        if service in _DCAI:
+          total_ai += time
+          services_ai[service] = time
+        else:
+          total_conv += time
+          services_conv[service] = time
+      else:
+        total_ai += time
+        total_conv += time
+        services_ai[service] = time
+        services_conv[service] = time
+    n = len(services_ai.keys())
+    if len(services_conv.keys())>n:
+      n = services_conv.keys()
+    for ii in range(n):
+      if ii<len(services_conv.keys()):
+        services = sorted(services_conv.keys())
+        ret += '%12s: %8.2f ms %5.2f%%'%(services[ii],services_conv[services[ii]]/self.successes,100*services_conv[services[ii]]/total_conv)
+      else:
+        ret += '                                '
+      if ii<len(services_ai.keys()):
+        services = sorted(services_ai.keys())
+        ret += '  |%12s: %8.2f ms %5.2f%%\n'%(services[ii],services_ai[services[ii]]/self.successes,100*services_ai[services[ii]]/total_ai)
+      else:
+        ret += '\n'
+    ret += '======================================================================\n'
+    ret += '%12s: %8.2f ms         |              %8.2f ms\n'%('TOTAL',total_conv/self.successes,total_ai/self.successes)
     return ret
 
   def fill(self,jl,val):
@@ -117,6 +157,10 @@ class ClaraStats:
         if fill>0:
           self.histos[jl.flavor][jl.threads].SetFillStyle(fill)
           self.histos[jl.flavor][jl.threads].SetFillColor(color)
+      for service,time in jl.services.items():
+        if service not in self.services:
+          self.services[service] = 0
+        self.services[service] += time
       self.histos[jl.flavor][jl.threads].Fill(val)
       self.successes+=1
     else:

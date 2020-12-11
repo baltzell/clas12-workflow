@@ -7,7 +7,7 @@ from LogFinder import LogFinder
 _MAXLOGSIZEMB=10
 _MINHIPOSIZEMB=100
 
-_LOGTAGS=['Number','Threads','TOTAL','Total','Average','Start time','shutdown DPE','Exception','Input','Output',' is cached','openning file','/bin/cp -p']
+_LOGTAGS=['Number','Threads','TOTAL','Total','Average','events','Start time','shutdown DPE','Exception','Input','Output',' is cached','openning file','/bin/cp -p']
 
 class ClaraLog(JobSpecs):
 
@@ -17,6 +17,7 @@ class ClaraLog(JobSpecs):
     JobSpecs.__init__(self)
     self.errors=ClaraErrors()
     self.filename=filename
+    self.services={}
     self.slurmlog=None
     self.filesize=os.path.getsize(filename)
     self.host=self.getFarmoutHostname(filename)
@@ -178,11 +179,21 @@ class ClaraLog(JobSpecs):
           self.events=int(cols[3])
         else:
           print(self.filename,self.threads,x)
-      if cols[2]=='TOTAL' and cols[11]=='event' and cols[12]=='time':
-        if self.t1<0:
-          self.t1=float(cols[14])
+      #if cols[2]=='TOTAL' and cols[11]=='event' and cols[12]=='time':
+      #  if self.t1<0:
+      #    self.t1=float(cols[14])
+      #  else:
+      #    print(self.filename,self.threads,x)
+      if cols[11]=='event' and cols[12]=='time':
+        if cols[2]=='TOTAL':
+          if self.t1<0:
+            self.t1=float(cols[14])
         else:
-          print(self.filename,self.threads,x)
+          service = cols[2]
+          if service in self.services:
+            print(('ERROR:  duplicate service in CLARA log: '+service))
+          else:
+            self.services[service] = float(cols[14])
     elif x.find('com.mysql.jdbc')>=0 and x.find('Too many connections')>0:
       self.errors.setBit('DB')
 
