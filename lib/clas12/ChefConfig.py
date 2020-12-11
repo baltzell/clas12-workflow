@@ -132,10 +132,11 @@ class ChefConfig(collections.OrderedDict):
     for x in ['reconYaml','trainYaml']:
       if self[x] is None:
         continue
-      elif self[x].startswith('/'):
+      elif self[x].startswith('/') or self[x].startswith('.'):
         if not os.path.isfile(self[x]):
           _LOGGER.critical('Nonexistent user yaml: '+self[x])
           sys.exit()
+        self[x] = os.path.abspath(self[x])
       else:
         yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
         if os.path.isfile(yamlprefix+self[x]+'.yaml'):
@@ -400,11 +401,8 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"clara" does not exist: '+self['clara'])
 
     # check yaml files:
-    if self['model'].find('ana')>=0:
-      if self['trainYaml'] is None:
+    if self['model'].find('ana')>=0 and self['trainYaml'] is None:
         self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
-      if self['reconYaml'] is None:
-        self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
     if self['model'].find('rec')>=0 and self['reconYaml'] is None:
       self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
     if self['reconYaml'] is not None:
