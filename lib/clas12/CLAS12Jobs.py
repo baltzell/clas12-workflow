@@ -233,7 +233,7 @@ class TrainMrgJob(CLAS12Job):
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
     cmd+=' -o '+outDir
     cmd+=' -y '+self.cfg['trainYaml']
-    cmd+=' ; ls -ltR %s ; ls -lt %s'%(inDir,outDir)
+    cmd+=' && ls -ltR %s && ls -lt %s'%(inDir,outDir)
     CLAS12Job.setCmd(self,cmd)
 
 class TrainCleanupJob(CLAS12Job):
