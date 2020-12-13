@@ -138,14 +138,18 @@ class CLAS12Workflow(SwifWorkflow):
     return jobs
 
   def jput(self,phase,jobs):
-    job=JputJob(self.name)
-    job.setPhase(phase)
-    job.addJputs(jobs)
-    if len(job.filenames) > 0:
-      job.setCmd()
-      self.addJob(job)
-      return [job]
-    return []
+    ret = []
+    for job in jobs:
+      # Throttle to avoiding hitting SWIF limits, probably on command byte size:
+      if len(ret)==0 or len(ret[-1].antecedents)>30:
+        j = JputJob(self.name)
+        j.setPhase(phase)
+        ret.append(j)
+      ret[-1].addJputs([job])
+      if len(ret[-1].filenames) > 0:
+        ret[-1].setCmd()
+    self.addJob(ret)
+    return ret
 
   #
   # decodemerge:  add jobs for decode+merge EVIO files
