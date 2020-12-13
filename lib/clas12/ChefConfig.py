@@ -210,7 +210,9 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, while negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train job', type=int, default=None)
-    cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
+
+    if getpass.getuser().find('clas12-')<0:
+      cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
     cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
@@ -319,7 +321,7 @@ class ChefConfig(collections.OrderedDict):
           self.cli.error('One of "outDir" or "trainDir" must be defined for decoding workflows.')
         else:
           self['trainDir']=self['outDir']
-          _LOGGER.warning('Using --outDir for train outputs ('+self['outDir']+')')
+          _LOGGER.info('Using --outDir for train outputs ('+self['outDir']+')')
 
     # for non-decoding workflows, require outDir:
     if self['model']!='dec' and self['model']!='decmrg':
