@@ -283,8 +283,7 @@ class JputJob(SwifJob):
       if 'output' in j.toJson():
         for o in j.toJson()['output']:
           if o['remote'].startswith('file:/cache'):
-#            print(o)
-#            print(j.getJson())
+            self.antecedents.append(j.getJobName())
             self.filenames.append(o['remote'][5:])
   def setCmd(self):
     cmd = '/site/bin/jcache put ' + ' '.join(self.filenames)
