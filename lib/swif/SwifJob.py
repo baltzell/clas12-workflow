@@ -277,16 +277,17 @@ class JputJob(SwifJob):
     self.disk='500MB'
     self.ram='500MB'
     self.addTag('mode','jput')
-    self.filenames = []
+    self.jputfiles = []
   def addJputs(self,jobs):
     for j in jobs:
       if 'output' in j.toJson():
         for o in j.toJson()['output']:
           if o['remote'].startswith('file:/cache'):
-            self.antecedents.append(j.getJobName())
-            self.filenames.append(o['remote'][5:])
-  def setCmd(self):
-    cmd = '/site/bin/jcache put ' + ' '.join(self.filenames)
+            if (j.getJobName()) not in self.antecedents:
+              self.antecedents.append(j.getJobName())
+            if o['remote'][5:] not in self.jputfiles:
+              self.jputfiles.append(o['remote'][5:])
+    cmd = '/site/bin/jcache put ' + ' '.join(self.jputfiles)
     SwifJob.setCmd(self,cmd)
 
 if __name__ == '__main__':

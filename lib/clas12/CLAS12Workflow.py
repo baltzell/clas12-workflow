@@ -137,17 +137,19 @@ class CLAS12Workflow(SwifWorkflow):
       self.addJob(job)
     return jobs
 
+  #
+  # jput:  add jobs for writing from /cache to /mss
+  #
   def jput(self,phase,jobs):
     ret = []
     for job in jobs:
-      # Throttle to avoiding hitting SWIF limits, probably on command byte size:
-      if len(ret)==0 or len(ret[-1].antecedents)>30:
+      if len(ret)==0 or len(ret[-1].jputfiles)>1:
         j = JputJob(self.name)
         j.setPhase(phase)
         ret.append(j)
       ret[-1].addJputs([job])
-      if len(ret[-1].filenames) > 0:
-        ret[-1].setCmd()
+    if len(ret[-1].jputfiles) == 0:
+      ret.pop()
     self.addJob(ret)
     return ret
 
