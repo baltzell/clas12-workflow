@@ -1,10 +1,13 @@
 import os,re,sys,logging
 
+import ClaraYaml
 import ChefUtil
 from RunFileUtil import RunFile
 from CLAS12Job import CLAS12Job
 
 _LOGGER=logging.getLogger(__name__)
+
+_DEBUG=False
 
 class MergingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
@@ -73,6 +76,8 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
+    if _DEBUG:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -97,11 +102,14 @@ class DecodingJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
+    if _DEBUG:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
   THRD_MEM_REQ={0:0,   16:12, 20:14, 24:16, 32:16}
   THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
+  HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
@@ -112,19 +120,30 @@ class ReconJob(CLAS12Job):
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
     self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
-    # TODO: choose time based on #events:
     self.setTime('24h')
     self.setDisk('20GB')
     self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
     self.addInput('clara.yaml',cfg['reconYaml'])
+    self.nfiles = 0
+  def setRequestIncrements(self,filename):
+    self.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
+    self.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
+    self.BYTES_INC += ChefUtil.DEFAULT_DECODED_BYTES
   def addInputData(self,filename):
-    self.setDisk(ChefUtil.getReconDiskReq(self.cfg['reconYaml'],filename))
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
     CLAS12Job.addOutputData(self,'rec_'+basename,outDir)
+    # here we choose request increment based on the first file:
+    if self.HOURS_INC is None or self.BYTES_INC is None:
+      self.setRequestIncrements(filename)
+    # and now update the resource requests when every file is added:
+    self.nfiles += 1
+    self.setRequests(self.BYTES_INC*self.nfiles,self.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
     cmd = './clara.sh -t '+str(self.getCores())
+    if _DEBUG:
+      cmd += ' -n 5000'
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
@@ -150,6 +169,7 @@ class ReconJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class TrainJob(CLAS12Job):
+  HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
@@ -161,8 +181,11 @@ class TrainJob(CLAS12Job):
     self.setTime('24h')
     self.addInput('train.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh')
     self.addInput('clara.yaml',cfg['trainYaml'])
+    self.nfiles = 0
+  def setRequestIncrements(self,filename):
+    self.HOURS_INC = 0.5
+    self.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename)
   def addInputData(self,filenames):
-    self.setDisk(ChefUtil.getTrainDiskReq(self.cfg['reconYaml'],filenames))
     for x in filenames:
       CLAS12Job.addInputData(self,x)
     if self.cfg['workDir'] is None:
@@ -172,8 +195,12 @@ class TrainJob(CLAS12Job):
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
-      for y in ChefUtil.getTrainIndices(self.cfg['trainYaml']):
+      for y in ClaraYaml.getTrainIndices(self.cfg['trainYaml']):
         CLAS12Job.addOutputData(self,'skim%d_%s'%(y,basename),outDir)
+    if self.HOURS_INC is None or self.BYTES_INC is None:
+      self.setRequestIncrements(filenames[0])
+    self.nfiles += len(filenames)
+    self.setRequests(self.BYTES_INC*self.nfiles,self.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
     cmd = './train.sh -t 12 '
     if self.cfg['claraLogDir'] is not None:
@@ -188,7 +215,7 @@ class TrainMrgJob(CLAS12Job):
     self.addEnv('COATJAVA',cfg['coatjava'])
     # FIXME: use `module load`, but need to know what version or wait until stable
     lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
-    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12')
+    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
     self.setRam('1000MB')
     self.addTag('mode','anamrg')
     self.setTime('12h')
@@ -200,13 +227,13 @@ class TrainMrgJob(CLAS12Job):
       inDir = self.cfg['workDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
     self.addOutputData(outDir,outDir,auger=False)
-    for trainName in list(ChefUtil.getTrainNames(self.cfg['trainYaml']).values()):
+    for trainName in list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
       ChefUtil.mkdir(outDir+'/'+trainName)
     cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
     cmd+=' -o '+outDir
     cmd+=' -y '+self.cfg['trainYaml']
-    cmd+=' ; ls -ltR %s ; ls -lt %s'%(inDir,outDir)
+    cmd+=' && ls -ltR %s && ls -lt %s'%(inDir,outDir)
     CLAS12Job.setCmd(self,cmd)
 
 class TrainCleanupJob(CLAS12Job):

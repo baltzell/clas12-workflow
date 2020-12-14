@@ -129,13 +129,11 @@ See [cron/swif.cron](./cron/swif.cron) for an example cron job.
   * utilize Swif's job tags (e.g. output directory, run/file numbers, coatjava version)
   * periodically write workflow status to clas12mon, for timeline plots and easy global status
     * https://clas12mon.jlab.org/rga/status/decoding/
+  * issues a "jcache put" at the end of each phase to force outputs to tape
 * includes CLARA log file analysis and slurm job status tools
 * initial use was decoding of CLAS12 Spring RGA data, where the requirements included:
   * decode single EVIO files independently (to optimize accessing disordered files on tape)
   * merge sequential HIPO files
   * write merged HIPO files to tape, in sequence (unlike the raw EVIO files)
   * maintain a fixed and available disk space requirement
-
-## TODO
-* write outputs to `/cache` with a `jcache -put` inside the job, pointing downstream dependencies to the `/mss` location
 

@@ -10,7 +10,7 @@ class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
-    self.abbreviations={'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'}
+    self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'})
     if cfg['ccdbsqlite'] is None:
       self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     else:
@@ -29,14 +29,17 @@ class CLAS12Job(SwifJob):
     return int(self.getTag('run'))
 
   def addInputData(self,filename,auger=True):
-    basename=filename.split('/').pop()
-    self.inputData.append(filename)
-    if auger: self.addInput(basename,filename)
-    runno=RunFile(filename).runNumber
-    fileno=RunFile(filename).fileNumber
-    self.setRun(runno)
-    if self.getTag('file') is None:
-      self.addTag('file','%.5d'%fileno)
+    if isinstance(filename,list):
+      for x in filename: self.addInputData(x,auger)
+    else:
+      basename=filename.split('/').pop()
+      self.inputData.append(filename)
+      if auger: self.addInput(basename,filename)
+      runno=RunFile(filename).runNumber
+      fileno=RunFile(filename).fileNumber
+      self.setRun(runno)
+      if self.getTag('file') is None:
+        self.addTag('file','%.5d'%fileno)
 
   def doReadme(self,directory):
     # put it on /cache if it's /mss:
@@ -66,4 +69,20 @@ class CLAS12Job(SwifJob):
     self.addTag('outDir',directory)
     self.outputData.append(directory+'/'+basename)
     if auger: self.addOutput(basename,directory+'/'+basename)
+
+  def setRequests(self,diskbytes,hours):
+    gb = int((diskbytes/1e9)+1)
+    hr = int(hours+1)
+    if hr > 72:
+      _LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
+      sys.exit(2)
+    if gb > 100:
+      _LOGGER.critical('Huge disk requirement (%s GB), need fewer files.'%str(gb))
+      sys.exit(2)
+    if hr < 24:
+      hr = 24
+    if gb < 10:
+      gb = 10
+    self.setTime( '%dh'  % hr)
+    self.setDisk( '%dGB' % gb)
 

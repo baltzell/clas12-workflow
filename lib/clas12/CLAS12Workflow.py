@@ -1,6 +1,7 @@
 import os,logging
 
 from SwifJob import SwifJob
+from SwifJob import JputJob
 from SwifWorkflow import SwifWorkflow
 import CLAS12Jobs
 import ChefUtil
@@ -41,39 +42,47 @@ class CLAS12Workflow(SwifWorkflow):
 
   #
   # reconclara:  add jobs for reconstrucing hipo files
-  # - one job per file
-  # - return list of output hipo files
+  # - one job per reconSize files
   #
   def reconclara(self,phase,inputs):
-    jobs=[]
-    for inp in inputs:
+    inps,ants,jobs=[],[],[]
+    for ii,inp in enumerate(inputs):
       if isinstance(inp,SwifJob):
-        for x in inp.outputData:
-          job=CLAS12Jobs.ReconJob(self.name,self.cfg)
-          job.setPhase(phase)
-          job.addInputData(x)
-          job.antecedents.append(inp.getJobName())
-          job.setCmd(len(self.jobs))
-          jobs.append(job)
+        ants.append(inp)
+        inps.extend(inp.outputData)
       else:
+        inps.append(inp)
+      if len(inps)>=self.cfg['reconSize'] or ii>=len(inputs)-1:
         job=CLAS12Jobs.ReconJob(self.name,self.cfg)
         job.setPhase(phase)
-        job.addInputData(inp)
+        if len(ants)>0:
+          job.antecedents.extend([x.getJobName() for x in ants])
+        for x in inps: job.addInputData(x)
         job.setCmd(len(self.jobs))
         jobs.append(job)
+        inps,ants=[],[]
     self.addJob(jobs)
     return jobs
 
+  #
+  # train: run trains
+  # - one job per trainSize files
+  # - each job has trainSize*nwagons output files
+  #
   def train(self,phase,inputs):
     inps,jobs=[],[]
     for ii,inp in enumerate(inputs):
       inps.append(inp)
-      if len(inps)>=self.cfg['trainSize'] or ii>=len(inputs)-1:
+      reconSize = 1
+      if isinstance(inp,SwifJob):
+        reconSize = self.cfg['reconSize']
+      if len(inps)>=self.cfg['trainSize']/reconSize or ii>=len(inputs)-1:
         job=CLAS12Jobs.TrainJob(self.name,self.cfg)
         job.setPhase(phase)
         if isinstance(inps[0],SwifJob):
-          job.addInputData([x.outputData[0] for x in inps])
-          job.antecedents.extend([inp.getJobName() for inp in inps])
+          for x in inps:
+            job.addInputData(x.outputData)
+            job.antecedents.append(x.getJobName())
         else:
           job.addInputData(inps)
         job.setCmd(len(self.jobs))
@@ -82,6 +91,10 @@ class CLAS12Workflow(SwifWorkflow):
         inps=[]
     return jobs
 
+  #
+  # trainmerge: merge train outputs into one file per run per wagon
+  # - one job per run
+  #
   def trainmerge(self,phase,jobs):
     runs={}
     for job in jobs:
@@ -101,6 +114,10 @@ class CLAS12Workflow(SwifWorkflow):
       self.addJob(job)
     return jobs
 
+  #
+  # trainclean: remove intermediate, unmerged train outputs
+  # - one job per run
+  #
   def trainclean(self,phase,jobs):
     runs={}
     for job in jobs:
@@ -121,9 +138,24 @@ class CLAS12Workflow(SwifWorkflow):
     return jobs
 
   #
-  # decodemerge:  add jobs for decode+merge hipo files
-  # - one job per merge
-  # - return list of output merged hipo files
+  # jput:  add jobs for writing from /cache to /mss
+  #
+  def jput(self,phase,jobs):
+    ret = []
+    for job in jobs:
+      if len(ret)==0 or len(ret[-1].jputfiles)>1:
+        j = JputJob(self.name)
+        j.setPhase(phase)
+        ret.append(j)
+      ret[-1].addJputs([job])
+    if len(ret[-1].jputfiles) == 0:
+      ret.pop()
+    self.addJob(ret)
+    return ret
+
+  #
+  # decodemerge:  add jobs for decode+merge EVIO files
+  # - one job per mergeSize files
   #
   def decodemerge(self,phase,inputs):
     inps,jobs=[],[]
@@ -146,7 +178,6 @@ class CLAS12Workflow(SwifWorkflow):
   #
   # decode:  add jobs for decoding evio files
   # - one job per file
-  # - return list of output hipo files
   #
   def decode(self,phase,inputs):
     jobs=[]
