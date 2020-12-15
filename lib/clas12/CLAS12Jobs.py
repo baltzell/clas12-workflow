@@ -126,20 +126,20 @@ class ReconJob(CLAS12Job):
     self.addInput('clara.yaml',cfg['reconYaml'])
     self.nfiles = 0
   def setRequestIncrements(self,filename):
-    self.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
-    self.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
-    self.BYTES_INC += ChefUtil.DEFAULT_DECODED_BYTES
+    ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
+    ReconJob.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
+    ReconJob.BYTES_INC += ChefUtil.DEFAULT_DECODED_BYTES
   def addInputData(self,filename):
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
     CLAS12Job.addOutputData(self,'rec_'+basename,outDir)
     # here we choose request increment based on the first file:
-    if self.HOURS_INC is None or self.BYTES_INC is None:
+    if ReconJob.HOURS_INC is None or ReconJob.BYTES_INC is None:
       self.setRequestIncrements(filename)
     # and now update the resource requests when every file is added:
     self.nfiles += 1
-    self.setRequests(self.BYTES_INC*self.nfiles,self.HOURS_INC*self.nfiles)
+    self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
     cmd = './clara.sh -t '+str(self.getCores())
     if _DEBUG:
@@ -183,8 +183,8 @@ class TrainJob(CLAS12Job):
     self.addInput('clara.yaml',cfg['trainYaml'])
     self.nfiles = 0
   def setRequestIncrements(self,filename):
-    self.HOURS_INC = 0.5
-    self.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename)
+    TrainJob.HOURS_INC = 0.5
+    TrainJob.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename)
   def addInputData(self,filenames):
     for x in filenames:
       CLAS12Job.addInputData(self,x)
@@ -197,10 +197,10 @@ class TrainJob(CLAS12Job):
       basename=os.path.basename(x)
       for y in ClaraYaml.getTrainIndices(self.cfg['trainYaml']):
         CLAS12Job.addOutputData(self,'skim%d_%s'%(y,basename),outDir)
-    if self.HOURS_INC is None or self.BYTES_INC is None:
+    if TrainJob.HOURS_INC is None or TrainJob.BYTES_INC is None:
       self.setRequestIncrements(filenames[0])
     self.nfiles += len(filenames)
-    self.setRequests(self.BYTES_INC*self.nfiles,self.HOURS_INC*self.nfiles)
+    self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
     cmd = './train.sh -t 12 '
     if self.cfg['claraLogDir'] is not None:

@@ -62,6 +62,8 @@ def getReconSeconds(decodedfile):
   if os.path.isfile(decodedfile):
     if decodedfile.endswith('.hipo') and not decodedfile.startswith('/mss'):
       nevents = countHipoEvents(decodedfile)
+      if nevents is None:
+        nevents = DEFAULT_EVENTS
   s = 2 * nevents * DEFAULT_RECON_TIME
   return s
 
