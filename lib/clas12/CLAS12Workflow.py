@@ -148,7 +148,7 @@ class CLAS12Workflow(SwifWorkflow):
         j.setPhase(phase)
         ret.append(j)
       ret[-1].addJputs([job])
-    if len(ret[-1].jputfiles) == 0:
+    if len(ret)>0 and len(ret[-1].jputfiles) == 0:
       ret.pop()
     self.addJob(ret)
     return ret
