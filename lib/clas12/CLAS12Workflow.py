@@ -143,7 +143,7 @@ class CLAS12Workflow(SwifWorkflow):
   def jput(self,phase,jobs):
     ret = []
     for job in jobs:
-      if len(ret)==0 or len(ret[-1].jputfiles)>1:
+      if len(ret)==0 or len(ret[-1].jputfiles)>30:
         j = JputJob(self.name)
         j.setPhase(phase)
         ret.append(j)
