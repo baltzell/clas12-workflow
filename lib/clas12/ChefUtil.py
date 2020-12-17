@@ -127,10 +127,9 @@ def countHipoEvents(filename):
       try:
         return int(cols[6])
       except:
-        _LOGGER.error('invalid entries from hipo-utils')
+        _LOGGER.error('Invalid entries from hipo-utils')
         return None
-    break
-  _LOGGER.error('cannot find entries from hipo-utils')
+  _LOGGER.warning('Cannot find entries from hipo-utils')
   return None
 
 def getRunList(data):
@@ -208,4 +207,9 @@ def hipoIntegrityCheck(filename):
     print(line)
   p.wait()
   return p.returncode
+
+if __name__ == '__main__':
+  logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')
+  logger=logging.getLogger(__name__)
+  print(countHipoEvents(sys.argv[1]))
 

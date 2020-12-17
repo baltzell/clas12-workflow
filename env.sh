@@ -7,6 +7,7 @@ then
     module load rcdb/1.0
     module load ccdb/1.06.02
     module load root/6.14.04
+    module load coatjava
 else
     echo WARNING:  Cannot find RCDB installation.
 fi
