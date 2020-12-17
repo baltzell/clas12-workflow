@@ -6,7 +6,7 @@ import CLAS12Workflows
 import ClaraYaml
 
 _LOGGER=logging.getLogger(__name__)
-_TOPDIR = os.path.dirname(os.path.realpath(__file__)).rstrip('lib/clas12')
+_TOPDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__))+'/../../')
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
 
 CHOICES={
@@ -223,7 +223,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
 
-    cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format (for matching run and file numbers)', type=str, default=None)
+    cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format for matching run and file numbers, default="%s"'%CFG['fileRegex'], type=str, default=None)
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
