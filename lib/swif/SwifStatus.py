@@ -68,7 +68,7 @@ def deleteWorkflow(name):
   print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
 
 def formatStats(label,jobs,succeeded):
-  return '%10s:  %8d / %8d = %6.4f%%\n'%(label,succeeded,jobs,100*succeeded/jobs)
+  return '%10s:  %8d / %8d = %6.4f%%\n'%(label,succeeded,jobs,100.0*succeeded/jobs)
 
 class SwifStatus():
 
