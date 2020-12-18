@@ -67,6 +67,9 @@ def getWorkflowNames():
 def deleteWorkflow(name):
   print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
 
+def formatStats(label,jobs,succeeded):
+  return '%10s:  %8d / %8d = %6.4f%%\n'%(label,succeeded,jobs,100*succeeded/jobs)
+
 class SwifStatus():
 
   def __init__(self,name):
@@ -94,7 +97,17 @@ class SwifStatus():
         raise TypeError('Cannot set SwifStatus.status')
     return self.__status
 
+  def __str__(self):
+    return json.dumps(self.getStatus(),**_JSONFORMAT)
+
+  def getValue(self,key):
+    for s in self.getStatus():
+      if key in s:
+        return s[key]
+    return None
+
   def getDetails(self,source=None):
+    self.getStatus(source)
     if self.__details is None:
       if source is None:
         cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
@@ -405,7 +418,7 @@ class SwifStatus():
   def summarize(self,tag):
     ret=''
     for k,v in self.getSummaryData(tag).items():
-      ret+='%10s:  %8d / %8d = %6.4f%%\n'%(k,v['success'],v['jobs'],float(v['success'])/v['jobs']*100)
+      ret+=formatStats(k,v['jobs'],v['success'])
     return ret
 
   def getPersistentProblems(self,problem='ANY'):

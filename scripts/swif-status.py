@@ -1,20 +1,30 @@
 #!/usr/bin/env python
 import os,sys,subprocess,argparse,logging
 import Matcher
-from SwifStatus import getWorkflowNames,deleteWorkflow,SWIF_PROBLEMS
+from SwifStatus import getWorkflowNames,deleteWorkflow,formatStats,SWIF_PROBLEMS
 from CLAS12SwifStatus import CLAS12SwifStatus,getHeader
 
 logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
 logger=logging.getLogger(__name__)
 
-# TODO: switch to JSON format (didn't know it was available at the time)
-
 PROBLEMS=SWIF_PROBLEMS[:]
 PROBLEMS.append('ANY')
+
+tallies={'jobs':0,'succeeded':0}
+
+def tally(status):
+  for key in tallies.keys():
+    try:
+      value = int(status.getValue(key))
+      tallies[key] += value
+    except:
+      pass
 
 def processWorkflow(workflow,args):
 
   status = CLAS12SwifStatus(workflow,args)
+
+  tally(status)
 
 #  if args.input:
 #    status.getStatus(args.input)
@@ -186,4 +196,7 @@ if __name__ == '__main__':
   else:
     for workflow in workflows:
       processWorkflow(workflow,args)
+    if args.stats:
+      print('\n---------------------------------------------')
+      print(formatStats('TOTAL',tallies['jobs'],tallies['succeeded']))
 
