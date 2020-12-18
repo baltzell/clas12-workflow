@@ -67,8 +67,29 @@ def getWorkflowNames():
 def deleteWorkflow(name):
   print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
 
-def formatStats(label,jobs,succeeded):
-  return '%10s:  %8d / %8d = %6.4f%%\n'%(label,succeeded,jobs,100.0*succeeded/jobs)
+class Stats(collections.OrderedDict):
+  ZERO={'jobs':0,'succeeded':0}
+  def __init__(self):
+    collections.OrderedDict.__init__(self)
+    self['total']=collections.OrderedDict(Stats.ZERO)
+  def add(self,data):
+    for k in data.keys():
+      if k == 'total':
+        continue
+      if k not in self:
+        self[k]=collections.OrderedDict(Stats.ZERO)
+      if 'jobs' in data[k]:
+        self[k]['jobs']+=data[k]['jobs']
+        self['total']['jobs']+=data[k]['jobs']
+      if 'succeeded' in data[k]:
+        self[k]['succeeded']+=data[k]['succeeded']
+        self['total']['succeeded']+=data[k]['succeeded']
+  def __str__(self):
+    ret=''
+    for k,v in self.items():
+      ret += '%10s:  %8d / %8d = %6.4f%%\n'%\
+          (k,v['succeeded'],v['jobs'],100.0*v['succeeded']/v['jobs'])
+    return ret
 
 class SwifStatus():
 
@@ -396,29 +417,16 @@ class SwifStatus():
       ret+='No files found for run numbers:  '+','.join(runs)
     return ret
 
-  def getSummaryData(self,tag):
-    data=collections.OrderedDict()
-    data['total']={'jobs':0,'success':0}
+  def getSummaryStats(self,tag):
+    ret = Stats()
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
         mode = 'unknown'
-        if 'tags' in job:
-          if tag in job['tags']:
-            mode = job['tags'][tag]
-        if mode not in data:
-          data[mode] = {'jobs':0,'success':0}
-        data[mode]['jobs'] += 1
-        data['total']['jobs'] += 1
-        if 'status' in job:
-          if job['status']=='succeeded':
-            data[mode]['success'] += 1
-            data['total']['success'] += 1
-    return data
-
-  def summarize(self,tag):
-    ret=''
-    for k,v in self.getSummaryData(tag).items():
-      ret+=formatStats(k,v['jobs'],v['success'])
+        if 'tags' in job and tag in job['tags']:
+          mode = job['tags'][tag]
+        ret.add({mode:{'jobs':1}})
+        if 'status' in job and job['status']=='succeeded':
+          ret.add({mode:{'succeeded':1}})
     return ret
 
   def getPersistentProblems(self,problem='ANY'):

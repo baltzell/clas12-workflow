@@ -1,30 +1,22 @@
 #!/usr/bin/env python
 import os,sys,subprocess,argparse,logging
 import Matcher
-from SwifStatus import getWorkflowNames,deleteWorkflow,formatStats,SWIF_PROBLEMS
-from CLAS12SwifStatus import CLAS12SwifStatus,getHeader
+import SwifStatus
+import CLAS12SwifStatus
 
 logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
 logger=logging.getLogger(__name__)
 
-PROBLEMS=SWIF_PROBLEMS[:]
+PROBLEMS=SwifStatus.SWIF_PROBLEMS[:]
 PROBLEMS.append('ANY')
 
-tallies={'jobs':0,'succeeded':0}
-
-def tally(status):
-  for key in tallies.keys():
-    try:
-      value = int(status.getValue(key))
-      tallies[key] += value
-    except:
-      pass
+tally = SwifStatus.Stats()
 
 def processWorkflow(workflow,args):
 
-  status = CLAS12SwifStatus(workflow,args)
+  status = CLAS12SwifStatus.CLAS12SwifStatus(workflow,args)
 
-  tally(status)
+  tally.add(status.getSummaryStats('mode'))
 
 #  if args.input:
 #    status.getStatus(args.input)
@@ -34,7 +26,7 @@ def processWorkflow(workflow,args):
 #      status.moveJobLogs()
 
   if args.delete:
-    deleteWorkflow(workflow)
+    SwifStatus.deleteWorkflow(workflow)
     return
 
   if args.missing or args.missingTape:
@@ -45,9 +37,9 @@ def processWorkflow(workflow,args):
   if args.stats or args.runStats:
     print('\nCompletion status summary for '+workflow+':')
     if args.stats:
-      print(status.summarize('mode')),
+      print(status.getSummaryStats('mode')),
     if args.runStats:
-      print(status.summarize('run')),
+      print(status.getSummaryStats('run')),
     return
 
   if args.problemStats or args.problemNodes:
@@ -122,8 +114,9 @@ def processWorkflow(workflow,args):
 #    if args.publish:
 #      subprocess.check_output(['rsync','-avz',args.logdir+'/',args.webhost+':'+args.webdir])
 
-  if len(args.clas12mon)>0 and Matcher.matchAny(getHeader(workflow)['tag'],args.clas12mon):
-    status.saveDatabase()
+  if len(args.clas12mon)>0:
+    if Matcher.matchAny(CLAS12SwifStatus.getHeader(workflow)['tag'],args.clas12mon):
+      status.saveDatabase()
 
 
 if __name__ == '__main__':
@@ -178,7 +171,7 @@ if __name__ == '__main__':
 
   # generate the list of workflows to process:
   workflows=[]
-  for wf in getWorkflowNames():
+  for wf in SwifStatus.getWorkflowNames():
     if len(args.workflow)==0:
       if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
         workflows.append(wf)
@@ -197,6 +190,6 @@ if __name__ == '__main__':
     for workflow in workflows:
       processWorkflow(workflow,args)
     if args.stats:
-      print('\n---------------------------------------------')
-      print(formatStats('TOTAL',tallies['jobs'],tallies['succeeded']))
+      print('\n---------------------------------------------------\n')
+      print(tally)
 
