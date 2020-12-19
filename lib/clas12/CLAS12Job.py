@@ -76,7 +76,7 @@ class CLAS12Job(SwifJob):
     if hr > 72:
       _LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
       sys.exit(2)
-    if gb > 100:
+    if gb > 120:
       _LOGGER.critical('Huge disk requirement (%s GB), need fewer files.'%str(gb))
       sys.exit(2)
     if hr < 24:
