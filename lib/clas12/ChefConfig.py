@@ -413,6 +413,11 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"reconYaml" has bugs')
     self._checkYamls()
 
+    # reduce #files in train jobs if huge schema:
+    if self['trainSize'] != CFG['trainSize']:
+      if self['schema']=='mon' or self['schema']=='calib':
+        self['trainSize']=10
+
     # parse run list:
     self['runs'] = ChefUtil.getRunList(self['runs'])
     if self['runs'] is None or len(self['runs'])==0:
