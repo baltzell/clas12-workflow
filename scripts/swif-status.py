@@ -29,6 +29,10 @@ def processWorkflow(workflow,args):
     SwifStatus.deleteWorkflow(workflow)
     return
 
+  if args.listDirs:
+    print(('\n'.join(status.getOutputDirs())))
+    return
+
   if args.missing or args.missingTape:
     print('\nMissing outputs in '+workflow+':')
     print(('\n'.join(status.findMissingOutputs(args.missingTape))))
@@ -140,6 +144,7 @@ if __name__ == '__main__':
   cli.add_argument('--problemStats', help='show summary of all problems that have occured during the workflow', default=False,action='store_true')
   cli.add_argument('--problemNodes', help='show summary of all problems per node that have occured during the workflow', default=False,action='store_true')
   cli.add_argument('--listRun',      help='list all job names associated with particular run numbers', metavar='#', action='append', default=[], type=int)
+  cli.add_argument('--listDirs',     help='list all output directories', action='store_true',default=False)
   cli.add_argument('--abandonRun',   help='abandon all jobs associated with particular run numbers', metavar='#', action='append', default=[], type=int)
   cli.add_argument('--abandon',      help='abandon problem jobs (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=PROBLEMS)
   cli.add_argument('--problems',     help='show details of jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=PROBLEMS)

@@ -381,6 +381,23 @@ class SwifStatus():
                       ret.append(out['remote'])
     return ret
 
+  def getOutputDirs(self):
+    ret=[]
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
+        if 'outputs' in job:
+          for out in job['outputs']:
+            if 'remote' in out:
+              x = os.path.dirname(out['remote'])
+              try:
+                # ignore last directory if it's just a (run) number:
+                y = int(x.split('/').pop())
+                x = os.path.dirname(x)
+              except:
+                pass
+              ret.append(x)
+    return set(ret)
+
   def getJobNamesByTag(self,tags):
     ret={}
     if 'jobs' in self.getDetails():
