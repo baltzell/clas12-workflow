@@ -1,4 +1,4 @@
-import os,sys,glob,json,subprocess,getpass,datetime,collections
+import os,sys,glob,json,copy,subprocess,getpass,datetime,collections
 
 SWIF='/site/bin/swif'
 
@@ -430,11 +430,15 @@ class SwifStatus():
 
   def getSummaryStats(self,tag):
     ret = Stats()
-    if 'jobs' in self.getDetails():
-      for job in self.getDetails()['jobs']:
+    details = copy.deepcopy(self.getDetails())
+    if 'jobs' in details:
+      for job in details['jobs']:
         mode = 'unknown'
-        if 'tags' in job and tag in job['tags']:
-          mode = job['tags'][tag]
+        if 'tags' in job:
+          if 'phase' in job:
+            job['tags']['phase'] = job['phase']
+          if tag in job['tags']:
+            mode = job['tags'][tag]
         ret.add({mode:{'jobs':1}})
         if 'status' in job and job['status']=='succeeded':
           ret.add({mode:{'succeeded':1}})

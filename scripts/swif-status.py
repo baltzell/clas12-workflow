@@ -35,12 +35,14 @@ def processWorkflow(workflow,args):
     print(('\n'.join(status.findMissingOutputs(args.missingTape))))
     return
 
-  if args.stats or args.runStats:
+  if args.stats or args.runStats or args.phaseStats:
     print('\nCompletion status summary for '+workflow+':')
     if args.stats:
       print(status.getSummaryStats('mode')),
     if args.runStats:
       print(status.getSummaryStats('run')),
+    if args.phaseStats:
+      print(status.getSummaryStats('phase')),
     return
 
   if args.problemStats or args.problemNodes:
@@ -137,6 +139,7 @@ if __name__ == '__main__':
   cli.add_argument('--delete',       help='delete workflow(s)', action='store_true',default=False)
   cli.add_argument('--stats',        help='show completion status of each workflow component', action='store_true',default=False)
   cli.add_argument('--runStats',     help='show completion status of each run number', action='store_true',default=False)
+  cli.add_argument('--phaseStats',   help='show completion status of each phase', action='store_true',default=False)
   cli.add_argument('--listRun',      help='list all job names associated with the given run number(s) (repeatable)', metavar='#', action='append', default=[], type=int)
   cli.add_argument('--listDirs',     help='list all output directories associated with the workflow', action='store_true',default=False)
   cli.add_argument('--missing',      help='list missing output files for jobs reported as success', action='store_true',default=False)
