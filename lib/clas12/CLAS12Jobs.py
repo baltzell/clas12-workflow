@@ -2,12 +2,20 @@ import os,re,sys,logging
 
 import ClaraYaml
 import ChefUtil
+import SwifJob
 from RunFileUtil import RunFile
 from CLAS12Job import CLAS12Job
 
 _LOGGER=logging.getLogger(__name__)
 
 _DEBUG=False
+
+class JputJob(SwifJob.JputJob):
+  def __init__(self,workflow,cfg):
+    SwifJob.JputJob.__init__(self,workflow)
+    self.project=cfg['project']
+    self.os=cfg['node']
+    self.cfg=cfg
 
 class MergingJob(CLAS12Job):
   def __init__(self,workflow,cfg):

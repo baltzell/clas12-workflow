@@ -1,7 +1,6 @@
 import os,logging
 
 from SwifJob import SwifJob
-from SwifJob import JputJob
 from SwifWorkflow import SwifWorkflow
 import CLAS12Jobs
 import ChefUtil
@@ -144,7 +143,7 @@ class CLAS12Workflow(SwifWorkflow):
     ret = []
     for job in jobs:
       if len(ret)==0 or len(ret[-1].jputfiles)>30:
-        j = JputJob(self.name)
+        j = CLAS12Jobs.JputJob(self.name,self.cfg)
         j.setPhase(phase)
         ret.append(j)
       ret[-1].addJputs([job])
