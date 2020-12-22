@@ -14,7 +14,7 @@ SWIF_PROBLEMS=[
 'AUGER-SUBMIT',
 ]
 
-SWIFJSONKEYS=[
+SWIF_JSON_KEYS=[
 'workflow_name',
 'workflow_id',
 'workflow_user'
@@ -100,8 +100,8 @@ class SwifStatus():
     self.tagsMerged=False
     self.user=getpass.getuser()
 
-  def setUser(self,user):
-    self.user=user
+  def __str__(self):
+    return json.dumps(self.getStatus(),**_JSONFORMAT)
 
   def getStatus(self,source=None):
     if self.__status is None:
@@ -118,15 +118,6 @@ class SwifStatus():
         raise TypeError('Cannot set SwifStatus.status')
     return self.__status
 
-  def __str__(self):
-    return json.dumps(self.getStatus(),**_JSONFORMAT)
-
-  def getValue(self,key):
-    for s in self.getStatus():
-      if key in s:
-        return s[key]
-    return None
-
   def getDetails(self,source=None):
     self.getStatus(source)
     if self.__details is None:
@@ -142,6 +133,12 @@ class SwifStatus():
       else:
         raise TypeError('Cannot set SwifStatus.details')
     return self.__details
+
+  def getValue(self,key):
+    for s in self.getStatus():
+      if key in s:
+        return s[key]
+    return None
 
   def getTagValues(self,tag):
     vals=[]
@@ -190,9 +187,6 @@ class SwifStatus():
             break
     return status
 
-  def getPrunedJsonStatus(self):
-    return json.dumps(self.getPrunedStatus())
-
   def getPrettyJsonStatus(self):
     return json.dumps(self.getPrunedStatus(),**_JSONFORMAT)
 
@@ -202,7 +196,7 @@ class SwifStatus():
   def getPrettyStatus(self):
     statuses=[]
     for status in self.getStatus():
-      for key in SWIFJSONKEYS:
+      for key in SWIF_JSON_KEYS:
         if key not in status:
           continue
         if status[key] is None:
@@ -485,7 +479,6 @@ class SwifStatus():
 
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
-#  s.setUser('clas12-4')
 #  s.mergeTags()
 #  print(s.getPrettyStatus())
 #  print(s.getPrettyJsonStatus())

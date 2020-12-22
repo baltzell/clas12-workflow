@@ -27,10 +27,10 @@ class CLAS12SwifStatus(SwifStatus):
     self.logFilename    =None
     self.statusFilename =None
     self.detailsFilename=None
-    if self.args.logdir is not None:
-      self.logFilename    =args.logdir+'/logs/'+name+'.json'
-      self.statusFilename =args.logdir+'/status/'+name+'.json'
-      self.detailsFilename=args.logdir+'/details/'+name+'.json'
+    #if self.args.logdir is not None:
+    #  self.logFilename    =args.logdir+'/logs/'+name+'.json'
+    #  self.statusFilename =args.logdir+'/status/'+name+'.json'
+    #  self.detailsFilename=args.logdir+'/details/'+name+'.json'
     self.dburl='https://clas12mon.jlab.org/api/SwifEntries'
     self.dbauth=None
     self.previous=None
@@ -68,13 +68,13 @@ class CLAS12SwifStatus(SwifStatus):
     return ret
 
   def saveLog(self):
-    mkdir(self.args.logdir+'/logs/')
+    #mkdir(self.args.logdir+'/logs/')
     with open(self.logFilename,'a+') as logFile:
       logFile.write('\n'+self.getPrettyJsonStatus())
       logFile.close()
 
   def saveDetails(self):
-    mkdir(self.args.logdir+'/details/')
+    #mkdir(self.args.logdir+'/details/')
     with open(self.detailsFilename,'w') as detailsFile:
       detailsFile.write(self.getPrettyJsonDetails())
       detailsFile.close()
