@@ -7,6 +7,13 @@ import CLAS12SwifStatus
 logging.basicConfig(level=logging.WARNING,format='%(levelname)-9s[%(name)-15s] %(message)s')
 logger=logging.getLogger(__name__)
 
+def separator(label):
+  width = 62
+  label = '' if label is None else ' '+label.strip()+' '
+  left = int((width - len(label))/2)
+  right = width - left - len(label)
+  return ('-'*left) + label + ('-'*right)
+
 tally = SwifStatus.Stats()
 
 def processWorkflow(workflow,args):
@@ -36,7 +43,7 @@ def processWorkflow(workflow,args):
     return
 
   if args.stats or args.runStats or args.phaseStats:
-    print('\nCompletion status summary for '+workflow+':')
+    print('\n'+separator(workflow))
     if args.stats:
       print(status.getSummaryStats('mode')),
     if args.runStats:
@@ -198,6 +205,6 @@ if __name__ == '__main__':
     for workflow in workflows:
       processWorkflow(workflow,args)
     if args.stats:
-      print('\n---------------------------------------------------\n')
+      print('\n'+separator('TOTAL'))
       print(tally)
 
