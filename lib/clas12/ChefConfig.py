@@ -197,7 +197,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
     cli.add_argument('--trainDir', metavar='PATH',help='overrides outDir for trains', type=str,default=None)
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location for single decoded/train files before merging', type=str,default=None)
-    cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
+    if getpass.getuser().find('clas12-')<0 and getpass.getuser().find('hps')<0:
+      cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
     cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number (or install location)', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
