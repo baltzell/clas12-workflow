@@ -11,6 +11,11 @@ class SwifWorkflow(RunFileGroups):
     self.name=name
     self.jobs=[]
     self.phase=0
+    # new for swif2:
+    self.maxConcurrent=1e4
+    self.site='jlab/enp'
+    #self.storage='enp:luster'
+    #self.siteLogin=None
 
   def addJob(self,job):
     if isinstance(job,list):
@@ -31,17 +36,25 @@ class SwifWorkflow(RunFileGroups):
     return jobs
 
   def getShell(self):
-    return '\n'.join([job.getShell() for job in self.jobs])
+    ret=[]
+    cmd=[SWIF,'create','-workflow',self.name,'-site',self.site]
+    cmd.extend['-max-concurrent',self.maxConcurrent]
+    ret.append(cmd)
+    for job in self.jobs:
+      ret.append(job.getShell())
+    return ret
 
   def getJson(self):
-    json  = '{"name":"'+self.name+'","jobs":[\n'
-    json += ',\n'.join([job.getJson() for job in self.jobs])
-    json += '\n]}'
-    return json
+    data = collections.OrderedDict()
+    data['name'] = self.name
+    data['site'] = self.site
+    data['max-concurrent'] = self.maxConcurrent
+    data['jobs']=[job.getJson() for job in self.jobs]
+    return json.dumps(data,**SwifJob.__JSONFORMAT)
 
   def submitShell(self):
-    for job in self.jobs:
-      print((subprocess.check_output(job.getShell().split())))
+    for cmd in self.getShell():
+      print((subprocess.check_output(cmd)))
 
   def submitJson(self):
     with tempfile.NamedTemporaryFile() as jsonFile:

@@ -217,32 +217,29 @@ class SwifJob:
     return cmd
 
   def getShell(self):
-
-    job=(SWIF+' add-job -create -workflow '+self.workflow+' -slurm '
-      '-project '+self.project+' -track '+self.track+' '+' -os '+self.os+' '
-      '-time '+self.time+' -cores '+str(self.cores)+' '
-      '-disk '+self.disk+' -ram '+self.ram+' -shell '+self.shell)
-
-    for ant in self.antecedents: job += ' -antecedent '+ant
-    if con in self.conditions: job += ' -condition file:///'+con
-
-    if not self.phase is None: job += ' -phase '+str(self.phase)
-
-    for key,val in list(self.tags.items()): job += ' -tag %s %s'   %(key,val)
-    for xx in self.inputs:  job += ' -input %s %s' %(xx['local'],xx['remote'])
-    for xx in self.outputs: job += ' -output %s %s'%(xx['local'],xx['remote'])
-
+    cmd=[SWIF]
+    cmd.extend(['add-job','-workflow',self.workflow,'-constraint',self.os])
+    cmd.extend(['-project',self.project,'-track',self.track])
+    cmd.extend(['-time',self.time,'-cores',str(self.cores)])
+    cmd.extend(['-disk',self.disk,'-ram',self.ram,'-shell',self.shell])
+    for ant in self.antecedents: cmd.extend(['-antecedent',ant])
+    for con in self.conditions: cmd.extend(['-condition','file:///'+con])
+    if self.phase is not None: cmd.extend(['-phase',str(self.phase)])
+    for key,val in list(self.tags.items()): cmd.extend(['-tag',key,str(val)])
+    for xx in self.inputs: cmd.extend(['-input',xx['local'],xx['remote']])
+    for xx in self.outputs: cmd.extend(['-output',xx['local'],xx['remote']])
     if self.logDir is not None:
-      job += ' -stdout file:'+self.getLogPrefix()+'.out'
-      job += ' -stderr file:'+self.getLogPrefix()+'.err'
-
-    job += ' \''+self._createCommand()+'\''
-
-    return job
+      cmd.extend(['-stdout','file:'+self.getLogPrefix()+'.out'])
+      cmd.extend(['-stderr','file:'+self.getLogPrefix()+'.err'])
+    x=self._createCommand
+    x[0]='\''+x[0]
+    x[-1]=x[-1]+'\''
+    cmd.extend(x)
+    return cmd
 
   def toJson(self):
     jsonData = collections.OrderedDict()
-    jsonData['os']=self.os
+    jsonData['constraint']=self.os
     jsonData['name']=self.getJobName()
     jsonData['phase']=self.phase
     jsonData['project']=self.project
@@ -297,6 +294,6 @@ if __name__ == '__main__':
   job.addTag('foo','bar')
   job.setLogDir('/tmp/logs')
   job.setPhase(77)
-  print((job.getShell()))
+  print((' '.join(job.getShell())))
   print((job.getJson()))
 
