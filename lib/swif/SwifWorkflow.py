@@ -1,4 +1,4 @@
-import tempfile,subprocess
+import tempfile,subprocess,collections,json
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
 from SwifStatus import SWIF
@@ -50,7 +50,7 @@ class SwifWorkflow(RunFileGroups):
     data['site'] = self.site
     data['max-concurrent'] = self.maxConcurrent
     data['jobs']=[job.getJson() for job in self.jobs]
-    return json.dumps(data,**SwifJob.__JSONFORMAT)
+    return json.dumps(data,**{'indent':2,'separators':(',',': ')})
 
   def submitShell(self):
     for cmd in self.getShell():
