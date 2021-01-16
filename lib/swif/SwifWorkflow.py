@@ -12,7 +12,7 @@ class SwifWorkflow(RunFileGroups):
     self.jobs=[]
     self.phase=0
     # new for swif2:
-    self.maxConcurrent=1e4
+    self.maxConcurrent=int(1e4)
     self.site='jlab/enp'
     #self.storage='enp:luster'
     #self.siteLogin=None
@@ -49,7 +49,7 @@ class SwifWorkflow(RunFileGroups):
     data['name'] = self.name
     data['site'] = self.site
     data['max-concurrent'] = self.maxConcurrent
-    data['jobs']=[job.getJson() for job in self.jobs]
+    data['jobs']=[job.toJson() for job in self.jobs]
     return json.dumps(data,**{'indent':2,'separators':(',',': ')})
 
   def submitShell(self):

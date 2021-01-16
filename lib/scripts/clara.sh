@@ -10,7 +10,7 @@ if [ -z $CCDB_CONNECTION ] || ! [[ $CCDB_CONNECTION = sqlite* ]]; then
 fi
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
-nevents=
+nevents="-e 5000"
 outprefix=rec_
 logdir=.
 threads=16
