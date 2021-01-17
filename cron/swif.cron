@@ -28,6 +28,9 @@ SCRIPT="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
 # send workflows with tags including "v2.2" to clas12mon.
 #15,45 * * * * /usr/bin/flock -n $LOCKFILE $SCRIPT --quiet --clas12mon v2.2 || echo "ERROR:  Previous clas12-workflow cronjob still running"
 #
-# At 3:00, delete files older than a day from farm_out:
-0 3 * * * find /farm_out/$USER -type f -mtime +1 -exec rm -f {} \;
-
+# Weekly, delete old, empty /farm_out directories:
+5 0 * * 1 find /farm_out/$USER -type d -mtime +7 -empty -delete
+# Delete old files:
+15 */12 * * * find /farm_out/$USER -type f -mtime +7 -delete
+# Gzip old files:
+5 */4 * * * find /farm_out/$USER -type f -mtime +1 -not -name '*.gz' -exec gzip {} \;
