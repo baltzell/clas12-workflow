@@ -1,0 +1,36 @@
+# NOTE:  This is a template.  To make it operational:
+# 1) Assign $MAILTO to your personal email address;  it can also be a comma-separated list of email addresses
+# 2) Assign $HOME/.swif-cron.lock to a full file path in the $HOME of the account that will be running this cronjob
+# 3) Assign $SCRIPT to the full path of cron/swif-cron.sh in clas12-workflow
+# 
+MAILTO="bobcat@jlab.org"
+#
+SWIF="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
+#
+FARMOUT="/group/clas12/packages/clas12-workflow/dev/cron/farmout-cron.sh"
+#
+PATH=/bin:/usr/bin
+#
+# This will run every 30 minutes (i.e. on the hour and half-hour)
+# and issue retries for all workflows:
+#*/30 *  *  *  * flock -n $HOME/.swif-cron.lock $SWIF || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# This will run every 30 minutes, and do both
+# 1:  swif retries for all workflows
+# 2:  publish wrkflows with tag==pass1v0 to clas12mon
+*/30 * * * * flock -n $HOME/.swif-cron.lock $SWIF --retry --clas12mon pass1v0 || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# This will run once every hour, on the hour, and do swif retries if necessary:
+#0 *  *  *  * flock -n $HOME/.swif-cron.lock $SWIF || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# This will run every two hours, on the hour:
+#0 */2  *  *  * flock -n $HOME/.swif-cron.lock $SWIF || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# This will run every 30 minutes, on ##:15 and ##:45, and
+# send workflows with tags including "v2.2" to clas12mon.
+#15,45 * * * * flock -n $HOME/.swif-cron.lock $SWIF --quiet --clas12mon v2.2 || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#
+# Daily, delete old /farm_out stuff:
+5  2  * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -d 7 || echo "ERROR:  Previous farm_out cronjob still running"
+# Every few hours, gzip old files:
+5 */4 * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -g 1 || echo "ERROR:  Previous farm_out cronjob still running"
