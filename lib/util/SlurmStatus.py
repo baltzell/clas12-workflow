@@ -346,7 +346,7 @@ class SlurmQuery():
     from ROOT import TCanvas
     import ROOTConfig
     histos=self.getHistos(varname)
-    canvas=TCanvas(varname,'',700,500)
+    canvas=TCanvas(self.user+'_'+varname,self.user+':'+varname,700,500)
     dopt='H'
     for h in histos.values():
       h.Draw(dopt)
