@@ -226,7 +226,7 @@ class TrainMrgJob(CLAS12Job):
     self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
     self.setRam('1000MB')
     self.addTag('mode','anamrg')
-    self.setTime('24h')
+    self.setTime('36h')
   def setCmd(self):
     # FIXME: write outputs to local disk and use Auger staging
     if self.cfg['workDir'] is None:
