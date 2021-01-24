@@ -64,8 +64,8 @@ for user in args.u:
       canvases.append(sq.getCanvas('cputime'))
       canvases.append(sq.getCanvas('walltime'))
       canvases.append(sq.getCanvas('cputime/walltime'))
-
-if args.g:
-  print('Done.  Press any key to close.')
-  input()
+      if sys.version_info.major<3:
+        raw_input('Done. Press Return to close ROOT.')
+      else:
+        input('Done. Press Return to close ROOT.')
 
