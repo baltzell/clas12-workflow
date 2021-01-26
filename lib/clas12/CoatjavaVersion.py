@@ -4,6 +4,7 @@ _LOGGER=logging.getLogger(__name__)
 
 CLAS12_PACKAGES_DIR='/group/clas12/packages/'
 CLARA_VERSION='4.3.12'
+SEARCH_PATHS = ['plugins/clas12/lib/clas','lib/clas','coatjava/lib/clas']
 
 class CoatjavaVersion():
 
@@ -13,29 +14,36 @@ class CoatjavaVersion():
   def __init__(self,string):
     self.string=string.strip().rstrip('/')
     self.version=None
-    self._parse(self.string)
+    if not self._find(self.string):
+      if self._extract(os.path.basename(self.string)):
+        _LOGGER.warning('Couldn\'t find jar, relying on directory name for coatjava version.')
+      else:
+        raise ValueError('Cannot determine coatjava version: '+self.string)
 
-  def _parse(self,path):
-    if os.path.basename(path).endswith('nightly'):
-      self.major=999
-      self.minor=999
-      self.small=999
-      self.version='nightly'
-    else:
-      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is None:
-        m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is None:
-        m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is None:
-        m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is not None:
-        self.major=int(m.group(1))
-        self.minor=int(m.group(3))
-        self.small=int(m.group(4))
-        self.version=m.group().strip('_')
-    if self.version is None or not self.string.endswith(self.version):
-      raise ValueError('Cannot determine coatjava version: '+path)
+  def _extract(self,string):
+    m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',string)
+    if m is None:
+      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',string)
+    if m is None:
+      m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',string)
+    if m is None:
+      m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',string)
+    if m is not None:
+      self.major=int(m.group(1))
+      self.minor=int(m.group(3))
+      self.small=int(m.group(4))
+      self.version=m.group().strip('_')
+      return True
+    return False
+
+  def _find(self,path):
+    for x in SEARCH_PATHS:
+      g = glob.glob(path+'/'+x+'/coat-libs-*.jar')
+      if len(g) > 1:
+        raise ValueError('Multiple coatjavas installed at: '+path)
+      if len(g) == 1:
+        return self._extract(os.path.basename(g[0]))
+    return False
 
   def __lt__(self,other):
     if not isinstance(other,CoatjavaVersion):
