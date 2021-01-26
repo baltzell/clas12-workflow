@@ -56,6 +56,8 @@ SWIF_JSON_KEYS=[
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
+_SWIF_RETRY_OPTS={'AUGER-TIMEOUT':['-time','add','300m'],'AUGER-OVER_RLIMIT':['-ram','add','1gb']}
+
 def getWorkflowNames():
   workflows=[]
   for line in subprocess.check_output([SWIF,'list']).splitlines():
@@ -98,40 +100,53 @@ class SwifStatus():
     self.__status=None
     self.__details=None
     self.tagsMerged=False
+    self.source=None
     self.user=getpass.getuser()
 
   def __str__(self):
     return json.dumps(self.getStatus(),**_JSONFORMAT)
 
-  def getStatus(self,source=None):
+  def loadSource(self,source):
+    self.__status = None
+    self.__details = None
+    self.tagsMerged = False
+    self.source = source
+    try:
+      for job in self.getDetails()['jobs']:
+        self.__status=[{}]
+        self.__status[0]['workflow_name'] = job['workflow_name']
+        break
+    except:
+      pass
+
+  def getStatus(self):
     if self.__status is None:
-      if source is None:
+      if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
         self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
-      elif isinstance(source,list) or isinstance(source,dict):
-        self.__status=source
-      elif os.path.isfile(source):
-        self.__status=json.load(open(source,'r'))
-      elif isinstance(source,str):
-        self.__status=json.loads(source)
+      elif isinstance(self.source,list) or isinstance(self.source,dict):
+        self.__status=self.source
+      elif os.path.isfile(self.source):
+        self.__status=json.load(open(self.source,'r'))
+      elif isinstance(self.source,str):
+        self.__status=json.loads(self.source)
       else:
-        raise TypeError('Cannot set SwifStatus.status')
+        raise TypeError('Cannot set status:'+str(self.source))
     return self.__status
 
-  def getDetails(self,source=None):
-    self.getStatus(source)
+  def getDetails(self):
     if self.__details is None:
-      if source is None:
+      if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
         self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
-      elif isinstance(source,list) or isinstance(source,dict):
-        self.__details=source
-      elif os.path.isfile(source):
-        self.__details=json.load(open(source,'r'))
-      elif isinstance(source,str):
-        self.__details=json.loads(source)
+      elif isinstance(self.source,list) or isinstance(self.source,dict):
+        self.__details=self.source
+      elif os.path.isfile(self.source):
+        self.__details=json.load(open(self.source,'r'))
+      elif isinstance(self.source,str):
+        self.__details=json.loads(self.source)
       else:
-        raise TypeError('Cannot set SwifStatus.details')
+        raise TypeError('Cannot set details')
     return self.__details
 
   def getValue(self,key):
@@ -199,13 +214,13 @@ class SwifStatus():
       for key in SWIF_JSON_KEYS:
         if key not in status:
           continue
-        if status[key] is None:
+        if key == 'jobs' or status[key] is None:
           continue
         if key.find('_ts')==len(key)-3:
           dt=datetime.datetime.fromtimestamp(int(status[key])/1000)
           statuses.append('%-30s = %s'%(key,dt.strftime('%Y/%m/%d %H:%M:%S')))
         else:
-          statuses.append('%-30s = %s'%(key,status[key]))
+          statuses.append('%-30s = %s'%(str(key),str(status[key])))
     return '\n'.join(statuses)
 
   def getProblems(self):
@@ -217,6 +232,41 @@ class SwifStatus():
         continue
       problems.extend(status['problem_types'].split(','))
     return problems
+
+  def getTimings(self):
+    ret={}
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
+        if 'attempts' in job:
+          for att in job['attempts']:
+            # need to switch to rtime/stime/utime
+            if 'auger_ts_complete' in att:
+              dt = float(att['auger_ts_complete'])/1000/60/60
+              dt -= float(att['auger_ts_active'])/1000/60/60
+              mode = 'Unknown'
+              if 'tags' in job:
+                if 'mode' in job['tags']:
+                  mode = job['tags']['mode']
+              if mode not in ret:
+                ret[mode] = {'cpu':[],'wall':[]}
+              ret[mode]['cpu'].append(dt*att['cpu_cores'])
+              ret[mode]['wall'].append(dt)
+              break
+    return ret
+
+  def showTimings(self):
+    for mode,data in self.getTimings().items():
+      for i in range(len(data['cpu'])):
+        print('%s %f %f'%(mode,data['cpu'][i],data['wall'][i]))
+    rows = []
+    for k,v in self.getTimings().items():
+      rows.append('%20s : %10d %10.1f %10.1f %10.1f %10.1f'%
+          (k,len(v['cpu']),
+            float(sum(v['cpu']))/len(v['cpu']),
+            float(sum(v['wall']))/len(v['wall']),
+            min(v['wall']), max(v['wall'])
+            ))
+    return '\n'.join(rows)
 
   def tallyAllProblems(self):
     data=collections.OrderedDict()
@@ -338,21 +388,27 @@ class SwifStatus():
 
   def modifyJobReqs(self,problems):
     ret=[]
-    if 'AUGER-TIMEOUT' in problems:
-      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-time','add','300m'])
-      modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
-      problems.remove('AUGER-TIMEOUT')
-      ret.append(modifyCmd)
-      ret.append(subprocess.check_output(modifyCmd))
-    if 'AUGER-OVER_RLIMIT' in problems:
-      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-ram','add','1gb'])
-      modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
-      problems.remove('AUGER-OVER_RLIMIT')
-      ret.append(modifyCmd)
-      ret.append(subprocess.check_output(modifyCmd))
+    for err,opts in _SWIF_RETRY_OPTS.items():
+      cmd=[SWIF,'modify-jobs','-workflow',self.name]
+      cmd.extend(opts)
+      cmd.extend(['-problems',err])
+      ret.append(cmd)
+      ret.append(subprocess.check_output(cmd))
     return ret
+#    if 'AUGER-TIMEOUT' in problems:
+#      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
+#      modifyCmd.extend(['-time','add','300m'])
+#      modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
+#      problems.remove('AUGER-TIMEOUT')
+#      ret.append(modifyCmd)
+#      ret.append(subprocess.check_output(modifyCmd))
+#    if 'AUGER-OVER_RLIMIT' in problems:
+#      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
+#      modifyCmd.extend(['-ram','add','1gb'])
+#      modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
+#      problems.remove('AUGER-OVER_RLIMIT')
+#      ret.append(modifyCmd)
+#      ret.append(subprocess.check_output(modifyCmd))
 
   def exists(self,path,tape=False):
     ret = os.path.exists(path)
@@ -479,6 +535,13 @@ class SwifStatus():
       if 'name' in job:
         ret.extend(glob.glob('%s/%s*'%(logdir,job['name'])))
     return ret
+
+  def dumpProblemLogs(self,logDir=None):
+    for f in self.getPersistentProblemLogs(logDir):
+      print(f)
+      with open(f,'r') as f:
+        for line in f.readlines():
+          print(line.strip())
 
 
 if __name__ == '__main__':

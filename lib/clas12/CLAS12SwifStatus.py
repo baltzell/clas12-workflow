@@ -34,15 +34,18 @@ class CLAS12SwifStatus(SwifStatus):
     self.dburl='https://clas12mon.jlab.org/api/SwifEntries'
     self.dbauth=None
     self.previous=None
+    if args.source is not None:
+      self.loadSource(args.source)
     try:
       with open(self.statusFilename,'r') as statusFile:
-        self.previous=SwifStatus(name)
+        self.previous = SwifStatus(name)
         self.previous.loadStatusFromString('\n'.join(statusFile.readlines()))
     except:
+      self.previous = None
       pass
     try:
       with open(os.getenv('HOME')+'/'+'.clas12mon.auth') as authFile:
-        self.dbauth=authFile.read().strip()
+        self.dbauth = authFile.read().strip()
     except:
       pass
 

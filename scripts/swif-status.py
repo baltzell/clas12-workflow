@@ -22,77 +22,21 @@ def processWorkflow(workflow,args):
 
   tally.add(status.getSummaryStats('mode'))
 
-#  if args.input:
-#    status.getStatus(args.input)
-
 #  if args.jobLogs:
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
 
-  if args.delete:
-    SwifStatus.deleteWorkflow(workflow)
-    return
-
-  if args.listDirs:
-    print(('\n'.join(status.getOutputDirs())))
-    return
-
-  if args.missing or args.missingTape:
-    print('\nMissing outputs in '+workflow+':')
-    print(('\n'.join(status.findMissingOutputs(args.missingTape))))
-    return
-
-  if args.stats or args.runStats or args.phaseStats:
-    print('\n'+separator(workflow))
-    if args.stats:
-      print(status.getSummaryStats('mode')),
-    if args.runStats:
-      print(status.getSummaryStats('run')),
-    if args.phaseStats:
-      print(status.getSummaryStats('phase')),
-    return
-
-  if args.problemStats or args.problemNodes:
-    print('\nProblem summary for '+workflow+':')
-    print(status.summarizeProblems(args.problemNodes))
-    return
-
-  if len(args.listRun)>0:
-    print('\nJobs associated with run numbers: '+','.join([str(x) for x in args.listRun]))
-    print('\n'.join(status.getJobNamesByRun(args.listRun)))
-    return
-
-  if len(args.abandonRun)>0:
-    print(status.abandonJobsByRun(args.abandonRun))
-    return
-
-  # print contents of logs from jobs problems:
-  if args.problemLogs is not False:
-    for f in status.getPersistentProblemLogs(args.problemLogs):
-      print(f)
-      with open(f,'r') as f:
-        for line in f.readlines():
-          print(line.strip())
-    return
-
-  # print inputs of jobs with problems:
-  if args.problemInputs:
-    print(('\n'.join(status.getPersistentProblemInputs(args.problemInputs))))
-    return
-
-  # print details of jobs with problems:
-  if args.problems:
-    print(status.getPersistentProblemJobs(args.problems))
-    return
-
-  # if retrying or abandoning, only print status if problems exist:
-  if len(args.abandon)>0 or args.retry or len(args.clas12mon)>0:
+  # if modifying workflow, only print status if problems exist:
+  if len(args.abandon)>0 or len(args.abandonRun)>0 or args.retry or len(args.clas12mon)>0:
 
     if len(args.abandon)>0:
       res = status.abandonProblems(args.abandon)
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
         print(res)
+
+    if len(args.abandonRun)>0:
+      print(status.abandonJobsByRun(args.abandonRun))
 
     if args.retry:
       sunzinps=[]
@@ -105,11 +49,56 @@ def processWorkflow(workflow,args):
       if len(sunzinps)>0 and len(sunzinps)<11:
         print('\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunzinps)+'\n')
 
-  # otherwise always print status:
+  # otherwise always print general status:
   else:
     print((status.getPrettyStatus()+'\n'))
-    if args.details:
-      print(status.getPrettyJsonDetails())
+
+  if args.details:
+    print(status.getPrettyJsonDetails())
+
+  if args.delete:
+    SwifStatus.deleteWorkflow(workflow)
+    return
+
+  if args.missing or args.missingTape:
+    print('\nMissing outputs in '+workflow+':')
+    print(('\n'.join(status.findMissingOutputs(args.missingTape))))
+
+  if args.stats or args.runStats or args.phaseStats:
+    print('\n'+separator(workflow))
+    if args.stats:
+      print(status.getSummaryStats('mode')),
+    if args.runStats:
+      print(status.getSummaryStats('run')),
+    if args.phaseStats:
+      print(status.getSummaryStats('phase')),
+
+  if args.listDirs:
+    print(('\n'.join(status.getOutputDirs())))
+
+  if args.problemStats or args.problemNodes:
+    print('\nProblem summary for '+workflow+':')
+    print(status.summarizeProblems(args.problemNodes))
+
+  if len(args.listRun)>0:
+    print('\nJobs associated with run numbers: '+','.join([str(x) for x in args.listRun]))
+    print('\n'.join(status.getJobNamesByRun(args.listRun)))
+
+  if args.problemInputs:
+    print(('\n'.join(status.getPersistentProblemInputs(args.problemInputs))))
+
+  if args.problems:
+    print(status.getPersistentProblemJobs(args.problems))
+
+  if args.problemLogs is not False:
+    status.dumpProblemLogs(args.problemLogs)
+
+  if args.timings:
+    print(status.showTimings()+'\n')
+
+  if len(args.clas12mon)>0:
+    if Matcher.matchAny(CLAS12SwifStatus.getHeader(workflow)['tag'],args.clas12mon):
+      status.saveDatabase()
 
   # save job status in text file
 #  if args.save:
@@ -123,10 +112,6 @@ def processWorkflow(workflow,args):
 #      status.saveDetails()
 ##    if args.publish:
 ##      subprocess.check_output(['rsync','-avz',args.logDir+'/',args.webhost+':'+args.webdir])
-
-  if len(args.clas12mon)>0:
-    if Matcher.matchAny(CLAS12SwifStatus.getHeader(workflow)['tag'],args.clas12mon):
-      status.saveDatabase()
 
 
 if __name__ == '__main__':
@@ -161,14 +146,15 @@ if __name__ == '__main__':
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
+  cli.add_argument('--timings',      help='show timings', default=False, action='store_true')
+  cli.add_argument('--source',       help='read workflow status from JSON file instead of querying SWIF', metavar='PATH', default=None,type=str)
 #  cli.add_argument('--logDir',      help='local log directory'+df, metavar='PATH',type=str,default=None)
 #  cli.add_argument('--save',        help='save to logs', action='store_true',default=False)
 #  cli.add_argument('--jobLogs',    help='move job logs when complete', action='store_true',default=False)
 #  cli.add_argument('--publish',    help='rsync to www dir', action='store_true',default=False)
 #  cli.add_argument('--webdir',     help='rsync target dir'+df, type=str,default=None)
 #  cli.add_argument('--webhost',    help='rsync target host'+df, type=str,default='jlabl5')
-#  cli.add_argument('--input',      help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
-
+#  cli.add_argument('--pickle',      help='asdf', default=False, action='store_true')
   args = cli.parse_args()
 
 #  if args.publish and not args.webdir:
@@ -179,6 +165,12 @@ if __name__ == '__main__':
   if len(args.workflow)>0:
     if len(args.matchAll)>0 or len(args.matchAny)>0:
       cli.error('--workflow not supported in conjuction with either --matchAll or --matchAny')
+
+  if args.source:
+    if not os.path.isfile(args.source):
+      cli.error('Source file not found:  '+args.source)
+    if len(args.workflow) != 1:
+      cli.error('Single --workflow must be defined for --source')
 
   if args.problemLogs is not False and args.problemLogs is not None:
     if not os.path.isdir(args.problemLogs):
