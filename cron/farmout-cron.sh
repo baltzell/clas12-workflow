@@ -12,7 +12,7 @@ do
             echo find $DIRECTORY -type d -mtime +$OPTARG -empty -delete 
             ;;
         z)
-            echo find $DIRECTORY -type f -mtime +$OPTARG -not -name '*.gz' -exec gzip {} \;
+            echo find $DIRECTORY -type f -mtime +$OPTARG -not -name '*.gz' -exec gzip -f {} \;
             ;;
         *)
             echo -e "\nUsage = $USAGE\n"
