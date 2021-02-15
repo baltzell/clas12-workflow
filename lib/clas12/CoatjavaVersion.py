@@ -16,7 +16,8 @@ class CoatjavaVersion():
     self.version=None
     if not self._find(self.string):
       if self._extract(os.path.basename(self.string)):
-        _LOGGER.warning('Couldn\'t find jar, relying on directory name for coatjava version.')
+        if os.path.isdir(self.string):
+          _LOGGER.warning('Couldn\'t find jar, relying on directory name for coatjava version: '+self.string)
       else:
         raise ValueError('Cannot determine coatjava version: '+self.string)
 
