@@ -82,23 +82,24 @@ def getMergeDiskReq(nfiles):
 def getMergeTimeReq(nfiles):
   return str(int(2*nfiles/10)+1)+'h'
 
-def getDecoderOpts(run,cfg):
+def getDecoderOpts(run,cfg=None):
   global _RCDB
-  s,t=None,None
-  if 'solenoid' in cfg:
-    s=cfg['solenoid']
-  if 'torus' in cfg:
-    t=cfg['torus']
+  s,t = None,None
+  if cfg is not None:
+    if 'solenoid' in cfg:
+      s = cfg['solenoid']
+    if 'torus' in cfg:
+      t = cfg['torus']
   if s is None:
     if _RCDB is None:
-      _RCDB=RcdbManager()
+      _RCDB = RcdbManager()
     s = _RCDB.getSolenoidScale(int(run))
     if s is None:
       _LOGGER.critical('Unknown solenoid scale for '+str(run))
       sys.exit()
   if t is None:
     if _RCDB is None:
-      _RCDB=RcdbManager()
+      _RCDB = RcdbManager()
     t = _RCDB.getTorusScale(int(run))
     if t is None:
       _LOGGER.critical('Unknown torus scale for '+str(run))
