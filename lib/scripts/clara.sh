@@ -17,6 +17,11 @@ then
     JAVA_OPTS="$JAVA_OPTS $expopts" 
 fi
 
+classpath=$CLARA_HOME/lib:$CLARA_HOME/services
+classpath=$classpath:$COATJAVA/lib/clas:$COATJAVA/lib/services
+classpath=$classpath:$GRAPES
+export JAVA_OPTS="$JAVA_OPTS -cp $classpath"
+
 nevents=
 outprefix=rec_
 logdir=.
