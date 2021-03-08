@@ -31,13 +31,9 @@ class TapeFile():
       return False
     if self.crc32 is not None and other.crc32 is not None:
       if self.crc32 != other.crc32:
-        print(self.crc32)
-        print(other.crc32)
-        print('b')
         return False
     if self.md5 is not None and other.md5 is not None:
       if self.md5 != other.md5:
-        print('c')
         return False
     return True
 
@@ -75,8 +71,9 @@ class CachedFile(TapeFile):
 
     self.size = os.stat(self.path).st_size
 
-    if self.size > MAX_FILE_SIZE:
-      raise ValueError('/cache file is too large to checksum:  '+self.path)
+    if md5 or crc32:
+      if self.size > MAX_FILE_SIZE:
+        raise ValueError('/cache file is too large to checksum:  '+self.path)
 
     if md5:
       with open(self.path,'rb') as f:
