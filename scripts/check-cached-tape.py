@@ -42,5 +42,5 @@ for x in args.path:
 if len(mismatch) == 0:
   print('No Mismatches Found.')
 else:
-  print(str(len(mismatch))+' Mismatches Found:'+'\n'.join(mismatch))
+  print(str(len(mismatch))+' Mismatches Found:\n'+'\n'.join(mismatch))
 
