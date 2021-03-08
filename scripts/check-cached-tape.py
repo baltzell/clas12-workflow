@@ -28,7 +28,7 @@ for x in args.path:
   if os.path.isfile(x):
     if not check_cache_file(x):
       mismatch.append(x)
-  elif os.path.isdir():
+  elif os.path.isdir(x):
     for adir,subdirs,files in os.walk(x):
       for f in files:
         if not check_cache_file(adir+'/'+f):
