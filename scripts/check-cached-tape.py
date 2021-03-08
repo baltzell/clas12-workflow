@@ -15,6 +15,8 @@ cli.add_argument('path', nargs='+',help='path of directory or file on /cache (re
 args = cli.parse_args(sys.argv[1:])
 
 def check_cache_file(cache_path):
+  if not os.path.isfile('/mss'+cache_path[6:]):
+    return True
   cache = JLabTape.CachedFile(cache_path, crc32=args.crc32, md5=args.md5)
   tape = JLabTape.TapeStub('/mss'+cache_path[6:])
   return cache == tape
