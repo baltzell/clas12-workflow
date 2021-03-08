@@ -11,7 +11,7 @@ if sys.version_info < (3,0):
   sys.exit(1)
 
 # should optimize checksums for large files, meanwhile:
-MAX_FILE_SIZE = 3e9
+MAX_FILE_SIZE = 5e9
 
 class TapeFile():
 
