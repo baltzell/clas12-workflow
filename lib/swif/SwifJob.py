@@ -22,8 +22,8 @@ class SwifJob:
     self.ram='1GB'
     self.shell='/bin/tcsh'
     self.tags=collections.OrderedDict()
-    self.antecedents=[]
-    self.conditions=[]
+    self.antecedents = set()
+    self.conditions = set()
     self.logDir=None
     self.cmd=''
     # for Auger staging:
@@ -277,16 +277,22 @@ class JputJob(SwifJob):
     self.disk='500MB'
     self.ram='500MB'
     self.addTag('mode','jput')
-    self.jputfiles = []
-  def addJputs(self,jobs):
-    for j in jobs:
-      if 'output' in j.toJson():
-        for o in j.toJson()['output']:
-          if o['remote'].startswith('file:/cache'):
-            if (j.getJobName()) not in self.antecedents:
-              self.antecedents.append(j.getJobName())
-            if o['remote'][5:] not in self.jputfiles:
-              self.jputfiles.append(o['remote'][5:])
+    self.jputfiles = set()
+  def addJputs(self,jobsOrFiles):
+    for j in jobsOrFiles:
+      if isinstance(j,SwifJob):
+        if 'output' in j.toJson():
+          for o in j.toJson()['output']:
+            if o['remote'].startswith('file:/cache'):
+              self.antecedents.add(j.getJobName())
+              self.jputfiles.add(o['remote'][5:])
+      elif isinstance(j,str):
+        if j.startswith('/cache/'):
+          self.jputfiles.add(j)
+      else:
+        raise TypeError()
+
+
     cmd = '/site/bin/jcache put ' + ' '.join(self.jputfiles)
     SwifJob.setCmd(self,cmd)
 

@@ -81,7 +81,7 @@ class CLAS12Workflow(SwifWorkflow):
         if isinstance(inps[0],SwifJob):
           for x in inps:
             job.addInputData(x.outputData)
-            job.antecedents.append(x.getJobName())
+            job.antecedents.add(x.getJobName())
         else:
           job.addInputData(inps)
         job.setCmd(len(self.jobs))
@@ -105,7 +105,7 @@ class CLAS12Workflow(SwifWorkflow):
     for run in runs:
       job=CLAS12Jobs.TrainMrgJob(self.name,self.cfg)
       for j in runs[run]:
-        job.antecedents.append(j.getJobName())
+        job.antecedents.add(j.getJobName())
       job.addTag('run','%.6d'%int(run))
       job.setCmd()
       job.setPhase(phase)
@@ -128,7 +128,7 @@ class CLAS12Workflow(SwifWorkflow):
     for run in runs:
       job=CLAS12Jobs.TrainCleanupJob(self.name,self.cfg)
       for j in runs[run]:
-        job.antecedents.append(j.getJobName())
+        job.antecedents.add(j.getJobName())
       job.addTag('run','%.6d'%int(run))
       job.setCmd()
       job.setPhase(phase)
@@ -141,7 +141,11 @@ class CLAS12Workflow(SwifWorkflow):
   #
   def jput(self,phase,jobs):
     ret = []
+    runs = set()
+
+    # Auger outputs on /cache:
     for job in jobs:
+      runs.append(job.getTag('run'))
       if len(ret)==0 or len(ret[-1].jputfiles)>30:
         j = CLAS12Jobs.JputJob(self.name,self.cfg)
         j.setPhase(phase)
@@ -150,6 +154,16 @@ class CLAS12Workflow(SwifWorkflow):
     if len(ret)>0 and len(ret[-1].jputfiles) == 0:
       ret.pop()
     self.addJob(ret)
+
+    # Merged train outputs on /cache, one job per run:
+    for run in runs:
+      f = '%s/%s/train/*/*%s*'%(self.cfg['trainDir'],self.cfg['schema'],run)
+      j = CLAS12Jobs.JputJob(self.name,self.cfg)
+      job.setPhase(phase)
+      job.addJputs([f])
+      ret.append(j)
+      self.addJob(j)
+
     return ret
 
   #
@@ -185,7 +199,7 @@ class CLAS12Workflow(SwifWorkflow):
       job.setPhase(phase)
       if isinstance(inp,SwifJob):
         job.addInputData(inp.outputData[0])
-        job.antecedents.append(inp.getJobName())
+        job.antecedents.add(inp.getJobName())
       else:
         job.addInputData(inp)
       job.setCmd()
