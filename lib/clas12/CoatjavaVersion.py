@@ -89,6 +89,8 @@ class CoatjavaVersion():
 def getCoatjavaVersions():
   cjvs={}
   for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+CLARA_VERSION+'_*'):
+    if clara.find('nightly')>=0:
+      continue
     clara=os.path.normpath(clara)
     if os.path.isdir(clara):
       try:
