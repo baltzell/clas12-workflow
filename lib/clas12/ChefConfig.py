@@ -415,7 +415,7 @@ class ChefConfig(collections.OrderedDict):
     self._checkYamls()
 
     # reduce #files in train jobs if huge schema:
-    if self['trainSize'] != CFG['trainSize']:
+    if self['trainSize'] == CFG['trainSize']:
       if self['schema']=='mon' or self['schema']=='calib':
         self['trainSize']=10
 
