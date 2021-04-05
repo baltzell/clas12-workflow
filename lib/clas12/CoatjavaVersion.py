@@ -49,24 +49,20 @@ class CoatjavaVersion():
   def __lt__(self,other):
     if not isinstance(other,CoatjavaVersion):
       other=CoatjavaVersion(other)
-    if self.major<other.major:
-      return True
-    if self.minor<other.minor:
-      return True
-    if self.small<other.small:
-      return True
-    return False
+    if self.major != other.major:
+      return self.major < other.major
+    if self.minor != other.minor:
+      return self.minor < other.minor
+    return self.small < other.small
 
   def __gt__(self,other):
     if not isinstance(other,CoatjavaVersion):
       other=CoatjavaVersion(other)
-    if self.major>other.major:
-      return True
-    if self.minor>other.minor:
-      return True
-    if self.small>other.small:
-      return True
-    return False
+    if self.major != other.major:
+      return self.major > other.major
+    if self.minor != other.minor:
+      return self.minor > other.minor
+    return self.small > other.small
 
   def __eq__(self,other):
     if not self<other and not self>other:
@@ -95,7 +91,7 @@ def getCoatjavaVersions():
     if os.path.isdir(clara):
       try:
         cjv=CoatjavaVersion(clara)
-        cjvs[cjv.version]=clara
+        cjvs[cjv.version]={'path':clara, 'version':cjv}
       except:
         pass
   return cjvs
@@ -111,6 +107,7 @@ if __name__ == '__main__':
     for xx in sys.argv[1:]:
       print((CoatjavaVersion(xx)))
   else:
-    for xx,yy in list(getCoatjavaVersions().items()):
-      print((xx+' '+yy))
+    cjvs = [ y['version'] for x,y in getCoatjavaVersions().items() ]
+    for cjv in sorted(cjvs):
+      print(cjv)
 

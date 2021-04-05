@@ -379,10 +379,11 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.info('Assuming "coatjava" is a version number:  '+self['coatjava'])
       claras=CoatjavaVersion.getCoatjavaVersions()
       if self['coatjava'] in claras:
+        path = claras['coatjava']['path']
         if self['clara'] is None:
-          _LOGGER.warning('Assuming the "clara" containing "coatjava":'+claras[self['coatjava']])
-          self['clara']=os.path.normpath(claras[self['coatjava']])
-        self['coatjava']=os.path.normpath(claras[self['coatjava']]+'/plugins/clas12')
+          _LOGGER.warning('Assuming the "clara" containing "coatjava":'+path)
+          self['clara']=os.path.normpath(path)
+        self['coatjava']=os.path.normpath(path+'/plugins/clas12')
       else:
         self.cli.error('Coatjava version not found: '+self['coatjava'])
 
