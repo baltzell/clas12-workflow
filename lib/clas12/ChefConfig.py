@@ -379,7 +379,7 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.info('Assuming "coatjava" is a version number:  '+self['coatjava'])
       claras=CoatjavaVersion.getCoatjavaVersions()
       if self['coatjava'] in claras:
-        path = claras['coatjava']['path']
+        path = claras[self['coatjava']]['path']
         if self['clara'] is None:
           _LOGGER.warning('Assuming the "clara" containing "coatjava":'+path)
           self['clara']=os.path.normpath(path)
