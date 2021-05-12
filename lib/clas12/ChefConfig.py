@@ -431,19 +431,20 @@ class ChefConfig(collections.OrderedDict):
         self['postproc']=False
         self['recharge']=False
         _LOGGER.warning('Ignoring "postproc" and "recharge" for non-rec workflow.')
-      cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
-      if self['postproc']:
-        if cjv < '6b.4.1':
-          self.cli.error('Post-processing requires coatjava>6b.4.1')
-        if self['helflip'] and cjv < '6.5.11':
-          self.cli.error('Post-processing helflip requires 6.5.11')
-        for run in self['runs']:
-          if run>11000 and cjv < '6b.5.0':
-            self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
-      if self['recharge'] and cjv < '6.5.6':
-        self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
-      if self['helflip']:
-        _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
+      else:
+        cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
+        if self['postproc']:
+          if cjv < '6b.4.1':
+            self.cli.error('Post-processing requires coatjava>6b.4.1')
+          if self['helflip'] and cjv < '6.5.11':
+            self.cli.error('Post-processing helflip requires 6.5.11')
+          for run in self['runs']:
+            if run>11000 and cjv < '6b.5.0':
+              self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
+        if self['recharge'] and cjv < '6.5.6':
+          self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
+        if self['helflip']:
+          _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
