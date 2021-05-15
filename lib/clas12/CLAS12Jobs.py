@@ -33,13 +33,13 @@ class MergingJob(CLAS12Job):
     outDir='%s/merged/%.6d/'%(self.cfg['workDir'],runno)
     self.addOutputData(outBasename,outDir,'staging')
     cmd=' set o=%s ; rm -f $o ; '%outBasename
-    cmd+='%s/bin/hipo-utils -merge -o $o'%self.cfg['coatjava']
+    cmd+='%s/bin/hipo4utils -merge -o $o'%self.cfg['coatjava']
     for ii in range(len(filenames)):
       CLAS12Job.addInputData(self,filenames[ii])
       basename=filenames[ii].split('/').pop()
       cmd+=' '+basename
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
+    cmd+=' && %s/bin/hipo4utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
     CLAS12Job.setCmd(self,cmd)
 
@@ -74,18 +74,18 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd='true'
     for decodedfile,eviofile in zip(decodedfiles,eviofiles):
       cmd+=' && (set o=%s && set i=%s'%(decodedfile,os.path.basename(eviofile))
-      cmd+=' && %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
+      cmd+=' && %s/bin/decoder4 %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
       cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-      cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
+      cmd+=' && %s/bin/hipo4utils -test $o'%self.cfg['coatjava']
       cmd+=' || rm -f $o && ls $o )'
     # merge:
     cmd+=' && set o=%s && rm -f $o && '%mergedfile
-    cmd+='%s/bin/hipo-utils -merge -o $o %s'%(self.cfg['coatjava'],' '.join(decodedfiles))
+    cmd+='%s/bin/hipo4utils -merge -o $o %s'%(self.cfg['coatjava'],' '.join(decodedfiles))
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
+    cmd+=' && %s/bin/hipo4utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
     if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
+      cmd = cmd.replace('bin/decoder4','bin/decoder4 -n 1000')
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -106,12 +106,12 @@ class DecodingJob(CLAS12Job):
   def setCmd(self):
     decoderOpts=ChefUtil.getDecoderOpts(self.getTag('run'),self.cfg)
     cmd =' set o=%s ; set i=%s'%(os.path.basename(self.outputData[0]),os.path.basename(self.inputData[0]))
-    cmd+=' ; %s/bin/decoder %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
+    cmd+=' ; %s/bin/decoder4 %s -o $o $i'%(self.cfg['coatjava'],decoderOpts)
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
-    cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
+    cmd+=' && %s/bin/hipo4utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
     if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
+      cmd = cmd.replace('bin/decoder4','bin/decoder4 -n 1000')
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
@@ -163,7 +163,7 @@ class ReconJob(CLAS12Job):
           cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
           cmd += ' && %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
           cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
-          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
+          cmd += ' && %s/bin/hipo4utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
         if self.cfg['postproc']:
           opts = '-d 1 -q 1'
@@ -172,7 +172,7 @@ class ReconJob(CLAS12Job):
           cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
           cmd += ' && %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
           cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
-          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
+          cmd += ' && %s/bin/hipo4utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
     CLAS12Job.setCmd(self,cmd)
 
