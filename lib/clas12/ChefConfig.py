@@ -39,7 +39,7 @@ CFG['trainSize']    = 30
 CFG['threads']      = 16
 CFG['torus']        = None
 CFG['solenoid']     = None
-CFG['postproc']     = False
+CFG['postproc']     = True
 CFG['recharge']     = False
 CFG['helflip']      = False
 CFG['schema']       = ''
@@ -197,7 +197,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--decDir', metavar='PATH',help='overrides outDir for decoding', type=str,default=None)
     cli.add_argument('--trainDir', metavar='PATH',help='overrides outDir for trains', type=str,default=None)
     cli.add_argument('--workDir',metavar='PATH',help='temporary data location for single decoded/train files before merging', type=str,default=None)
-    cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
+    if getpass.getuser().find('clas12-')<0 and getpass.getuser().find('hps')<0:
+      cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
     cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number (or install location)', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
@@ -378,10 +379,11 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.info('Assuming "coatjava" is a version number:  '+self['coatjava'])
       claras=CoatjavaVersion.getCoatjavaVersions()
       if self['coatjava'] in claras:
+        path = claras[self['coatjava']]['path']
         if self['clara'] is None:
-          _LOGGER.warning('Assuming the "clara" containing "coatjava":'+claras[self['coatjava']])
-          self['clara']=os.path.normpath(claras[self['coatjava']])
-        self['coatjava']=os.path.normpath(claras[self['coatjava']]+'/plugins/clas12')
+          _LOGGER.warning('Assuming the "clara" containing "coatjava":'+path)
+          self['clara']=os.path.normpath(path)
+        self['coatjava']=os.path.normpath(path+'/plugins/clas12')
       else:
         self.cli.error('Coatjava version not found: '+self['coatjava'])
 
@@ -414,7 +416,7 @@ class ChefConfig(collections.OrderedDict):
     self._checkYamls()
 
     # reduce #files in train jobs if huge schema:
-    if self['trainSize'] != CFG['trainSize']:
+    if self['trainSize'] == CFG['trainSize']:
       if self['schema']=='mon' or self['schema']=='calib':
         self['trainSize']=10
 
@@ -428,21 +430,21 @@ class ChefConfig(collections.OrderedDict):
       if self['model'].find('rec')<0:
         self['postproc']=False
         self['recharge']=False
-        self.cli.warning('Ignoring "postproc" and "recharge" for non-rec workflow.')
-      cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
-      if self['postproc']:
-        if cjv < '6b.4.1':
-          self.cli.error('Post-processing requires coatjava>6b.4.1')
-        if self['helflip'] and cjv < '6.5.11':
-          self.cli.error('Post-processing helflip requires 6.5.11')
-        for run in self['runs']:
-          if run>11000 and cjv < '6b.5.0':
-            self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
-      if self['recharge'] and cjv < '6.5.6':
-        self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
-      if self['helflip']:
-        self.warning('--helflip should only be used on data decoded prior to 6.5.11')
-
+        _LOGGER.warning('Ignoring "postproc" and "recharge" for non-rec workflow.')
+      else:
+        cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
+        if self['postproc']:
+          if cjv < '6b.4.1':
+            self.cli.error('Post-processing requires coatjava>6b.4.1')
+          if self['helflip'] and cjv < '6.5.11':
+            self.cli.error('Post-processing helflip requires 6.5.11')
+          for run in self['runs']:
+            if run>11000 and cjv < '6b.5.0':
+              self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
+        if self['recharge'] and cjv < '6.5.6':
+          self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
+        if self['helflip']:
+          _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')

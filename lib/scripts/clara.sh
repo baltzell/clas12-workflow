@@ -4,7 +4,9 @@ export CLARA_USER_DATA=.
 export CLAS12DIR=${CLARA_HOME}/plugins/clas12
 export PATH=${PATH}:$CLAS12DIR/bin
 
-export CLARA_MONITOR_FE="129.57.70.24%9000_java"
+unset CLARA_MONITOR_FE
+#export CLARA_MONITOR_FE="129.57.70.24%9000_java"
+
 if [ -z $CCDB_CONNECTION ] || ! [[ $CCDB_CONNECTION = sqlite* ]]; then
   export CCDB_CONNECTION=mysql://clas12reader@clasdb-farm.jlab.org/clas12
 fi
