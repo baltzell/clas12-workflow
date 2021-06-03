@@ -12,6 +12,13 @@ if [ -z $CCDB_CONNECTION ] || ! [[ $CCDB_CONNECTION = sqlite* ]]; then
 fi
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
+expopts='-XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI -XX:+UseJVMCICompiler'
+v=`$CLARA_HOME/lib/clara/run-java -version 2>&1 | head -1 | awk '{print$3}' | sed 's/"//g' | awk -F\. '{print$1}'`
+if [ $v -ge 11 ]
+then
+    JAVA_OPTS="$JAVA_OPTS $expopts" 
+fi
+
 nevents=
 outprefix=rec_
 logdir=.
