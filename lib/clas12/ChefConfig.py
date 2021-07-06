@@ -10,47 +10,13 @@ _TOPDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__))+'/../../')
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
 
 CHOICES={
-    'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
-    'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
-    'threads' : [16, 20, 24, 32],
-    'node'    : ['general','centos77','centos72','farm19','farm18','farm16','farm14','farm13','qcd12s','amd','xeon']
+'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
+'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
+'threads' : [16, 20, 24, 32],
+'node'    : ['general','centos77','centos72','farm19','farm18','farm16','farm14','farm13','qcd12s','amd','xeon']
 }
 
-CFG=collections.OrderedDict()
-CFG['runGroup']     = None
-CFG['tag']          = None
-CFG['node']         = 'general'
-CFG['model']        = None
-CFG['reconYaml']    = None
-CFG['project']      = 'clas12'
-CFG['trainYaml']    = None
-CFG['coatjava']     = None
-CFG['clara']        = None
-CFG['inputs']       = []
-CFG['runs']         = []
-CFG['workDir']      = None
-CFG['outDir']       = None
-CFG['decDir']       = None
-CFG['trainDir']     = None
-CFG['phaseSize']    = -1
-CFG['mergeSize']    = 5
-CFG['reconSize']    = 1
-CFG['trainSize']    = 30
-CFG['threads']      = 16
-CFG['torus']        = None
-CFG['solenoid']     = None
-CFG['postproc']     = True
-CFG['recharge']     = False
-CFG['helflip']      = False
-CFG['schema']       = ''
-CFG['ccdbsqlite']   = None
-CFG['claraLogDir']  = None
-CFG['logDir']       = '/farm_out/'+getpass.getuser()
-CFG['submit']       = False
-CFG['fileRegex']    = RunFileUtil.getFileRegex()
-CFG['mergePattern'] = 'clas_%.6d.evio.%.5d-%.5d.hipo'
-CFG['singlePattern']= 'clas_%.6d.evio.%.5d.hipo'
-CFG['ignored']      = {}
+CFG=json.load(open(_TOPDIR+'/lib/clas12/defaults.json','r'))
 
 # override default project for priority accounts:
 if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','hps']:
@@ -135,7 +101,7 @@ class ChefConfig(collections.OrderedDict):
       elif self[x].startswith('/') or self[x].startswith('.'):
         if not os.path.isfile(self[x]):
           _LOGGER.critical('Nonexistent user yaml: '+self[x])
-          sys.exit()
+          sys.exit(1)
         self[x] = os.path.abspath(self[x])
       else:
         yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
@@ -144,7 +110,7 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.info('Using stock yaml: '+self[x])
         else:
           _LOGGER.critical('Nonexistent stock yaml: '+self[x])
-          sys.exit()
+          sys.exit(1)
       if x=='reconYaml':
         good=False
         with open(self[x],'r') as f:
@@ -153,13 +119,13 @@ class ChefConfig(collections.OrderedDict):
               cols=line.strip().split()
               if len(cols)<2:
                 _LOGGER.critical('Undefined schema_dir in '+self[x])
-                sys.exit()
+                sys.exit(1)
               elif os.path.isdir(cols[1].strip('"')):
                 good=True
               else:
                 _LOGGER.critical('Invalid schema_dir in '+self[x]+':')
                 _LOGGER.critical('  '+cols[1].strip('"'))
-                sys.exit()
+                sys.exit(1)
         if not good:
           _LOGGER.warning('No schema_dir defined in '+self[x])
 
@@ -172,7 +138,7 @@ class ChefConfig(collections.OrderedDict):
         self._workflow = CLAS12Workflows.MinimalDependency(name,self)
     if self._workflow.getFileCount()<1:
       _LOGGER.critical('Found no applicable input files.  Check "inputs" and "run".')
-      sys.exit()
+      sys.exit(1)
     return self._workflow
 
   def getCli(self):
@@ -241,14 +207,14 @@ class ChefConfig(collections.OrderedDict):
 
     if not os.access(filename,os.R_OK):
       _LOGGER.critical('Config file is not readable:  '+filename)
-      sys.exit()
+      sys.exit(1)
 
     try:
       cfg = json.load(open(filename,'r'))
     except:
       print((traceback.format_exc()))
       _LOGGER.critical('Config file has invalid JSON format:  '+filename)
-      sys.exit()
+      sys.exit(1)
 
     int_keys=[]
     for key,val in list(CFG.items()):
@@ -261,16 +227,16 @@ class ChefConfig(collections.OrderedDict):
     for key,val in list(cfg.items()):
       if key not in self:
         _LOGGER.critical('Config file contains invalid key:  '+key)
-        sys.exit()
+        sys.exit(1)
       if key in CHOICES and val not in CHOICES[key]:
         _LOGGER.critical('Config file\'s "%s" must be one of %s'%(key,str(CHOICES[key])))
-        sys.exit()
+        sys.exit(1)
       if key in int_keys:
         try:
           val=int(val)
         except:
           _LOGGER.critical('Config file\'s "'+key+'" must be an integer: '+val)
-          sys.exit()
+          sys.exit(1)
       self[key]=val
 
   def _loadCliArgs(self):
@@ -299,6 +265,29 @@ class ChefConfig(collections.OrderedDict):
     if len(self['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
 
+    # print ignoring decoding-specific parameters:
+    if self['model'].find('dec')<0:
+      for x in 'mergeSize','decDir','torus','solenoid':
+        if self[x] != CFG[x]:
+          _LOGGER.warning('Ignoring custom --%s option since not decoding.'%x)
+
+    # print ignoring train-specific parameters:
+    if self['model'].find('ana')<0:
+      for x in 'trainSize','trainDir','trainYaml':
+        if self[x] != CFG[x]:
+          _LOGGER.warning('Ignoring custom --%s option since not running trains.'%x)
+
+    # print ignoring recon-specific parameters:
+    if self['model'].find('rec')<0:
+      for x in 'threads','reconYaml','postproc','helflip','recharge':
+        if self[x] != CFG[x]:
+          _LOGGER.warning('Ignoring custom --%s option since not running recon.'%x)
+
+    if self['workDir'] is not None:
+      if self['model'].find('ana')<0 and self['model'].find('mrg')<0:
+        _LOGGER.warning('Ignoring --workDir for non-decoding-merging, trainless workflow.')
+        self['workDir']=None
+
     # cleanup directory definitions:
     for xx in ['decDir','outDir','workDir','logDir','trainDir']:
       if self[xx] is not None:
@@ -315,6 +304,7 @@ class ChefConfig(collections.OrderedDict):
         else:
           self['decDir']=self['outDir']+'/decoded'
           _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self['outDir']+')')
+
     # for train workflows, assign trainDir to outDir if it doesn't exist:
     if self['model'].find('ana')>=0:
       if self['trainDir'] is None:
@@ -348,13 +338,8 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.info('Using '+str(self['phaseSize'])+' *files* per phase.')
 
     # merging+phased workflows have additional constraints:
-    if self['phaseSize']>=0 and self['model'].find('mrg')>=0:
-      if self['fileRegex'] != RunFileUtil.getFileRegex():
-        self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
-    else:
-      if self['workDir'] is not None and self['model'].find('ana')<0:
-        _LOGGER.warning('Ignoring --workDir for non-phased, trainless workflow.')
-        self['workDir']=None
+    if self['model'].find('mrg')>=0 and self['fileRegex']!=RunFileUtil.getFileRegex():
+      self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
 
     # no temporary files on /cache or mss
     if self['workDir'] is not None:
@@ -369,6 +354,7 @@ class ChefConfig(collections.OrderedDict):
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
 
+    # check sqlite file:
     if self['ccdbsqlite'] is not None:
       self['ccdbsqlite'] = os.path.abspath(self['ccdbsqlite'])
       if not os.path.isfile(self['ccdbsqlite']):
@@ -376,12 +362,12 @@ class ChefConfig(collections.OrderedDict):
 
     # let user specify version number instead of path:
     if self['coatjava'] is not None and not self['coatjava'].startswith('/'):
-      _LOGGER.info('Assuming "coatjava" is a version number:  '+self['coatjava'])
+      _LOGGER.info('Interpreting --coatjava as a version number:  '+self['coatjava'])
       claras=CoatjavaVersion.getCoatjavaVersions()
       if self['coatjava'] in claras:
         path = claras[self['coatjava']]['path']
         if self['clara'] is None:
-          _LOGGER.warning('Assuming the "clara" containing "coatjava":'+path)
+          _LOGGER.info('Assuming the CLARA install containing --coatjava:  '+path)
           self['clara']=os.path.normpath(path)
         self['coatjava']=os.path.normpath(path+'/plugins/clas12')
       else:
@@ -390,19 +376,21 @@ class ChefConfig(collections.OrderedDict):
     # use coatjava from clara if coatjava isn't defined:
     if self['coatjava'] is None:
       if self['clara'] is not None:
-        _LOGGER.warning('Using coatjava from clara: '+self['clara'])
+        _LOGGER.info('Using COATJAVA from CLARA installation:  '+self['clara'])
         self['coatjava']=self['clara']+'/plugins/clas12'
       else:
-        self.cli.error('Unable to define a "coatjava".  Define it or "clara".')
+        self.cli.error('You must define at least one of --coatjava or --clara.')
+
+    # check for coatjava:
     if not os.path.exists(self['coatjava']):
-      self.cli.error('"coatjava" does not exist: '+self['coatjava'])
+      self.cli.error('COATJAVA does not exist: '+self['coatjava'])
 
     # check for clara:
     if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
       if self['clara'] is None:
-        self.cli.error('"clara" must be defined for model='+str(self['model']))
+        self.cli.error('--clara must be defined for model='+str(self['model']))
       if not os.path.exists(self['clara']):
-        self.cli.error('"clara" does not exist: '+self['clara'])
+        self.cli.error('CLARA does not exist:  '+self['clara'])
 
     # check yaml files:
     if self['model'].find('ana')>=0 and self['trainYaml'] is None:
@@ -426,25 +414,20 @@ class ChefConfig(collections.OrderedDict):
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
 
     # check post-processing:
-    if self['postproc'] or self['recharge']:
-      if self['model'].find('rec')<0:
-        self['postproc']=False
-        self['recharge']=False
-        _LOGGER.warning('Ignoring "postproc" and "recharge" for non-rec workflow.')
-      else:
-        cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
-        if self['postproc']:
-          if cjv < '6b.4.1':
-            self.cli.error('Post-processing requires coatjava>6b.4.1')
-          if self['helflip'] and cjv < '6.5.11':
-            self.cli.error('Post-processing helflip requires 6.5.11')
-          for run in self['runs']:
-            if run>11000 and cjv < '6b.5.0':
-              self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
-        if self['recharge'] and cjv < '6.5.6':
-          self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
-        if self['helflip']:
-          _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
+    if self['model'].find('rec')>=0 and ( self['postproc'] or self['recharge'] ):
+      cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
+      if self['postproc']:
+        if cjv < '6b.4.1':
+          self.cli.error('Post-processing requires coatjava>6b.4.1')
+        if self['helflip'] and cjv < '6.5.11':
+          self.cli.error('Post-processing helflip requires 6.5.11')
+        for run in self['runs']:
+          if run>11000 and cjv < '6b.5.0':
+            self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
+      if self['recharge'] and cjv < '6.5.6':
+        self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
+      if self['helflip']:
+        _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
