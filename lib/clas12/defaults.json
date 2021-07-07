@@ -27,7 +27,7 @@
   "schema": "",
   "ccdbsqlite": null,
   "claraLogDir": null,
-  "logDir": "/farm_out/baltzell",
+  "logDir": null,
   "submit": false,
   "fileRegex": ".*clas[_A-Za-z]*_(\\d+)\\.evio\\.(\\d+)",
   "mergePattern": "clas_%.6d.evio.%.5d-%.5d.hipo",
