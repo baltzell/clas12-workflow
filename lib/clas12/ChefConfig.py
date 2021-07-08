@@ -18,6 +18,9 @@ CHOICES={
 
 CFG=json.load(open(_TOPDIR+'/lib/clas12/defaults.json','r'))
 
+if CFG['logDir'] is None:
+  CFG['logDir'] = '/farm_out/'+getpass.getuser()
+
 # override default project for priority accounts:
 if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','hps']:
   CFG['project']='hallb-pro'
