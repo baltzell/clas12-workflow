@@ -387,6 +387,12 @@ class ChefConfig(collections.OrderedDict):
     # check for coatjava:
     if not os.path.exists(self['coatjava']):
       self.cli.error('COATJAVA does not exist: '+self['coatjava'])
+    else:
+      n = len(glob.glob(self['coatjava']+'/lib/clas/coat-libs*.jar'))
+      if n < 1:
+        self.cli.error('COATJAVA has insufficient libraries:  '+self['coatjava'])
+      elif n > 1:
+        self.cli.error('COATJAVA has too many library versions:  '+self['coatjava'])
 
     # check for clara:
     if self['model'].find('rec')>=0 or self['model'].find('ana')>=0:
