@@ -69,7 +69,7 @@ class ChefConfig(collections.OrderedDict):
 
   def __eq__(self,cfg):
     # equality is based only on things that would change the output data
-    for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','postproc','helflip','recharge']:
+    for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','nopostproc','helflip','recharge']:
       if self.get(k) != None and cfg.get(k) != None:
         if self[k] != cfg[k]:
           return False
@@ -184,7 +184,7 @@ class ChefConfig(collections.OrderedDict):
     if getpass.getuser().find('clas12-')<0:
       cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
-    cli.add_argument('--postproc', help='enable post-processing of helicity and beam charge', action='store_true', default=None)
+    cli.add_argument('--nopostproc', help='disable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
     cli.add_argument('--helflip',  help='flip offline helicity', action='store_true', default=None)
 
@@ -214,6 +214,8 @@ class ChefConfig(collections.OrderedDict):
 
     try:
       cfg = json.load(open(filename,'r'))
+      # strip out deprecated option:
+      cfg.pop('postproc',None)
     except:
       print((traceback.format_exc()))
       _LOGGER.critical('Config file has invalid JSON format:  '+filename)
@@ -282,10 +284,13 @@ class ChefConfig(collections.OrderedDict):
 
     # print ignoring recon-specific parameters:
     if self['model'].find('rec')<0:
-      for x in 'threads','reconYaml','postproc','helflip','recharge':
+      for x in 'threads','reconYaml','nopostproc','helflip','recharge':
         if self[x] != CFG[x]:
           _LOGGER.warning('Ignoring custom --%s option since not running recon.'%x)
+    elif self['nopostproc'] and self['helflip']:
+      _LOGGER.warning('Ignoring --helflip option since postprocessing is disabled.')
 
+    # print ignoring work dir:
     if self['workDir'] is not None:
       if self['model'].find('ana')<0 and self['model'].find('mrg')<0:
         _LOGGER.warning('Ignoring --workDir for non-decoding-merging, trainless workflow.')
@@ -423,16 +428,16 @@ class ChefConfig(collections.OrderedDict):
       self.cli.error('\nFound no runs.  Check --inputs and --runs.')
 
     # check post-processing:
-    if self['model'].find('rec')>=0 and ( self['postproc'] or self['recharge'] ):
+    if self['model'].find('rec')>=0 and ( not self['nopostproc'] or self['recharge'] ):
       cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
-      if self['postproc']:
+      if not self['nopostproc']:
         if cjv < '6b.4.1':
           self.cli.error('Post-processing requires coatjava>6b.4.1')
         if self['helflip'] and cjv < '6.5.11':
           self.cli.error('Post-processing helflip requires 6.5.11')
         for run in self['runs']:
           if run>11000 and cjv < '6b.5.0':
-            self.cli.critical('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
+            self.cli.error('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
       if self['recharge'] and cjv < '6.5.6':
         self.cli.critical('Rebuilding beam charge requires coatjava>6.5.5')
       if self['helflip']:

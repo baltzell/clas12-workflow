@@ -122,7 +122,7 @@ class ReconJob(CLAS12Job):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
     # $COATJAVA has to be set for postprocessing to find bankdefs:
-    if cfg['postproc']:
+    if not cfg['nopostproc']:
       self.addEnv('COATJAVA',cfg['clara']+'/plugins/clas12')
     self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
@@ -155,7 +155,7 @@ class ReconJob(CLAS12Job):
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
-    if self.cfg['postproc'] or self.cfg['recharge']:
+    if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
         # postprocessing must run from the same coatjava as clara for bankdefs:
@@ -165,7 +165,7 @@ class ReconJob(CLAS12Job):
           cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
           cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
-        if self.cfg['postproc']:
+        if not self.cfg['nopostproc']:
           opts = '-d 1 -q 1'
           if self.cfg['helflip']:
             opts += ' -f 1'

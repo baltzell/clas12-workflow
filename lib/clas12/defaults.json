@@ -21,7 +21,7 @@
   "threads": 16,
   "torus": null,
   "solenoid": null,
-  "postproc": true,
+  "nopostproc": false,
   "recharge": false,
   "helflip": false,
   "schema": "",
