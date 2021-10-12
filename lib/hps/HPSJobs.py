@@ -80,6 +80,9 @@ class HpsJavaJob(HPSJob):
     cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     self.addOutput('out.slcio',outPath)
+    for x in self.cfg['outFile']:
+      sufflen = len(outPath.split('.').pop())
+      self.addOutput(x,outPath[:-sufflen]+x.split('.').pop())
     self.addTag('run','%.6d'%runno)
     SwifJob.setCmd(self,cmd)
 

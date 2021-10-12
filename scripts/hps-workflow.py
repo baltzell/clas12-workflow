@@ -44,6 +44,7 @@ cli_lcio.add_argument('--detector', metavar='NAME',help='detector name',type=str
 cli_lcio.add_argument('--outPrefix',metavar='NAME',help='output file prefix',type=str,required=True)
 cli_lcio.add_argument('--runno',    metavar='#',help='pass run number to java command via -R #, and use filename if # not specified',type=int,default=None,nargs='?',const='-1')
 cli_lcio.add_argument('--java',     metavar='#.#.#',help='override system java version (choices=%s)'%','.join(JAVAS),type=str,default=None,choices=JAVAS)
+cli_lcio.add_argument('--outFile',  metavar='FILENAME',help='add an additional output file, repeatable', default=[], action='append', type=str)
 
 args=cli.parse_args(sys.argv[1:])
 
@@ -61,6 +62,22 @@ if 'jar' in cfg:
 
 if cfg.get('java') is not None:
   cfg['java']='/group/clas12/packages/jdk/'+cfg['java']
+
+if cfg.get('outFile') is not None:
+
+  suffixes = ['.slcio']
+
+  for x in cfg.get('outFile'):
+
+    if x.find('.') <=0:
+      cli.error('This --outFile does not contain a .suffix:  '+x)
+
+    suffix = x.split('.').pop()
+
+    if suffix in suffixes:
+      cli.error('Multiple --outFiles with the same suffix is not supported:  '+suffix)
+
+    suffixes.append(suffix)
 
 if cfg.get('steer') is not None:
 
