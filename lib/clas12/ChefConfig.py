@@ -415,6 +415,9 @@ class ChefConfig(collections.OrderedDict):
       self['schema']=ClaraYaml.getSchemaName(self['reconYaml'])
       if not ClaraYaml.checkIntegrity(self['reconYaml'],self['clara']):
         self.cli.error('"reconYaml" has bugs')
+    if self['trainYaml'] is not None:
+      if not ClaraYaml.checkIntegrity(self['trainYaml'],self['clara']):
+        self.cli.error('"trainYaml" has bugs')
     self._checkYamls()
 
     # reduce #files in train jobs if huge schema:

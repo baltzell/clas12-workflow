@@ -17,8 +17,6 @@ _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 # all variations exist in CCDB
 # there's spaces in any names
 #
-# TODO: add full train YAML integrity checking
-#
 
 def checkIntegrity(yamlfile,clara):
   return ClaraYaml(yamlfile,clara).checkIntegrity()
@@ -40,12 +38,20 @@ class ClaraYaml:
     self.ccdb = None
     self.jars = None
     self.names = []
+    self.check_ccdb = True
     with open(yamlfile,'r') as f:
       self.yaml = yaml.safe_load(f)
+    if 'services' in self.yaml:
+      for x in self.yaml['services']:
+        if 'class' in x:
+          if x['class'].find('org.jlab.jnp.grapes') == 0:
+            self.check_ccdb = False
 
   def getJars(self):
     jars = {}
     for jar in glob.glob(self.clara + '/plugins/clas12/lib/*/*.jar'):
+      jars[jar] = JarUtil.JarContents(jar)
+    for jar in glob.glob(self.clara + '/plugins/grapes/lib/core/grapes*.jar'):
       jars[jar] = JarUtil.JarContents(jar)
     for jar in glob.glob(self.clara + '/lib/jclara-*.jar'):
       jars[jar] = JarUtil.JarContents(jar)
@@ -61,6 +67,8 @@ class ClaraYaml:
 
   def checkIntegrity(self):
     _LOGGER.info('Checking YAML file:  '+self.filename)
+    if not self.checkGroups():
+      return False
     if not self.checkAscii(self.filename):
       return False
     if 'services' not in self.yaml:
@@ -128,6 +136,19 @@ class ClaraYaml:
         ret[x]='skim%d'%int(x)
     return ret
 
+  def checkGroups(self):
+    groups={'io-services':['reader','writer'],'services':[],'configuration':['global','io-services','custom-names','services'],'mime-types':[]}
+    for group in self.yaml:
+      if group not in groups:
+        _LOGGER.error('Unknown YAML section:  '+group)
+        return False
+      if len(groups[group]) > 0:
+        for x in self.yaml[group]:
+          if x not in groups[group]:
+            _LOGGER.error('Unknown YAML section:  '+group+':'+x)
+            return False
+    return True
+
   def checkService(self,service):
     if 'class' not in service:
       if 'name' in service:
@@ -171,8 +192,8 @@ class ClaraYaml:
     return True
 
   def checkConfiguration(self,cfg):
-    if 'io-services' not in cfg:
-      return False
+    #if 'io-services' not in cfg:
+    #  return False
     if 'services' not in cfg:
       return False
     timestamp,variation = None,None
@@ -192,12 +213,12 @@ class ClaraYaml:
       if 'variation' in val:
         if not self.checkVariation(val['variation']):
           return False
-      elif variation is None:
+      elif variation is None and self.check_ccdb:
         _LOGGER.warning('No CCDB variation specified for '+name+' in YAML: '+self.filename)
       if 'timestamp' in val:
         if not self.checkTimestamp(val['timestamp']):
           return False
-      elif timestamp is None:
+      elif timestamp is None and self.check_ccdb:
         _LOGGER.warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)
     return True
 
