@@ -407,6 +407,7 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('CLARA does not exist:  '+self['clara'])
 
     # check yaml files:
+    self._checkYamls()
     if self['model'].find('ana')>=0 and self['trainYaml'] is None:
         self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
     if self['model'].find('rec')>=0 and self['reconYaml'] is None:
@@ -418,7 +419,6 @@ class ChefConfig(collections.OrderedDict):
     if self['trainYaml'] is not None:
       if not ClaraYaml.checkIntegrity(self['trainYaml'],self['clara']):
         self.cli.error('"trainYaml" has bugs')
-    self._checkYamls()
 
     # reduce #files in train jobs if huge schema:
     if self['trainSize'] == CFG['trainSize']:
