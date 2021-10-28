@@ -82,6 +82,10 @@ class ClaraYaml:
         return False
     if not self.checkConfiguration(self.yaml['configuration']):
       return False
+    for i in self.getTrainIndices():
+      if i<1 or i>32:
+        _LOGGER.critical('Train id not in valid 1-32 range:  '+str(i))
+        return False
     return True
 
   def getSchemaName(self):
