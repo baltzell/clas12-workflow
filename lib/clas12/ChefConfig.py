@@ -287,6 +287,7 @@ class ChefConfig(collections.OrderedDict):
       for x in 'threads','reconYaml','nopostproc','helflip','recharge':
         if self[x] != CFG[x]:
           _LOGGER.warning('Ignoring custom --%s option since not running recon.'%x)
+      self['reconYaml'] = CFG['reconYaml']
     elif self['nopostproc'] and self['helflip']:
       _LOGGER.warning('Ignoring --helflip option since postprocessing is disabled.')
 
