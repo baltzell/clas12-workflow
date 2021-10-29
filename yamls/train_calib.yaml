@@ -40,6 +40,11 @@ services:
 #################################################### BAND
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: BAND
+#################################################### ECAL
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ECALp
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ECALm
 ####################################################
 configuration:
   custom-names:
