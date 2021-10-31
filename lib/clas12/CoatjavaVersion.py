@@ -4,6 +4,7 @@ _LOGGER=logging.getLogger(__name__)
 
 CLAS12_PACKAGES_DIR='/group/clas12/packages/'
 CLARA_VERSION='4.3.12'
+SEARCH_PATHS = ['plugins/clas12/lib/clas','lib/clas','coatjava/lib/clas']
 
 class CoatjavaVersion():
 
@@ -13,51 +14,55 @@ class CoatjavaVersion():
   def __init__(self,string):
     self.string=string.strip().rstrip('/')
     self.version=None
-    self._parse(self.string)
+    if not self._find(self.string):
+      if self._extract(os.path.basename(self.string)):
+        if os.path.isdir(self.string):
+          _LOGGER.warning('Couldn\'t find jar, relying on directory name for coatjava version: '+self.string)
+      else:
+        raise ValueError('Cannot determine coatjava version: '+self.string)
 
-  def _parse(self,path):
-    if os.path.basename(path).endswith('nightly'):
-      self.major=999
-      self.minor=999
-      self.small=999
-      self.version='nightly'
-    else:
-      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is None:
-        m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is None:
-        m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is None:
-        m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',os.path.basename(path))
-      if m is not None:
-        self.major=int(m.group(1))
-        self.minor=int(m.group(3))
-        self.small=int(m.group(4))
-        self.version=m.group().strip('_')
-    if self.version is None or not self.string.endswith(self.version):
-      raise ValueError('Cannot determine coatjava version: '+path)
+  def _extract(self,string):
+    m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',string)
+    if m is None:
+      m=re.search('_(\d+)([abcd]*)\.(\d+)\.(\d+)',string)
+    if m is None:
+      m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)\.(\d+)',string)
+    if m is None:
+      m=re.search('(\d+)([abcd]*)\.(\d+)\.(\d+)',string)
+    if m is not None:
+      self.major=int(m.group(1))
+      self.minor=int(m.group(3))
+      self.small=int(m.group(4))
+      self.version=m.group().strip('_')
+      return True
+    return False
+
+  def _find(self,path):
+    for x in SEARCH_PATHS:
+      g = glob.glob(path+'/'+x+'/coat-libs-*.jar')
+      if len(g) > 1:
+        raise ValueError('Multiple coatjavas installed at: '+path)
+      if len(g) == 1:
+        return self._extract(os.path.basename(g[0]))
+    return False
 
   def __lt__(self,other):
     if not isinstance(other,CoatjavaVersion):
       other=CoatjavaVersion(other)
-    if self.major<other.major:
-      return True
-    if self.minor<other.minor:
-      return True
-    if self.small<other.small:
-      return True
-    return False
+    if self.major != other.major:
+      return self.major < other.major
+    if self.minor != other.minor:
+      return self.minor < other.minor
+    return self.small < other.small
 
   def __gt__(self,other):
     if not isinstance(other,CoatjavaVersion):
       other=CoatjavaVersion(other)
-    if self.major>other.major:
-      return True
-    if self.minor>other.minor:
-      return True
-    if self.small>other.small:
-      return True
-    return False
+    if self.major != other.major:
+      return self.major > other.major
+    if self.minor != other.minor:
+      return self.minor > other.minor
+    return self.small > other.small
 
   def __eq__(self,other):
     if not self<other and not self>other:
@@ -80,11 +85,13 @@ class CoatjavaVersion():
 def getCoatjavaVersions():
   cjvs={}
   for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+CLARA_VERSION+'_*'):
+    if clara.find('nightly')>=0:
+      continue
     clara=os.path.normpath(clara)
     if os.path.isdir(clara):
       try:
         cjv=CoatjavaVersion(clara)
-        cjvs[cjv.version]=clara
+        cjvs[cjv.version]={'path':clara, 'version':cjv}
       except:
         pass
   return cjvs
@@ -100,6 +107,7 @@ if __name__ == '__main__':
     for xx in sys.argv[1:]:
       print((CoatjavaVersion(xx)))
   else:
-    for xx,yy in list(getCoatjavaVersions().items()):
-      print((xx+' '+yy))
+    cjvs = [ y['version'] for x,y in getCoatjavaVersions().items() ]
+    for cjv in sorted(cjvs):
+      print(cjv)
 

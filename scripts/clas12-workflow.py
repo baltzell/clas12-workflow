@@ -2,7 +2,6 @@
 import sys,os,logging
 from ChefConfig import ChefConfig
 
-#logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-14s %(lineno).3d] %(message)s')
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
 logger=logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ logger.info('Created workflow with %d jobs based on %d runs with %d total input 
 
 if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')
-  sys.exit()
+  sys.exit(1)
 
 logger.info('Writing workflow to ./'+workflow.name+'.json')
 with open(workflow.name+'.json','w') as out:

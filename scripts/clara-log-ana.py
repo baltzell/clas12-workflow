@@ -23,6 +23,9 @@ args=cli.parse_args(sys.argv[1:])
 if args.r:
   LogFinder.RECACHE=True
 
+if args.i and os.environ.get('DISPLAY') is None:
+  cli.error('DISPLAY not set.  Did you enable X-forwarding in your ssh connection?')
+
 # generate list of logfiles:
 logfiles=[]
 for path in args.p:

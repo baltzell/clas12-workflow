@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,pwd,grp,argparse,datetime,getpass
+import os,sys,pwd,grp,argparse,datetime,getpass
 from SlurmStatus import SlurmStatus
 from SlurmStatus import SlurmQuery
 
@@ -18,6 +18,9 @@ cli.add_argument('-W',metavar='#.#',help='maximum wall time in hours',type=float
 cli.add_argument('-g',help='generate plots',default=False,action='store_true')
 
 args=cli.parse_args(sys.argv[1:])
+
+if args.g and os.environ.get('DISPLAY') is None:
+  cli.error('DISPLAY not set.  Did you enable X-forwarding in your ssh connection?')
 
 if len(args.u)==0:
   if args.p is None:
@@ -65,7 +68,9 @@ for user in args.u:
       canvases.append(sq.getCanvas('walltime'))
       canvases.append(sq.getCanvas('cputime/walltime'))
 
-if args.g:
-  print('Done.  Press any key to close.')
-  input()
+if len(canvases)>0:
+  if sys.version_info.major<3:
+    raw_input('Done. Press Return to close ROOT.')
+  else:
+    input('Done. Press Return to close ROOT.')
 

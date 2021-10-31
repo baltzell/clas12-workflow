@@ -115,14 +115,14 @@ class DecodingJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
-  THRD_MEM_REQ={0:0,   16:12, 20:14, 24:16, 32:16}
-  THRD_MEM_LIM={0:256, 16:10, 20:12, 24:14, 32:14}
+  THRD_MEM_REQ={0:0,   16:12, 20:16, 24:20, 32:28}
+  THRD_MEM_LIM={0:256, 16:10, 20:14, 24:18, 32:26}
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
     # $COATJAVA has to be set for postprocessing to find bankdefs:
-    if cfg['postproc']:
+    if not cfg['nopostproc']:
       self.addEnv('COATJAVA',cfg['clara']+'/plugins/clas12')
     self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
@@ -155,7 +155,7 @@ class ReconJob(CLAS12Job):
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
-    if self.cfg['postproc'] or self.cfg['recharge']:
+    if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
         # postprocessing must run from the same coatjava as clara for bankdefs:
@@ -165,7 +165,7 @@ class ReconJob(CLAS12Job):
           cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
           cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
           cmd += ' && ls %s )'%(x)
-        if self.cfg['postproc']:
+        if not self.cfg['nopostproc']:
           opts = '-d 1 -q 1'
           if self.cfg['helflip']:
             opts += ' -f 1'
@@ -226,7 +226,7 @@ class TrainMrgJob(CLAS12Job):
     self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
     self.setRam('1000MB')
     self.addTag('mode','anamrg')
-    self.setTime('12h')
+    self.setTime('36h')
   def setCmd(self):
     # FIXME: write outputs to local disk and use Auger staging
     if self.cfg['workDir'] is None:

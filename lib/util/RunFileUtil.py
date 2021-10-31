@@ -148,12 +148,17 @@ class RunFileGroups(collections.OrderedDict):
 
     # file containing a file list if it's a file:
     elif os.path.isfile(data):
+      _LOGGER.info('Assuming '+data+' is a file containing a file list.')
       for x in open(data,'r').readlines():
-        self.addFile(x.split()[0])
+        try:
+          self.addFile(x.split()[0])
+        except:
+          _LOGGER.critical('Failed to parse file list from '+data)
+          sys.exit(1)
 
     # else assume it's a glob:
     else:
-      _LOGGER.warning('Assuming '+data+' is a glob.')
+      _LOGGER.info('Assuming '+data+' is a glob.')
       for xx in glob.glob(data):
         if os.path.isdir(xx):
           self.addDir(xx)
@@ -161,6 +166,8 @@ class RunFileGroups(collections.OrderedDict):
           self.addFile(xx)
 
   def getGroups(self):
+    #
+    # Each group will contain exactly 1 run number.
     #
     # If groupSize is greater than 0, then groups will be
     # limited to that number of files, in which case a

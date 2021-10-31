@@ -12,6 +12,8 @@ SWIF_PROBLEMS=[
 'AUGER-CANCELLED',
 'AUGER-TIMEOUT',
 'AUGER-SUBMIT',
+'AUGER-OUTPUT-FAIL',
+'AUGER-INPUT-FAIL'
 ]
 
 SWIF_JSON_KEYS=[
@@ -257,10 +259,10 @@ class SwifStatus():
           if mode not in modes:
             modes[mode]=dict(zip(SWIF_PROBLEMS,[0]*len(SWIF_PROBLEMS)))
           modes[mode][k]+=v['counts']['modes'][mode]
-      fmt='%12s '+(' '.join(['%20s']*len(SWIF_PROBLEMS)))
-      x=['Node']
-      x.extend(sorted(SWIF_PROBLEMS))
-      ret+=fmt%tuple(x)
+      header_fmt='%12s '+(' '.join(['%20s']*len(SWIF_PROBLEMS)))
+      header=['Node']
+      header.extend(sorted(SWIF_PROBLEMS))
+      ret+=header_fmt%tuple(header)
       fmt='%12s '+' '.join(['%20d']*len(SWIF_PROBLEMS))
       for node in sorted(nodes.keys()):
         if sum(nodes[node].values())==0:
@@ -268,6 +270,7 @@ class SwifStatus():
         x=[node]
         x.extend([nodes[node][k] for k in sorted(SWIF_PROBLEMS)])
         ret+='\n'+fmt%tuple(x)
+      ret+='\n'+header_fmt%tuple(header)
       ret+='\n\n'
     for k,v in data:
       ret+='%20s :'%k

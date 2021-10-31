@@ -4,13 +4,21 @@ export CLARA_USER_DATA=.
 export CLAS12DIR=${CLARA_HOME}/plugins/clas12
 export PATH=${PATH}:$CLAS12DIR/bin
 
-export CLARA_MONITOR_FE="129.57.70.24%9000_java"
+unset CLARA_MONITOR_FE
+#export CLARA_MONITOR_FE="129.57.70.24%9000_java"
+
 if [ -z $CCDB_CONNECTION ] || ! [[ $CCDB_CONNECTION = sqlite* ]]; then
   export CCDB_CONNECTION=mysql://clas12reader@clasdb-farm.jlab.org/clas12
 fi
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
-nevents="-e 5000"
+expopts='-XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI -XX:+UseJVMCICompiler'
+v=`$CLARA_HOME/lib/clara/run-java -version 2>&1 | head -1 | awk '{print$3}' | sed 's/"//g' | awk -F\. '{print$1}'`
+if [ $v -ge 11 ]
+then
+    JAVA_OPTS="$JAVA_OPTS $expopts" 
+fi
+
 outprefix=rec_
 logdir=.
 threads=16

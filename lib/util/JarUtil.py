@@ -2,17 +2,20 @@ import subprocess,os,logging
 
 _LOGGER=logging.getLogger(__name__)
 
+_JAVA=None
+
 def contains(filename,resource):
   return JarContents(filename).contains(resource)
 
 class JarContents:
   def __init__(self,filename):
     self.data=[]
-    try:
-      subprocess.check_output(['java','-version'],stderr=open(os.devnull,'w'))
-    except:
-      _LOGGER.critical('java not found in $PATH')
-      return
+    if _JAVA is None:
+      try:
+        JAVA=subprocess.check_output(['java','-version'],stderr=open(os.devnull,'w'))
+      except:
+        _LOGGER.critical('java not found in $PATH')
+        return
     if not os.path.isfile(filename):
       _LOGGER.critical('File does not exist:  '+filename)
     else:
