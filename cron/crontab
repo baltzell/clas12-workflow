@@ -5,6 +5,8 @@
 # 
 MAILTO="bobcat@jlab.org"
 #
+WOK="/group/clas12/packages/clas12-workflow/dev"
+#
 SWIF="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
 #
 FARMOUT="/group/clas12/packages/clas12-workflow/dev/cron/farmout-cron.sh"
@@ -34,3 +36,8 @@ PATH=/bin:/usr/bin
 5  2  * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -d 7 || echo "ERROR:  Previous farm_out cronjob still running"
 # Every few hours, gzip old files:
 5 */4 * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -g 1 || echo "ERROR:  Previous farm_out cronjob still running"
+#
+#
+# submit jobs for new files automatically, for an "online" pass0:
+0 * * * * flock -n $HOME/.online-pass0.lock $WOK/scripts/pass0-auto-submit.sh $HOME/online-pass0 /cache/clas12/rg-m/data/"
+
