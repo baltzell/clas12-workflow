@@ -1,5 +1,9 @@
 #!/bin/bash
 
+d=`/usr/bin/readlink -f $0`
+d=`/usr/bin/dirname $d`/..
+export PYTHONPATH=${d}/lib/swif:${d}/lib/util:${d}/lib/clas12:${d}/lib/ccdb
+
 workdir=$1
 inputdir=$2
 config=$workdir/config.json
@@ -17,13 +21,15 @@ filelist=$(mktemp $workdir/logs/filelist_$timestamp.XXXXXX)
 logfile=$(mktemp $workdir/logs/log_$timestamp.XXXXXX)
 
 # find files to process:
-echo $filelist >> $logfile
-find $inputdir -type f -name '*0004?.hipo' -mmin +30 | grep -v -f $blacklist >> $filelist
+echo FILELIST: $filelist >> $logfile
+find $inputdir -type f -name '*.evio.0004?' -mmin +30 | grep -v -f $blacklist >> $filelist
 ! [ -s $filelist ] && echo NO NEW FILES >> $logfile && exit 0
 
 # submit the jobs:
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../env.sh
-echo clas12-workflow.py --config $config --inputs $filelist --tag op0$timestamp --submit >> $logfile
-[ $? -ne 0 ] && echo Error generating workflow && exit 7
+cmd="clas12-workflow.py --config $config --inputs $filelist --tag op0$timestamp --submit"
+echo $cmd >> $logfile
+$cmd >> $logfile 2>&1
+[ $? -ne 0 ] && echo !!!!!!!!!ERROR GENERATING WORKFLOW!!!!!!!! && cat $logfile && exit 7
 cat $filelist >> $blacklist
 
