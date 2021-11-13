@@ -130,7 +130,7 @@ class SwifJob:
     return int(scale * int(time.rstrip('secondminutehour')))
 
   def abbreviate(self,x):
-    for full,short in list(self.abbreviations.items()):
+    for full,short in reversed(sorted(list(self.abbreviations.items()))):
       x=x.replace(full,short)
     return x
 
