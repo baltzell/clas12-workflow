@@ -17,8 +17,6 @@ fi
 
 ExcNodeList=$1
 
-echo Excluding Node List for all Pending jobs:  $ExcNodeList
-
 # Seems we cannot just apply it to all jobs, but only via id/name,
 # (hence this convenience script), so let's get and loop over a list
 # of applicable jobs:
