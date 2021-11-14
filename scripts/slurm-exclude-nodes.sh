@@ -30,7 +30,7 @@ do
     exclu=$(echo $x | awk -F, '{print$2}')
     if [ "$exclu" = "" ] || ! [ $exclu = $1 ]
     then
-        echo "Excluding nodes for job #$jobid: $ExcNodeList" 1>&2
+        echo "Excluding nodes for job #$jobid: $ExcNodeList"
         scontrol update UserID=$USER JobId=$jobid ExcNodeList=$ExcNodeList
     fi
 done
