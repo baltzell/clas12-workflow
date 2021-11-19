@@ -10,7 +10,7 @@ inputdir=$3
 config=$workdir/config.json
 blacklist=$workdir/blacklist.txt
 
-[ $# -ne 2 ] && echo Usage:  pass0-auto-submit.sh workdir inputdir && exit 1
+[ $# -ne 3 ] && echo Usage:  pass0-auto-submit.sh workdir inputdir && exit 1
 ! [ -d $workdir ] && echo Nonexistent work directory:  $workdir && exit 2
 ! [ -w $workdir ] && echo Error with write access:  $workdir && exit 3
 ! [ -d $inputdir ] && echo Nonexistent input directory:  $inputdir && exit 4
