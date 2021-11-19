@@ -45,6 +45,8 @@ services:
     name: ECALp
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: ECALm
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: FMT
 ####################################################
 configuration:
   custom-names:
@@ -57,10 +59,11 @@ configuration:
     7: ft 
     8: band
     9: ecal
+    10: fmt
   io-services:
     writer:
       compression: 2
-      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-2-RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments-3-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-4-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-5-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks-6-RUN::config,REC::Particle,REC::Event,CVTRec::Tracks,CND::*-7-RUN::config,REC::Event,REC::Particle,FT::particles,FTCAL::*,FTHODO::*-8-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler-9-RUN::config,REC::Event,REC::Calorimeter,REC::Scintillator,REC::Particle,ECAL::*
+      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-2-RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments-3-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-4-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-5-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks-6-RUN::config,REC::Particle,REC::Event,CVTRec::Tracks,CND::*-7-RUN::config,REC::Event,REC::Particle,FT::particles,FTCAL::*,FTHODO::*-8-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler-9-RUN::config,REC::Event,REC::Calorimeter,REC::Scintillator,REC::Particle,ECAL::*-10-RUN::config,REC::Particle,REC::Track,TimeBasedTrkg::TBTracks,TimeBasedTrkg:Trajectory,FMT*
   services:
 #################################################### RF
     RF:
@@ -126,6 +129,10 @@ configuration:
     ECALp:
       id: 9
       forward: 1+:11:X+:X-:Xn
+#################################################### FMT
+    FMT:
+      id: 10
+      forward: 11:X+:X-:Xn
 ####################################################
 
 mime-types:
