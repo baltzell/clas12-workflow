@@ -4,8 +4,9 @@ d=`/usr/bin/readlink -f $0`
 d=`/usr/bin/dirname $d`/..
 export PYTHONPATH=${d}/lib/swif:${d}/lib/util:${d}/lib/clas12:${d}/lib/ccdb
 
-workdir=$1
-inputdir=$2
+tag=$1
+workdir=$2
+inputdir=$3
 config=$workdir/config.json
 blacklist=$workdir/blacklist.txt
 
@@ -27,7 +28,7 @@ find $inputdir -type f -name '*.evio.0004?' -mmin +30 | grep -v -f $blacklist >>
 
 # submit the jobs:
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../env.sh
-cmd="clas12-workflow.py --config $config --inputs $filelist --tag op0$timestamp --submit"
+cmd="clas12-workflow.py --config $config --inputs $filelist --tag $tag --submit"
 echo $cmd >> $logfile
 $cmd >> $logfile 2>&1
 [ $? -ne 0 ] && echo !!!!!!!!!ERROR GENERATING WORKFLOW!!!!!!!! && cat $logfile && exit 7
