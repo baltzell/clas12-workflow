@@ -108,10 +108,10 @@ class SwifJob:
     return True
 
   def _addIO(self,io,local,remote):
-    if not checkPath(local):
+    if not self.checkPath(local):
       logging.getLogger(__name__).critical('Path cannot contain shell glob characters: '+local)
       sys.exit(1)
-    if not checkPath(remote):
+    if not self.checkPath(remote):
       logging.getLogger(__name__).critical('Path cannot contain shell glob characters: '+remote)
       sys.exit(1)
     if not remote.find('mss:')==0 and not remote.find('file:')==0:
