@@ -1,7 +1,7 @@
 import tempfile,subprocess
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
-from SwifStatus import SWIF
+from SwifStatus import SWIF,SwifStatus
 
 class SwifWorkflow(RunFileGroups):
 
@@ -11,6 +11,9 @@ class SwifWorkflow(RunFileGroups):
     self.name=name
     self.jobs=[]
     self.phase=0
+
+  def getStatus(self):
+    return SwifStatus(self.name)
 
   def addJob(self,job):
     if isinstance(job,list):

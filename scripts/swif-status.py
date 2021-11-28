@@ -33,6 +33,10 @@ def processWorkflow(workflow,args):
     SwifStatus.deleteWorkflow(workflow)
     return
 
+  if args.deleteComplete and status.isComplete():
+    SwifStatus.deleteWorkflow(workflow)
+    return
+
   if args.listDirs:
     print(('\n'.join(status.getOutputDirs())))
     return
@@ -166,6 +170,7 @@ if __name__ == '__main__':
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
+  cli.add_argument('--deleteComplete', help='delete all completed workflows', default=False, action='store_true')
 #  cli.add_argument('--logDir',      help='local log directory'+df, metavar='PATH',type=str,default=None)
 #  cli.add_argument('--save',        help='save to logs', action='store_true',default=False)
 #  cli.add_argument('--jobLogs',    help='move job logs when complete', action='store_true',default=False)
