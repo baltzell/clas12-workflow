@@ -101,7 +101,19 @@ class SwifJob:
   def setLogDir(self,logDir):
     self.logDir=logDir
 
+  def checkPath(self,path):
+    for x in ['[',']','(',')','?','*']:
+      if path.find(x) >= 0:
+        return False
+    return True
+
   def _addIO(self,io,local,remote):
+    if not checkPath(local):
+      logging.getLogger(__name__).critical('Path cannot contain shell glob characters: '+local)
+      sys.exit(1)
+    if not checkPath(remote):
+      logging.getLogger(__name__).critical('Path cannot contain shell glob characters: '+remote)
+      sys.exit(1)
     if not remote.find('mss:')==0 and not remote.find('file:')==0:
       if remote.find('/mss/')==0:
         remote='mss:'+remote
@@ -141,7 +153,7 @@ class SwifJob:
     name='%s-p%d%s-%.5d'%(self.workflow,self.phase,task,self.number)
     if len(name)>50:
       logging.getLogger(__name__).critical('Greater than max job name length (50 characters): '+name)
-      sys.exit()
+      sys.exit(1)
     return name
 
   def getLogPrefix(self):
