@@ -99,7 +99,10 @@ class EvioTriggerFilterJob(HPSJob):
     HPSJob.__init__(self,workflow,cfg)
     # FIXME:  software from Maurk's personal location
     self.exe='/home/holtrop/bin/HPS_Trigger_Filter'
-    self.addEnv('LD_LIBRARY_PATH','/home/holtrop/lib:/apps/root/6.12.06/lib')
+    # 2019 version:
+    #self.addEnv('LD_LIBRARY_PATH','/home/holtrop/lib:/apps/root/6.12.06/lib')
+    # 2021 version:
+    self.addEnv('LD_LIBRARY_PATH','/apps/gcc/9.3.0/lib:/apps/gcc/9.3.0/lib64:/home/holtrop/root/lib/root:/home/holtrop/lib:/apps/python/3.4.3/lib:/home/hps/lib')
     self.setRam('500MB')
     self.setDisk('10GB')
     self.setTime('4h')
@@ -112,9 +115,9 @@ class EvioTriggerFilterJob(HPSJob):
     r = rf1.runNumber
     # FIXME:  this doesn't have proper error checking on exit codes
     cmd = 'set echo ; ls -lhtr ; '
-    if 'fcup' in self.cfg['trigger']:
-      cmd += '%s -T fcup -o out_fcup.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_fcup.evio',  '%s/fcup/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_fcup_')))
+    if 'rndm' in self.cfg['trigger']:
+      cmd += '%s -T random -o out_rndm.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_rndm.evio',  '%s/rndm/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_rndm_')))
     if 'muon' in self.cfg['trigger']:
       cmd += '%s -T muon -E -o out_muon.evio ./*.evio* ;'%self.exe
       self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_muon_')))
@@ -127,6 +130,9 @@ class EvioTriggerFilterJob(HPSJob):
     if 'mult3' in self.cfg['trigger']:
       cmd += '%s -T 17 -o out_mult3.evio ./*.evio* ;'%self.exe
       self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_mult3_')))
+    if 'moll' in self.cfg['trigger']:
+      cmd += '%s -T moller_all -o out_moll.evio ./*.evio* ;'%self.exe
+      self.addOutput('out_moll.evio','%s/moll/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_moll_')))
     cmd += 'ls -lhtr ; '
     self.addTag('run','%.6d'%rf1.runNumber)
     SwifJob.setCmd(self,cmd)

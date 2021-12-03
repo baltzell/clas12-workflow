@@ -7,7 +7,7 @@ from SwifWorkflow import SwifWorkflow
 MERGEPATTERN='hps_%.6d.evio.%.5d-%.5d'
 FILEREGEX='.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*'
 RECONSTEER='/org/hps/steering/recon/PhysicsRun2019FullRecon.lcsim'
-TRIGGERS=['fee','mult2','mult3','muon','fcup']
+TRIGGERS=['fee','mult2','mult3','muon','rndm','moll']
 JAVAS=['11.0.2','14.0.2']
 
 logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
@@ -113,7 +113,7 @@ runsPerPhase=31
 phase,runsInThisPhase=0,0
 
 for inputs in workflow.getGroups():
-#    if len(args.trgger)>0 and len(inputs)<100:
+#    if len(args.trigger)>0 and len(inputs)<100:
 #      continue
   runsInThisPhase += 1
   if args.command == 'evioskim' and runsInThisPhase > runsPerPhase:
