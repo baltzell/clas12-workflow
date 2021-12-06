@@ -104,7 +104,7 @@ class EvioTriggerFilterJob(HPSJob):
     # 2021 version:
     self.addEnv('LD_LIBRARY_PATH','/apps/gcc/9.3.0/lib:/apps/gcc/9.3.0/lib64:/home/holtrop/root/lib/root:/home/holtrop/lib:/apps/python/3.4.3/lib:/home/hps/lib')
     self.setRam('500MB')
-    self.setDisk('10GB')
+    self.setDisk('25GB')
     self.setTime('4h')
     if self.cfg['hours'] is not None:
       self.setTime('%dh'%self.cfg['hours'])
