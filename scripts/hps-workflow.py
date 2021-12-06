@@ -5,7 +5,7 @@ import RunFileUtil,HPSJobs,ChefUtil,JarUtil
 from SwifWorkflow import SwifWorkflow
 
 MERGEPATTERN='hps_%.6d.evio.%.5d-%.5d'
-FILEREGEX='.*hps[_A-Za-z]*[23]?_(\d+)\.evio\.(\d+).*'
+FILEREGEX='.*hps[_A-Za-z]*_(\d+)\.evio\.(\d+).*'
 RECONSTEER='/org/hps/steering/recon/PhysicsRun2019FullRecon.lcsim'
 TRIGGERS=['fee','mult2','mult3','muon','rndm','moll']
 JAVAS=['11.0.2','14.0.2']
