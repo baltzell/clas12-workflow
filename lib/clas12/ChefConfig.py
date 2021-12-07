@@ -318,7 +318,7 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('ana')>=0:
       if self['trainDir'] is None:
         if self['outDir'] is None:
-          self.cli.error('One of "outDir" or "trainDir" must be defined for decoding workflows.')
+          self.cli.error('One of "outDir" or "trainDir" must be defined for ana train workflows.')
         else:
           self['trainDir']=self['outDir']
           _LOGGER.info('Using --outDir for train outputs ('+self['outDir']+')')
