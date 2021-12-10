@@ -99,18 +99,18 @@ def processWorkflow(workflow,args):
         print(res)
 
     if args.retry:
-      sunzinps=[]
+      sunz_inputs=[]
       if 'SWIF-USER-NON-ZERO' in status.getProblems():
-        sunzinps = status.getPersistentProblemInputs('SWIF-USER-NON-ZERO')
+        sunz_inputs = status.getPersistentProblemInputs('SWIF-USER-NON-ZERO')
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
         print('\n'+str(res))
       # print input files for SWIF-USER-NON-ZERO:
-      if len(sunzinps)>0:
-        n = min(len(sunzinps),9)
-        print('\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunzinps[0:n]))
-        if len(sunzinps)>10:
+      if len(sunz_inputs)>0:
+        n = min(len(sunz_inputs),9)
+        print('\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunz_inputs[0:n]))
+        if len(sunz_inputs)>10:
           print('... (truncated)')
         print('\n')
 

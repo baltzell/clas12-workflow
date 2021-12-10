@@ -1,4 +1,4 @@
-import os,sys,logging,getpass
+import re,os,sys,logging,getpass
 
 import RunFileUtil
 import ChefUtil
@@ -12,6 +12,7 @@ class HPSJob(SwifJob):
     self.cfg = cfg
     self.copyInputs = False
     self.project = 'hps'
+    self.shell = '/bin/bash'
     if self.cfg['logDir'] is None:
       self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
     else:
@@ -104,7 +105,7 @@ class EvioTriggerFilterJob(HPSJob):
     # 2021 version:
     self.addEnv('LD_LIBRARY_PATH','/apps/gcc/9.3.0/lib:/apps/gcc/9.3.0/lib64:/home/holtrop/root/lib/root:/home/holtrop/lib:/apps/python/3.4.3/lib:/home/hps/lib')
     self.setRam('500MB')
-    self.setDisk('25GB')
+    self.setDisk('3GB')
     self.setTime('4h')
     if self.cfg['hours'] is not None:
       self.setTime('%dh'%self.cfg['hours'])
@@ -112,28 +113,47 @@ class EvioTriggerFilterJob(HPSJob):
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
     outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
+    outdir = self.cfg['workDir']
     r = rf1.runNumber
     # FIXME:  this doesn't have proper error checking on exit codes
     cmd = 'set echo ; ls -lhtr ; '
     if 'rndm' in self.cfg['trigger']:
       cmd += '%s -T random -o out_rndm.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_rndm.evio',  '%s/rndm/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_rndm_')))
+      self.addOutput('out_rndm.evio',  '%s/rndm/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_rndm_')))
     if 'muon' in self.cfg['trigger']:
       cmd += '%s -T muon -E -o out_muon.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_muon_')))
+      self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_muon_')))
     if 'fee' in self.cfg['trigger']:
       cmd += '%s -T FEE -o out_fee.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_fee_')))
+      self.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_fee_')))
     if 'mult2' in self.cfg['trigger']:
       cmd += '%s -T 16 -o out_mult2.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_mult2_')))
+      self.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult2_')))
     if 'mult3' in self.cfg['trigger']:
       cmd += '%s -T 17 -o out_mult3.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_mult3_')))
+      self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult3_')))
     if 'moll' in self.cfg['trigger']:
       cmd += '%s -T moller_all -o out_moll.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_moll.evio','%s/moll/%.6d/%s'%(self.cfg['outDir'],r,outfile.replace('hps_','hps_moll_')))
+      self.addOutput('out_moll.evio','%s/moll/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_moll_')))
     cmd += 'ls -lhtr ; '
+    self.addTag('run','%.6d'%rf1.runNumber)
+    SwifJob.setCmd(self,cmd)
+
+class EvioMergeJob(HPSJob):
+  def __init__(self,workflow,cfg):
+    HPSJob.__init__(self,workflow,cfg)
+    self.exe='/home/holtrop/bin/evioconcat'
+    self.addEnv('LD_LIBRARY_PATH','/apps/gcc/9.3.0/lib:/apps/gcc/9.3.0/lib64:/home/holtrop/root/lib/root:/home/holtrop/lib:/apps/python/3.4.3/lib:/home/hps/lib')
+    self.setRam('500MB')
+    self.setDisk('25GB')
+    self.setTime('4h')
+  def setCmd(self):
+    rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
+    rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
+    prefix = re.match('^(hps[_a-z]+)',self.inputs[0]['remote'].split('/').pop()).group(1)
+    outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
+    cmd = 'set echo ; ls -lhtr ; %s -o out.evio ./*.evio* ; ls -lhtr'%self.exe
+    self.addOutput('out.evio','%s/%.6d/%s'%(self.cfg['outDir'],rf1.runNumber,outfile.replace('hps_',prefix)))
     self.addTag('run','%.6d'%rf1.runNumber)
     SwifJob.setCmd(self,cmd)
 

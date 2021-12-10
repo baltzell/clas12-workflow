@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os,sys,logging,argparse
+import re,os,sys,logging,argparse
 
 import RunFileUtil,HPSJobs,ChefUtil,JarUtil
 from SwifWorkflow import SwifWorkflow
@@ -28,6 +28,7 @@ cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format for m
 cli_evioskim = subclis.add_parser('evioskim',epilog='(*) = required')
 cli_evioskim.add_argument('--mergeSize',metavar='#',help='number of files to merge', default=0, type=int, choices=[0,2,3,4,5,10,20,30,50,100])
 cli_evioskim.add_argument('--trigger',  metavar='NAME',help='(*) trigger type, repeatable ('+'/'.join(TRIGGERS)+')',action='append',default=[],choices=TRIGGERS,required=True)
+cli_evioskim.add_argument('--workDir',  metavar='PATH',help='(*) temporary location before merging', type=str, required=True)
 
 cli_evio2lcio = subclis.add_parser('evio2lcio',epilog='(*) = required')
 cli_evio2lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-java-bin.jar',type=str,required=True)
@@ -109,43 +110,67 @@ workflow.addRuns(ChefUtil.getRunList(cfg['runs']))
 workflow.findFiles(cfg['inputs'])
 workflow.setPhaseSize(0)
 
-runsPerPhase=31
-phase,runsInThisPhase=0,0
+if args.command == 'evioskim':
 
-for inputs in workflow.getGroups():
-#    if len(args.trigger)>0 and len(inputs)<100:
-#      continue
-  runsInThisPhase += 1
-  if args.command == 'evioskim' and runsInThisPhase > runsPerPhase:
-    runsInThisPhase = 0
-    phase += 1
-  inps=[]
-  for ii,inp in enumerate(inputs):
-    inps.append(inp)
-    if 'mergeSize' not in cfg or len(inps)>=cfg['mergeSize'] or ii>=len(inputs)-1:
-      if args.command == 'evioskim':
-        job=HPSJobs.EvioTriggerFilterJob(workflow,cfg)
-      elif args.command == 'evio2lcio':
+  # just a loop over runs:
+  for inputs in workflow.getGroups():
+
+    # accumulate jobs for merging their outputs:
+    jobs = []
+
+    # just a loop over all files in the run:
+    for ii,inp in enumerate(inputs):
+
+      # one filter job for each input file:
+      job = HPSJobs.EvioTriggerFilterJob(workflow,cfg)
+      job.addInput(os.path.basename(inp),inp)
+      job.setCmd()
+      workflow.addJob(job)
+      jobs.append(job)
+
+      # decide whether to accumulate more jobs before merging:
+      if len(jobs) < cfg['mergeSize'] and ii < len(inputs)-1:
+        continue
+
+      # organize by prefix:
+      inps = {}
+      while len(jobs) > 0:
+        job = jobs.pop(0)
+        for o in job.getOutputPaths():
+          prefix = re.match('^(hps[_a-z]+)',o.split('/').pop()).group(1)
+          if prefix not in inps:
+            inps[prefix] = {'jobs':[],'files':[]}
+          inps[prefix]['jobs'].append(job)
+          inps[prefix]['files'].append(o)
+
+      # one merge job for each prefix:
+      for prefix in inps.keys():
+        job = HPSJobs.EvioMergeJob(workflow,cfg)
+        for inp in inps[prefix]['files']:
+          job.addInput(os.path.basename(inp),inp)
+        for j in inps[prefix]['jobs']:
+          job.antecedents.append(j.getJobName())
+        job.setCmd()
+        if not job.outputExists():
+          workflow.addJob(job)
+
+else:
+
+  for inputs in workflow.getGroups():
+
+    for inp in inputs:
+
+      # choose the job type:
+      if args.command == 'evio2lcio':
         job=HPSJobs.EvioToLcioJob(workflow,cfg)
       else:
         job=HPSJobs.HpsJavaJob(workflow,cfg)
-      job.setPhase(phase)
-      for inp in inps:
-        job.addInput(os.path.basename(inp),inp)
+
+      job.addInput(os.path.basename(inp),inp)
       job.setCmd()
-      exists=False
-      for out in job.outputs:
-        if out['remote'].startswith('file:'):
-          x=out['remote'][5:]
-        elif out['remote'].startswith('mss:'):
-          x=out['remote'][4:]
-        if os.path.exists(x):
-          inps.pop()
-          exists=True
-          break
-      if not exists:
+
+      if not job.outputExists():
         workflow.addJob(job)
-      inps=[]
 
 logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\
   (len(workflow.jobs),len(workflow.getRunList()),workflow.getFileCount(),workflow.phase+1))

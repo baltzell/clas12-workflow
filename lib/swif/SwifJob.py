@@ -168,6 +168,21 @@ class SwifJob:
 #        prefix+='_'+key+val
     return prefix
 
+  def getOutputPaths(self):
+    for o in self.outputs:
+      if o['remote'].startswith('file:'):
+        yield o['remote'][5:]
+      elif o['remote'].startswith('mss:'):
+        yield o['remote'][4:]
+      else:
+        logging.getLogger(__name__)('Unknown remote prefix:  '+o['remote'])
+
+  def outputExists(self):
+    for o in self.getOutputPaths():
+      if os.path.exists(o):
+        return True
+    return False
+
   # copy Auger symlinked inputs:
   def _getCopyInputsCmd(self):
     cmd='ls -l'
