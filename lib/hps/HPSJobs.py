@@ -113,28 +113,28 @@ class EvioTriggerFilterJob(HPSJob):
     rf1 = RunFileUtil.RunFile(self.inputs[0]['remote'])
     rf2 = RunFileUtil.RunFile(self.inputs[len(self.inputs)-1]['remote'])
     outfile = self.cfg['mergePattern']%(rf1.runNumber,rf1.fileNumber,rf2.fileNumber)
-    outdir = self.cfg['workDir']
+    outdir = self.cfg['outDir']
     r = rf1.runNumber
     # FIXME:  this doesn't have proper error checking on exit codes
     cmd = 'set echo ; ls -lhtr ; '
     if 'rndm' in self.cfg['trigger']:
       cmd += '%s -T random -o out_rndm.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_rndm.evio',  '%s/rndm/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_rndm_')))
+      cmd += 'if ( -e out_rndm.evio ) /site/bin/swif outfile %s file:%s;' % ('out_rndm.evio','%s/rndm/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_rndm_')))
     if 'muon' in self.cfg['trigger']:
       cmd += '%s -T muon -E -o out_muon.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_muon.evio',  '%s/muon/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_muon_')))
+      cmd += 'if ( -e out_muon.evio ) /site/bin/swif outfile %s file:%s;' % ('out_muon.evio','%s/muon/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_muon_')))
     if 'fee' in self.cfg['trigger']:
       cmd += '%s -T FEE -o out_fee.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_fee.evio',  '%s/fee/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_fee_')))
+      cmd += 'if ( -e out_fee.evio ) /site/bin/swif outfile %s file:%s;' % ('out_fee.evio','%s/fee/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_fee_')))
     if 'mult2' in self.cfg['trigger']:
       cmd += '%s -T 16 -o out_mult2.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_mult2.evio','%s/mult2/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult2_')))
+      cmd += 'if ( -e out_mult2.evio ) /site/bin/swif outfile %s file:%s;' % ('out_mult2.evio','%s/mult2/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult2_')))
     if 'mult3' in self.cfg['trigger']:
       cmd += '%s -T 17 -o out_mult3.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_mult3.evio','%s/mult3/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult3_')))
+      cmd += 'if ( -e out_mult3.evio ) /site/bin/swif outfile %s file:%s;' % ('out_mult3.evio','%s/mult3/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult3_')))
     if 'moll' in self.cfg['trigger']:
       cmd += '%s -T moller_all -o out_moll.evio ./*.evio* ;'%self.exe
-      self.addOutput('out_moll.evio','%s/moll/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_moll_')))
+      cmd += 'if ( -e out_moll.evio ) /site/bin/swif outfile %s file:%s;' % ('out_moll.evio','%s/moll/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_moll_')))
     cmd += 'ls -lhtr ; '
     self.addTag('run','%.6d'%rf1.runNumber)
     SwifJob.setCmd(self,cmd)

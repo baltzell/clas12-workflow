@@ -26,9 +26,9 @@ cli.add_argument('--submit',   help='submit and run workflow automatically', def
 cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format for matching run and file numbers (default = %s)'%FILEREGEX, type=str, default=FILEREGEX)
 
 cli_evioskim = subclis.add_parser('evioskim',epilog='(*) = required')
-cli_evioskim.add_argument('--mergeSize',metavar='#',help='number of files to merge', default=0, type=int, choices=[0,2,3,4,5,10,20,30,50,100])
 cli_evioskim.add_argument('--trigger',  metavar='NAME',help='(*) trigger type, repeatable ('+'/'.join(TRIGGERS)+')',action='append',default=[],choices=TRIGGERS,required=True)
-cli_evioskim.add_argument('--workDir',  metavar='PATH',help='(*) temporary location before merging', type=str, required=True)
+#cli_evioskim.add_argument('--mergeSize',metavar='#',help='number of files to merge', default=0, type=int, choices=[0,2,3,4,5,10,20,30,50,100])
+#cli_evioskim.add_argument('--workDir',  metavar='PATH',help='(*) temporary location before merging', type=str, required=True)
 
 cli_evio2lcio = subclis.add_parser('evio2lcio',epilog='(*) = required')
 cli_evio2lcio.add_argument('--jar',      metavar='PATH',help='(*) path to hps-java-bin.jar',type=str,required=True)
@@ -129,8 +129,8 @@ if args.command == 'evioskim':
       jobs.append(job)
 
       # decide whether to accumulate more jobs before merging:
-      if len(jobs) < cfg['mergeSize'] and ii < len(inputs)-1:
-        continue
+      #if len(jobs) < cfg['mergeSize'] and ii < len(inputs)-1:
+      continue
 
       # organize by prefix:
       inps = {}
