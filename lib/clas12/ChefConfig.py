@@ -186,7 +186,8 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--nopostproc', help='disable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
-    cli.add_argument('--helflip',  help='flip offline helicity', action='store_true', default=None)
+    cli.add_argument('--helflip',  help='flip offline helicity (ONLY for data decoded prior to 6.5.11)', action='store_true', default=None)
+    cli.add_argument('--noheldel', help='disable delayed-helicity correction', action='store_true', default=None)
 
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
 
@@ -284,12 +285,14 @@ class ChefConfig(collections.OrderedDict):
 
     # print ignoring recon-specific parameters:
     if self['model'].find('rec')<0:
-      for x in 'threads','reconYaml','nopostproc','helflip','recharge':
+      for x in 'threads','reconYaml','nopostproc','helflip','recharge','noheldel':
         if self[x] != CFG[x]:
           _LOGGER.warning('Ignoring custom --%s option since not running recon.'%x)
       self['reconYaml'] = CFG['reconYaml']
-    elif self['nopostproc'] and self['helflip']:
-      _LOGGER.warning('Ignoring --helflip option since postprocessing is disabled.')
+    elif self['nopostproc']:
+      for x in 'helflip','recharge','noheldel':
+        if self[x] != CFG[x]:
+          _LOGGER.warning('Ignoring custom --%s option since postprocessing is disabled.')
 
     # print ignoring work dir:
     if self['workDir'] is not None:
@@ -436,9 +439,11 @@ class ChefConfig(collections.OrderedDict):
       cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
       if not self['nopostproc']:
         if cjv < '6b.4.1':
-          self.cli.error('Post-processing requires coatjava>6b.4.1')
+          self.cli.error('Post-processing requires 6b.4.1 or later')
         if self['helflip'] and cjv < '6.5.11':
-          self.cli.error('Post-processing helflip requires 6.5.11')
+          self.cli.error('Post-processing helflip requires 6.5.11 or later')
+        if self['noheldel'] and not self['nopostproc'] and cjv < '7.1.0':
+          self.cli.error('Post-processing with --noheldel requires 7.1.0 or later')
         for run in self['runs']:
           if run>11000 and cjv < '6b.5.0':
             self.cli.error('Post-processing 120 Hz helicity requires coatjava>6b.5.0.')
