@@ -255,11 +255,8 @@ class SwifJob:
     if self.logDir is not None:
       cmd.extend(['-stdout','file:'+self.getLogPrefix()+'.out'])
       cmd.extend(['-stderr','file:'+self.getLogPrefix()+'.err'])
-    x=self._createCommand
-    x[0]='\''+x[0]
-    x[-1]=x[-1]+'\''
-    cmd.extend(x)
-    return cmd
+    cmd.append('\''+self._createCommand()+'\'')
+    return ' '.join(cmd)
 
   def toJson(self):
     jsonData = collections.OrderedDict()
@@ -316,8 +313,6 @@ if __name__ == '__main__':
   job.setCmd('ls -l')
   job.addTag('key','val')
   job.addTag('foo','bar')
-  job.setLogDir('/tmp/logs')
-  job.setPhase(77)
-  print((' '.join(job.getShell())))
+  print((job.getShell()))
   print((job.getJson()))
 

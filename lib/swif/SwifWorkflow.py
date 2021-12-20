@@ -41,11 +41,11 @@ class SwifWorkflow(RunFileGroups):
   def getShell(self):
     ret=[]
     cmd=[SWIF,'create','-workflow',self.name,'-site',self.site]
-    cmd.extend['-max-concurrent',self.maxConcurrent]
-    ret.append(cmd)
+    cmd.extend(('-max-concurrent',str(self.maxConcurrent)))
+    ret.append(' '.join(cmd))
     for job in self.jobs:
       ret.append(job.getShell())
-    return ret
+    return '\n'.join(ret)
 
   def getJson(self):
     data = collections.OrderedDict()
@@ -83,12 +83,10 @@ if __name__ == '__main__':
   workflow = SwifWorkflow(name)
   for ii in range(3):
     job = SwifJob(name)
-    job.setPhase(ii+1)
     job.addTag('meal',['breakfast','lunch','dinner'][ii])
-    job.addInput('in.evio','/mss/clas12/foo%d.evio'%ii)
-    job.addOutput('out.evio','/my/dir/foo%d.xml'%ii)
-    job.setCmd('evio2xml in.evio > out.xml')
-    job.setLogDir('/tmp/log')
+    job.addInput('in.evio','/mss/hallb/hps/physrun2021/data/hps_014244/hps_014244.evio.01235')
+    job.addOutput('x.txt','/home/baltzell/swif2-xx-%d.txt'%ii)
+    job.setCmd('ls -l > x.txt')
     workflow.addJob(job)
   print((workflow.getShell()))
   print((workflow.getJson()))
