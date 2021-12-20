@@ -5,6 +5,7 @@ from SwifStatus import SWIF
 class SwifJob:
 
   __JSONFORMAT={'indent':2,'separators':(',',': ')}
+  __INVALIDPATHCHARS=['[',']','(',')','?','*']
 
   # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
@@ -101,7 +102,15 @@ class SwifJob:
   def setLogDir(self,logDir):
     self.logDir=logDir
 
+  def checkLegalPath(self,path):
+    for x in SwifJob.__INVALIDPATHCHARS:
+      if path.find(x) >= 0:
+        logging.getLogger(__name__).critical('Invalid character "'+x+'" in path: '+path)
+        sys.exit(1)
+
   def _addIO(self,io,local,remote):
+    self.checkLegalPath(local)
+    self.checkLegalPath(remote)
     if not remote.find('mss:')==0 and not remote.find('file:')==0:
       if remote.find('/mss/')==0:
         remote='mss:'+remote
@@ -130,7 +139,7 @@ class SwifJob:
     return int(scale * int(time.rstrip('secondminutehour')))
 
   def abbreviate(self,x):
-    for full,short in list(self.abbreviations.items()):
+    for full,short in reversed(sorted(list(self.abbreviations.items()))):
       x=x.replace(full,short)
     return x
 
@@ -141,7 +150,7 @@ class SwifJob:
     name='%s-p%d%s-%.5d'%(self.workflow,self.phase,task,self.number)
     if len(name)>50:
       logging.getLogger(__name__).critical('Greater than max job name length (50 characters): '+name)
-      sys.exit()
+      sys.exit(1)
     return name
 
   def getLogPrefix(self):
@@ -158,6 +167,21 @@ class SwifJob:
 #      elif val.find('/')<0:
 #        prefix+='_'+key+val
     return prefix
+
+  def getOutputPaths(self):
+    for o in self.outputs:
+      if o['remote'].startswith('file:'):
+        yield o['remote'][5:]
+      elif o['remote'].startswith('mss:'):
+        yield o['remote'][4:]
+      else:
+        logging.getLogger(__name__)('Unknown remote prefix:  '+o['remote'])
+
+  def outputExists(self):
+    for o in self.getOutputPaths():
+      if os.path.exists(o):
+        return True
+    return False
 
   # copy Auger symlinked inputs:
   def _getCopyInputsCmd(self):

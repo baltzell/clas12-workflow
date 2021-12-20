@@ -4,8 +4,28 @@ from JobSpecs import getNodeFlavor
 from JobSpecs import JobSpecs
 import Matcher
 
-#'https://scicomp.jlab.org/scicomp/farmCjob?type=query&user=baltzell&from=2019-11-01&to=2019-11-10&states=SUCCESS'
+#NEW:
+#https://scicomp.jlab.org/scicomp2/farmRecentJob?type=query&from=2021-10-30&to=2021-11-03&states=FAILED+COMPLETED+TIMEOUT+&user=clas12-2
+#{
+#"jobId":"43172035",
+#"user":"clas12",
+#"account":"hallb-pro",
+#"jobName":"rga-a-test-5247-p0...",
+#"partition":"production",
+#"state":"COMPLETED",
+#"core":1,
+#"submit":"Oct 29, 2021 7:35:33 PM",
+#"start":"Oct 29, 2021 7:37:56 PM",
+#"end":"Oct 29, 2021 7:38:14 PM",
+#"walltime":"00:00:18",
+#"cputime":"00:13.285",
+#"memory":"940",
+#"exit":0,
+#"nodeId":"farm13"
+#}
 
+#OLD:
+#'https://scicomp.jlab.org/scicomp/farmCjob?type=query&user=baltzell&from=2019-11-01&to=2019-11-10&states=SUCCESS'
 #{
 #    "coreCount": 16,
 #    "name": "rga-rec-vRD-6v.3.4_R5038x6-00598",
@@ -30,9 +50,9 @@ class SlurmStatus():
   _TIMEVARS=['cputime','walltime']
   _BYTEVARS=['memoryUsed','memoryReq']
   _STATES=['TIMEOUT','SUCCESS','FAILED','OVER_RLIMIT']
-  _VARS     =['project','name','id','coreCount','hostname','memoryReq','memoryUsed','cputime','walltime','c/w/#','submit','finish','state','exitCode']
-  _SHORTVARS=['proj',   'name','id','#',        'host',    'memReq',   'memUse',    'cpu',    'wall',    'c/w/#','submit','finish','state','ex'      ]
-  _LEN      =[ 9,        30,    10,  2,          10,        6,          6,           5,        5,         5,      19,      19,      12,     3        ]
+  _VARS     =['account','jobName','id','core','hostname','memory','cputime','walltime','c/w/#','submit','end','state','exit']
+  _SHORTVARS=['acct',   'name',   'id','#',   'host',    'mem',   'cpu',    'wall',    'c/w/#','submit','end','state','ex'  ]
+  _LEN      =[ 9,        30,       10,  2,     10,        6,       5,        5,         5,      19,      19,   12,     3    ]
 
   def __init__(self,user,data):
     self.user=user
@@ -183,7 +203,7 @@ class SlurmStatus():
 
 class SlurmQuery():
 
-  _URL='https://scicomp.jlab.org/scicomp/farmCjob'
+  _URL='https://scicomp.jlab.org/scicomp2/farmRecentJob'
 
   def __init__(self,user,project=None):
     self.user=user
@@ -260,6 +280,7 @@ class SlurmQuery():
       try:
         self.data=json.loads(response.content.decode('UTF-8'))
       except:
+        priint(response.content.decode('UTF-8'))
         return None
       self._pruneProjects()
       self._pruneJobNames()

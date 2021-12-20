@@ -195,6 +195,9 @@ class TrainJob(CLAS12Job):
     TrainJob.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename)
   def addInputData(self,filenames):
     for x in filenames:
+      if not x.endswith('.hipo'):
+        _LOGGER.critical('Non-HIPO file detected for a train job: '+x)
+        sys.exit(99)
       CLAS12Job.addInputData(self,x)
     if self.cfg['workDir'] is None:
       outDir=self.cfg['outDir']

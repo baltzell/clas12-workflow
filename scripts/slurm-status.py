@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os,sys,pwd,grp,argparse,datetime,getpass
 from SlurmStatus import SlurmStatus
 from SlurmStatus import SlurmQuery

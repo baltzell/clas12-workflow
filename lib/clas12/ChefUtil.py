@@ -96,14 +96,14 @@ def getDecoderOpts(run,cfg=None):
     s = _RCDB.getSolenoidScale(int(run))
     if s is None or s == '':
       _LOGGER.critical('Unknown solenoid scale for '+str(run))
-      sys.exit()
+      sys.exit(2)
   if t is None:
     if _RCDB is None:
       _RCDB = RcdbManager()
     t = _RCDB.getTorusScale(int(run))
     if t is None or t == '':
       _LOGGER.critical('Unknown torus scale for '+str(run))
-      sys.exit()
+      sys.exit(2)
   return '-c 2 -s %.4f -t %.4f'%(s,t)
 
 def getFileList(fileOrDir):

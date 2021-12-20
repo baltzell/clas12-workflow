@@ -1,7 +1,7 @@
 import tempfile,subprocess,collections,json
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
-from SwifStatus import SWIF
+from SwifStatus import SWIF,SwifStatus
 
 class SwifWorkflow(RunFileGroups):
 
@@ -16,6 +16,9 @@ class SwifWorkflow(RunFileGroups):
     self.site='jlab/enp'
     #self.storage='enp:luster'
     #self.siteLogin=None
+
+  def getStatus(self):
+    return SwifStatus(self.name)
 
   def addJob(self,job):
     if isinstance(job,list):

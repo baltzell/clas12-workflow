@@ -80,7 +80,7 @@ class ClaraYaml:
     for service in self.yaml['services']:
       if not self.checkService(service):
         return False
-    if not self.checkConfiguration(self.yaml['configuration']):
+    if not self.checkConfiguration(self.yaml):
       return False
     for i in self.getTrainIndices():
       if i<1 or i>32:
@@ -198,6 +198,8 @@ class ClaraYaml:
   def checkConfiguration(self,cfg):
     #if 'io-services' not in cfg:
     #  return False
+    services = cfg['services']
+    cfg = cfg['configuration']
     if 'services' not in cfg:
       return False
     timestamp,variation = None,None
@@ -224,6 +226,10 @@ class ClaraYaml:
           return False
       elif timestamp is None and self.check_ccdb:
         _LOGGER.warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)
+    if timestamp is None and self.check_ccdb:
+      for service in services:
+        if service['name'] not in cfg['services'].keys():
+          _LOGGER.warning('No CCDB timestamp specified for '+service['name']+' in YAML: '+self.filename)
     return True
 
   def checkAscii(self,filename):

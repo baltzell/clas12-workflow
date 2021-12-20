@@ -1,4 +1,4 @@
-import os,sys,re,datetime,socket
+import os,sys,re,datetime,socket,gzip
 
 from JobSpecs import JobSpecs
 from ClaraErrors import ClaraErrors
@@ -8,6 +8,12 @@ _MAXLOGSIZEMB=10
 _MINHIPOSIZEMB=100
 
 _LOGTAGS=['Number','Threads','TOTAL','Total','Average','events','Start time','shutdown DPE','Exception','Input','Output',' is cached','openning file','/bin/cp -p']
+
+def _open(path):
+  if path.endswith('.gz'):
+    return gzip.open(path)
+  else:
+    return open(path,'r')
 
 class ClaraLog(JobSpecs):
 
@@ -36,7 +42,7 @@ class ClaraLog(JobSpecs):
     if os.path.getsize(filename)>_MAXLOGSIZEMB*1e6:
       self.errors.setBit('HUGE')
     else:
-      with open(filename,'r') as f:
+      with _open(filename) as f:
         while True:
           line=f.readline()
           if not line:
@@ -68,7 +74,7 @@ class ClaraLog(JobSpecs):
       if m is not None:
         return m.group(1)+m.group(2)
     # otherwise find the ip address in its contents:
-    with open(logfilename,'r') as f:
+    with _open(logfilename) as f:
       while True:
         line=f.readline()
         if not line:

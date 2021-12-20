@@ -21,7 +21,7 @@ configuration:
   io-services:
     writer:
       compression: 2
-      filter: 1-RUN::config,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Cherenkov,RAW::vtp-2-RUN::config,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Cherenkov,RAW::vtp
+      filter: 1-RUN::config,REC::*,RAW::vtp,ECAL::*,HTCC::rec-2-RUN::config,REC::*,RAW::vtp,ECAL::*,HTCC::rec
   services:
     PAIR:
       id: 1
