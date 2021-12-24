@@ -116,27 +116,17 @@ class EvioTriggerFilterJob(HPSJob):
     outdir = self.cfg['outDir']
     r = rf1.runNumber
     # FIXME:  this doesn't have proper error checking on exit codes
-    cmd = 'set echo ; ls -lhtr ; '
-    if 'rndm' in self.cfg['trigger']:
-      cmd += '%s -T random -o out_rndm.evio ./*.evio* ;'%self.exe
-      cmd += '[ -e out_rndm.evio ] && /site/bin/swif outfile %s file:%s;' % ('out_rndm.evio','%s/rndm/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_rndm_')))
-    if 'muon' in self.cfg['trigger']:
-      cmd += '%s -T muon -E -o out_muon.evio ./*.evio* ;'%self.exe
-      cmd += '[ -e out_muon.evio ] && /site/bin/swif outfile %s file:%s;' % ('out_muon.evio','%s/muon/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_muon_')))
-    if 'fee' in self.cfg['trigger']:
-      cmd += '%s -T FEE -o out_fee.evio ./*.evio* ;'%self.exe
-      cmd += '[ -e out_fee.evio ] && /site/bin/swif outfile %s file:%s;' % ('out_fee.evio','%s/fee/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_fee_')))
-    if 'mult2' in self.cfg['trigger']:
-      cmd += '%s -T 16 -o out_mult2.evio ./*.evio* ;'%self.exe
-      cmd += '[ -e out_mult2.evio ] && /site/bin/swif outfile %s file:%s;' % ('out_mult2.evio','%s/mult2/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult2_')))
-    if 'mult3' in self.cfg['trigger']:
-      cmd += '%s -T 17 -o out_mult3.evio ./*.evio* ;'%self.exe
-      cmd += '[ -e out_mult3.evio ] && /site/bin/swif outfile %s file:%s;' % ('out_mult3.evio','%s/mult3/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_mult3_')))
-    if 'moll' in self.cfg['trigger']:
-      cmd += '%s -T moller_all -o out_moll.evio ./*.evio* ;'%self.exe
-      cmd += '[ -e out_moll.evio ] && /site/bin/swif outfile %s file:%s;' % ('out_moll.evio','%s/moll/%.6d/%s'%(outdir,r,outfile.replace('hps_','hps_moll_')))
+    cmd = 'set echo ; ls -lhtr ; exe=%s ; '%self.exe
+    triggers = {'rndm':'random','muon':'muon','fee':'FEE','mult2':16,'mult3':17,'moll':'moller_all'}
+    for abb in self.cfg['trigger']:
+      trigger = triggers[abb]
+      basename = outfile.replace('hps_','hps_%s_'%abb)
+      cmd += '$exe -T %s -o out_%s.evio ./*.evio* ;'%(trigger,abb)
+      cmd += '[ -e out_%s.evio ] && /site/bin/swif outfile out_%s.evio file:%s;' % (abb,abb,'%s/%s/%.6d/%s'%(outdir,abb,r,basename))
+      self.outputData.append('%s/%s/%.6d/%s'%(outdir,abb,r,basename))
     cmd += 'ls -lhtr ; '
     self.addTag('run','%.6d'%rf1.runNumber)
+    self.makeOutputDirs()
     SwifJob.setCmd(self,cmd)
 
 class EvioMergeJob(HPSJob):
