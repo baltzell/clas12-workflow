@@ -79,13 +79,17 @@ class SwifPhase():
     return 'Phase %d : %s (%d)'%(self.phase,self.jobs[0],len(self.jobs))
 
 if __name__ == '__main__':
-  name = 'myWorkflow'
+  name = 'test'
   workflow = SwifWorkflow(name)
   for ii in range(3):
     job = SwifJob(name)
+    job.setDisk('3GB')
+    job.setRam('500MB')
+    job.setTime('30m')
+    job.setPartition('priority')
     job.addTag('meal',['breakfast','lunch','dinner'][ii])
     job.addInput('in.evio','/mss/hallb/hps/physrun2021/data/hps_014244/hps_014244.evio.01235')
-    job.addOutput('x.txt','/home/baltzell/swif2-xx-%d.txt'%ii)
+    job.addOutput('x.txt','/home/baltzell/swif2-test/xx-%d.txt'%ii)
     job.setCmd('ls -l > x.txt')
     workflow.addJob(job)
   print((workflow.getShell()))

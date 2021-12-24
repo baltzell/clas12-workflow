@@ -18,7 +18,7 @@ class CLAS12Job(SwifJob):
       self.addInput('clas12.sqlite',cfg['ccdbsqlite'])
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
-    self.project=cfg['project']
+    self.account=cfg['project']
     self.os=cfg['node']
     self.cfg=cfg
 
