@@ -224,7 +224,7 @@ class SwifJob:
     cmd+='mkdir -p %s ; touch %s ;'%(self.logDir,self.logDir)
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'
-    cmd+='expr $PWD : ^/lustre19/expphy/swif2/jobs'
+    cmd+='expr $PWD : ^/scratch/slurm'
     for xx in list(self.env.keys()):
       cmd+=' && setenv '+xx+' "'+self.env[xx]+'"'
     if self.copyInputs:
