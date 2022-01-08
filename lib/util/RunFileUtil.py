@@ -1,6 +1,6 @@
 import os,re,sys,glob,logging,collections
 
-from JLabTape import PositionedTapeStub
+#from JLabTape import PositionedTapeStub
 
 # The first/second group must match the run/file number:
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
