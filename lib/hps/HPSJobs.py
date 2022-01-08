@@ -10,7 +10,7 @@ class HPSJob(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow.name)
     self.cfg = cfg
-    self.copyInputs = False
+#    self.copyInputs = False
     self.project = 'hps'
     self.shell = '/bin/bash'
     if self.cfg['logDir'] is None:
