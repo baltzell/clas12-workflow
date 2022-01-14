@@ -52,7 +52,7 @@ class EvioToLcioJob(HPSJob):
     if not self.cfg['steerIsFile']:
       steer += ' -r'
     cmd += ' %s -d %s -e 1000 -DoutputFile=out %s'%(steer,self.cfg['detector'],inBasename)
-    cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
+    cmd += ' || ( rm -f %s %s && false )' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s.slcio'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     self.addOutput('out.slcio',outPath)
     self.addTag('run','%.6d'%runno)
@@ -78,7 +78,7 @@ class HpsJavaJob(HPSJob):
     if not self.cfg['steerIsFile']:
       cmd += ' -r'
     cmd += ' -i %s -DoutputFile=out'%(inBasename)
-    cmd += ' || rm -f %s %s && false' %(inBasename,'out.slcio')
+    cmd += ' || ( rm -f %s %s && false )' %(inBasename,'out.slcio')
     outPath = '%s/%.6d/%s%s'%(self.cfg['outDir'],runno,self.cfg['outPrefix'],inBasename)
     if not self.cfg['noLCIO']:
       self.addOutput('out.slcio',outPath)
