@@ -270,8 +270,11 @@ class SwifJob:
     jsonData['diskBytes']=self.getBytes(self.disk)
     jsonData['ramBytes']=self.getBytes(self.ram)
     jsonData['timeSecs']=self.getSeconds(self.time)
-    jsonData['tags']=self.tags
     jsonData['command']=[self._createCommand()]
+    if len(self.tags)>0:
+      jsonData['tags']=[]
+      for k,v in list(self.tags.items()):
+        jsonData['tags'].append({'name':k,'value':v})
     if len(self.antecedents)>0:
       jsonData['antecedents']=self.antecedents
     if len(self.conditions)>0:
