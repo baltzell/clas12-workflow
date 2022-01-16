@@ -51,7 +51,7 @@ class SwifWorkflow(RunFileGroups):
     data = collections.OrderedDict()
     data['name'] = self.name
     data['site'] = self.site
-    data['max-concurrent'] = self.maxConcurrent
+    data['max_dispatched'] = self.maxConcurrent
     data['jobs']=[job.toJson() for job in self.jobs]
     return json.dumps(data,**{'indent':2,'separators':(',',': ')})
 
