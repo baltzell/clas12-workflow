@@ -277,9 +277,9 @@ class SwifJob:
     if len(self.conditions)>0:
       jsonData['conditions']=self.conditions
     if len(self.inputs)>0:
-      jsonData['input']=self.inputs
+      jsonData['inputs']=self.inputs
     if len(self.outputs)>0:
-      jsonData['output']=self.outputs
+      jsonData['outputs']=self.outputs
     if self.logDir is not None:
       jsonData['stdout']=self.getLogPrefix()+'.out'
       jsonData['stderr']=self.getLogPrefix()+'.err'
