@@ -68,15 +68,15 @@ class ChefConfig(collections.OrderedDict):
         print((json.dumps(c,**_JSONFORMAT)))
         sys.exit()
 
+  def diff(self,cfg):
+    ret = []
+    for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','nopostproc','helflip','recharge','ccdbsqlite']:
+      if self.get(k) != None and cfg.get(k) != None and self[k] != cfg[k]:
+        ret.append(k)
+    return ret
+
   def __eq__(self,cfg):
-    # equality is based only on things that would change the output data
-    for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','nopostproc','helflip','recharge']:
-      if self.get(k) != None and cfg.get(k) != None:
-        if self[k] != cfg[k]:
-          return False
-    if 'ccdbsqlite' in self and 'ccdbsqlite' in cfg and self['ccdbsqlite'] != cfg['ccdbsqlite']:
-      return False
-    return True
+    return len(self.diff(cfg)) == 0
 
   def __ne__(self,cfg):
     return not self.__eq__(cfg)
@@ -306,8 +306,8 @@ class ChefConfig(collections.OrderedDict):
         elif not self[xx].startswith('/'):
           self.cli.error('"'+xx+'" must be an absolute path, not '+self[xx])
         elif xx is not 'logDir':
-          if '/'+self[xx].split('/').pop(0) not in _VALIDREMOTES:
-            self.cli.error('"'+xx+'" must start with one of '+'/'.join(_VALIDREMOTES))
+          if '/'+self[xx].strip('/').split('/').pop(0) not in _VALIDREMOTES:
+            self.cli.error('"'+xx+'" must start with one of: '+','.join(_VALIDREMOTES))
 
     # for decoding workflows, assign decDir to outDir if it doesn't exist:
     if self['model'].find('dec')>=0:
