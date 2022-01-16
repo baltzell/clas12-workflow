@@ -130,7 +130,6 @@ class ReconJob(CLAS12Job):
     self.addTag('mode','recon')
     self.setTime('24h')
     self.setDisk('20GB')
-    self.addInput('clara.yaml',cfg['reconYaml'])
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
@@ -149,7 +148,7 @@ class ReconJob(CLAS12Job):
     self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh'
-    cmd += ' -t '+str(self.getCores())
+    cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
     if self.cfg['claraLogDir'] is not None:
@@ -187,7 +186,6 @@ class TrainJob(CLAS12Job):
     self.addTag('mode','ana')
     # TODO: choose time based on #events:
     self.setTime('24h')
-    self.addInput('clara.yaml',cfg['trainYaml'])
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     TrainJob.HOURS_INC = 0.5
@@ -212,7 +210,8 @@ class TrainJob(CLAS12Job):
     self.nfiles += len(filenames)
     self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh -t 12'
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh'
+    cmd += ' -t 12 -y '+self.cfg['trainYaml']
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
