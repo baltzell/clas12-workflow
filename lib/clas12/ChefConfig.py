@@ -8,6 +8,7 @@ import ClaraYaml
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__))+'/../../')
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
+_VALIDREMOTES=['/mss','/volatile','/cache']
 
 CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
@@ -304,6 +305,9 @@ class ChefConfig(collections.OrderedDict):
           self[xx]=None
         elif not self[xx].startswith('/'):
           self.cli.error('"'+xx+'" must be an absolute path, not '+self[xx])
+        elif xx is not 'logDir':
+          if '/'+self[xx].split('/').pop(0) not in _VALIDREMOTES:
+            self.cli.error('"'+xx+'" must start with one of '+'/'.join(_VALIDREMOTES))
 
     # for decoding workflows, assign decDir to outDir if it doesn't exist:
     if self['model'].find('dec')>=0:
