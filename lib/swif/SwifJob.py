@@ -221,6 +221,10 @@ class SwifJob:
 
   def _createCommand(self):
     cmd='unalias -a ; '
+    if self.shell.endswith('tcsh'):
+      cmd+='set echo; '
+    else:
+      cmd+='set -v; '
     cmd+='mkdir -p %s ; touch %s ;'%(self.logDir,self.logDir)
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'

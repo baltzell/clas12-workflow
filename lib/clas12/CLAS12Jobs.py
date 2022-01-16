@@ -157,22 +157,21 @@ class ReconJob(CLAS12Job):
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
+        cmd += ' && set o='+x
         # postprocessing must run from the same coatjava as clara for bankdefs:
         if self.cfg['recharge']:
-          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
-          cmd += ' && %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
-          cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
-          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
-          cmd += ' && ls %s )'%(x)
+          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/rebuild-scalers -o rs.hipo $o'
+          cmd += ' && rm -f $o && mv -f rs.hipo $o'
+          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
+          cmd += ' && ls $o )'
         if not self.cfg['nopostproc']:
           opts = '-d 1 -q 1'
           if self.cfg['helflip']:
             opts += ' -f 1'
-          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
-          cmd += ' && %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
-          cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
-          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
-          cmd += ' && ls %s )'%(x)
+          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/postprocess %s -o pp.hipo $o'%(opts)
+          cmd += ' && rm -f $o && mv -f pp.hipo $o'
+          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
+          cmd += ' && ls $o )'
     CLAS12Job.setCmd(self,cmd)
 
 class TrainJob(CLAS12Job):
