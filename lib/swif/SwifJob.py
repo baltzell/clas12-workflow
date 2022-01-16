@@ -271,7 +271,7 @@ class SwifJob:
     jsonData['ramBytes']=self.getBytes(self.ram)
     jsonData['timeSecs']=self.getSeconds(self.time)
     jsonData['tags']=self.tags
-    jsonData['command']=self._createCommand()
+    jsonData['command']=[self._createCommand()]
     if len(self.antecedents)>0:
       jsonData['antecedents']=self.antecedents
     if len(self.conditions)>0:
