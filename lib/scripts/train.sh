@@ -52,14 +52,7 @@ done
 export CLASSPATH
 
 # get train ids for expected output files:
-trainids=`python - <<'EOF'
-ids=[]
-for line in open('clara.yaml','r').readlines():
-  if line.strip().find('id: ')==0:
-    ids.append(int(line.strip().split()[1]))
-print(' '.join(sorted(set(map(str,ids)))))
-EOF`
-
+trainids=`sed 's/^\s*//' $yaml | grep '^id:' | awk '{print$2}' | sort -n | uniq`
 echo "train.sh: INFO: Train IDs:  "$trainids
 
 # check existence, size, and hipo-utils -test:
