@@ -2,9 +2,9 @@ import os,sys,glob,json,copy,subprocess,getpass,datetime,collections
 
 SWIF='/site/bin/swif2'
 
-# FIXME:  incomplete?
+# FIXME:  UPDATE FOR SWIF2 ......
 SWIF_PROBLEMS=[
-'SWIF-MISSING-OUTPUT',
+'SWIF_MISSING_OUTPUT',
 'SWIF-USER-NON-ZERO',
 'SWIF-SYSTEM-ERROR',
 'AUGER-FAILED',
@@ -18,8 +18,10 @@ SWIF_PROBLEMS=[
 
 SWIF_JSON_KEYS=[
 'workflow_name',
+'workflow_site',
 'workflow_id',
 'workflow_user'
+'max_concurrent',
 'job_limit',
 'error_limit',
 'phase_limit',
@@ -28,8 +30,14 @@ SWIF_JSON_KEYS=[
 'succeeded',
 'attempts',
 'frozen',
-'dispatched',
 'undispatched',
+'dispatched',
+'dispatched_preparing',
+'dispatched_running',
+'dispatched_pending',
+'dispatched_other',
+'dispatched_reaping',
+'abandoned'
 'failed',
 'canceled',
 'suspended',
@@ -51,19 +59,21 @@ SWIF_JSON_KEYS=[
 'problem_auger_unknown',
 'problem_auger_failed',
 'problem_auger_over_rlimit',
+'input_mb_processed',
+'output_mb_generated',
 'update_ts',
 'create_ts',
 'current_ts',
+'summary_ts'
 ]
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
 def getWorkflowNames():
   workflows=[]
-  for line in subprocess.check_output([SWIF,'list']).splitlines():
-    line=line.decode('UTF-8').strip()
-    if line.find('workflow_name')==0:
-      workflows.append(line.split('=')[1].strip())
+  for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
+    if x.get('workflow_name') is not None:
+      workflows.append(x.get('workflow_name'))
   return workflows
 
 def deleteWorkflow(name):
