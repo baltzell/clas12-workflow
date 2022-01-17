@@ -270,10 +270,10 @@ class SwifJob:
     jsonData['account']=self.account
     jsonData['partition']=self.partition
     jsonData['shell']=self.shell
-    jsonData['cpuCores']=self.cores
-    jsonData['diskBytes']=self.getBytes(self.disk)
-    jsonData['ramBytes']=self.getBytes(self.ram)
-    jsonData['timeSecs']=self.getSeconds(self.time)
+    jsonData['cpu_cores']=self.cores
+    jsonData['disk_bytes']=self.getBytes(self.disk)
+    jsonData['ram_bytes']=self.getBytes(self.ram)
+    jsonData['time_secs']=self.getSeconds(self.time)
     jsonData['command']=[self._createCommand()]
     if len(self.tags)>0:
       jsonData['tags']=[]
