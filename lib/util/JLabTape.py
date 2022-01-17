@@ -41,10 +41,14 @@ class TapeFile():
     return 'size=%d crc32=0x%s md5=0x%s'%(self.size,self.crc32,self.md5)
 
 class TapeStub(TapeFile):
+  ''' for comparing checksum to CachedFile '''
 
   def __init__(self, path):
 
     TapeFile.__init__(self, path)
+
+    self.tape = None
+    self.index = None
 
     if not path.startswith('/mss/'):
       raise ValueError('File must start with /mss/:  '+path)
@@ -58,6 +62,32 @@ class TapeStub(TapeFile):
           self.md5 = val
         elif key == 'crc32':
           self.crc32 = val
+        elif key == 'volser':
+          self.tape = val
+        elif key == 'bitfileIndex':
+          self.index = val
+
+class PositionedTapeStub(TapeStub):
+  ''' for sorting by position on tape '''
+
+  def __init__(self, path):
+    TapeStub.__init__(self, path)
+
+  def __eq__(self, other):
+    return self.tape==other.tape and self.position==other.position
+
+  def __lt__(self, other):
+    if self.tape < other.tape:
+      return True
+    if self.tape > other.tape:
+      return False
+    if self.position < other.position:
+      return True
+    if self.position > other.position:
+      return False
+
+  def __gt__(self, other):
+    return not self == other and not self < other
 
 
 class CachedFile(TapeFile):

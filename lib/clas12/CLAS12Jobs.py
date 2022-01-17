@@ -165,7 +165,9 @@ class ReconJob(CLAS12Job):
           cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
           cmd += ' && ls $o )'
         if not self.cfg['nopostproc']:
-          opts = '-d 1 -q 1'
+          opts = '-q 1'
+          if not self.cfg['noheldel']:
+            opts += ' -d 1'
           if self.cfg['helflip']:
             opts += ' -f 1'
           cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/postprocess %s -o pp.hipo $o'%(opts)
