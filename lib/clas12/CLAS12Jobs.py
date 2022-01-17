@@ -147,7 +147,7 @@ class ReconJob(CLAS12Job):
     self.nfiles += 1
     self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh'
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
@@ -209,7 +209,7 @@ class TrainJob(CLAS12Job):
     self.nfiles += len(filenames)
     self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh'
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
