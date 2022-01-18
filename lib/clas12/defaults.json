@@ -24,6 +24,7 @@
   "nopostproc": false,
   "recharge": false,
   "helflip": false,
+  "noheldel": false,
   "schema": "",
   "ccdbsqlite": null,
   "claraLogDir": null,

@@ -1,7 +1,11 @@
 import os,re,sys,glob,logging,collections
 
+#from JLabTape import PositionedTapeStub
+
 # The first/second group must match the run/file number:
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
+
+__TAPEORDER=False
 
 _LOGGER=logging.getLogger(__name__)
 
@@ -59,6 +63,17 @@ class RunFile:
     return '%s(%d/%d)'%(self.fileName,self.runNumber,self.fileNumber)
   def show(self):
     print((self.fileName,self.runNumber,self.fileNumber))
+
+class TapeRunFile(RunFile):
+  def __init__(self, path):
+    RunFile.__init__(self, path)
+    self.stub = PositionedTapeStub(path)
+  def __lt__(self, other):
+    if not type(other) is type(self): raise TypeError('')
+    if self.runNumber < other.runNumber: return True
+    if self.runNumber > other.runNumber: return False
+    if self.stub < other.stub: return True
+    return False
 
 class RunFileGroup(list):
 

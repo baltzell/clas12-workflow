@@ -168,6 +168,20 @@ class SwifJob:
 #        prefix+='_'+key+val
     return prefix
 
+  def getOutputDirs(self):
+    ret = set()
+    for o in self.outputs:
+      ret.add(os.path.dirname(o))
+    for o in self.outputData:
+      ret.add(os.path.dirname(o))
+    return ret
+
+  def makeOutputDirs(self):
+    for x in self.getOutputDirs():
+      if not os.path.isdir(x):
+        logging.getLogger(__name__).info('Making output directory: '+x)
+        os.makedirs(x,exist_ok=True)
+
   def getOutputPaths(self):
     for o in self.outputs:
       if o['remote'].startswith('file:'):
@@ -175,7 +189,8 @@ class SwifJob:
       elif o['remote'].startswith('mss:'):
         yield o['remote'][4:]
       else:
-        logging.getLogger(__name__)('Unknown remote prefix:  '+o['remote'])
+        logging.getLogger(__name__).critical('Unknown remote prefix:  '+o['remote'])
+        sys.exit(1)
 
   def outputExists(self):
     for o in self.getOutputPaths():
@@ -230,7 +245,10 @@ class SwifJob:
     cmd+='echo $PWD ; pwd ;'
     cmd+='expr $PWD : ^/scratch/slurm'
     for xx in list(self.env.keys()):
-      cmd+=' && setenv '+xx+' "'+self.env[xx]+'"'
+      if self.shell.endswith('tcsh'):
+        cmd+=' && setenv '+xx+' "'+self.env[xx]+'"'
+      else:
+        cmd+=' && export '+xx+'="'+self.env[xx]+'"'
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
     d=[]
