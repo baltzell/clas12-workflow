@@ -14,6 +14,9 @@ cli.add_argument('rmax',metavar='RUNMAX',help='maximum run number',type=int)
 
 args=cli.parse_args(sys.argv[1:])
 
+if args.rmax < args.rmin:
+  cli.error('rmax cannot be less than rmin')
+
 rm=RcdbManager()
 for run in range(args.rmin,args.rmax+1):
   rm.load(run)
