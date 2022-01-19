@@ -260,8 +260,7 @@ class SwifJob:
       cmd+=' && mkdir -p %s '%(' '.join(d))
     cmd+=' && ( '+self.cmd+' )'
     #cmd+=self._getJputOutputsCmd()
-    # looks like SWIF2 has a 1 kB limit, while SWIF1 was much larger ...
-    if len(cmd)>1e3-1:
+    if len(cmd)>(1e4-1):
       logging.getLogger(__name__).critical('Command might be too long:\n '+cmd)
     return cmd
 
