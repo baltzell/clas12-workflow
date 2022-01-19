@@ -100,7 +100,7 @@ def processWorkflow(workflow,args):
 
     if args.retry:
       sunz_inputs=[]
-      if 'SWIF-USER-NON-ZERO' in status.getProblems():
+      if 'SWIF-USER-NON-ZERO' in status.getCurrentProblems():
         sunz_inputs = status.getPersistentProblemInputs('SWIF-USER-NON-ZERO')
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
