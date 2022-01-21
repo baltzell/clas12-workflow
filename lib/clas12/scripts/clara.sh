@@ -19,16 +19,17 @@ then
     JAVA_OPTS="$JAVA_OPTS $expopts" 
 fi
 
-nevents=
 outprefix=rec_
 logdir=.
 threads=16
-while getopts "p:l:t:n:" OPTION; do
+yaml=clara.yaml
+while getopts "p:l:t:n:y:" OPTION; do
     case $OPTION in
         p)  outprefix=$OPTARG ;;
         l)  logdir=$OPTARG ;;
         t)  threads=$OPTARG ;;
         n)  nevents="-e $OPTARG" ;;
+        y)  yaml=$OPTARG ;;
         ?)  exit 1 ;;
     esac
 done
@@ -78,7 +79,7 @@ $CLARA_HOME/lib/clara/run-clara \
         -t $threads \
         $nevents \
         -s $jobname \
-        ./clara.yaml \
+        $yaml \
         ./filelist.txt
 claraexit=$?
 ls -lt

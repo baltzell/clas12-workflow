@@ -130,8 +130,6 @@ class ReconJob(CLAS12Job):
     self.addTag('mode','recon')
     self.setTime('24h')
     self.setDisk('20GB')
-    self.addInput('clara.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/clara.sh')
-    self.addInput('clara.yaml',cfg['reconYaml'])
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
@@ -149,7 +147,8 @@ class ReconJob(CLAS12Job):
     self.nfiles += 1
     self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
-    cmd = './clara.sh -t '+str(self.getCores())
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
+    cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
     if self.cfg['claraLogDir'] is not None:
@@ -158,24 +157,23 @@ class ReconJob(CLAS12Job):
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
+        cmd += ' && set o='+x
         # postprocessing must run from the same coatjava as clara for bankdefs:
         if self.cfg['recharge']:
-          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
-          cmd += ' && %s/plugins/clas12/bin/rebuild-scalers -o rs.hipo %s'%(self.cfg['clara'],x)
-          cmd += ' && rm -f %s && mv -f rs.hipo %s'%(x,x)
-          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
-          cmd += ' && ls %s )'%(x)
+          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/rebuild-scalers -o rs.hipo $o'
+          cmd += ' && rm -f $o && mv -f rs.hipo $o'
+          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
+          cmd += ' && ls $o )'
         if not self.cfg['nopostproc']:
           opts = '-q 1'
           if not self.cfg['noheldel']:
             opts += ' -d 1'
           if self.cfg['helflip']:
             opts += ' -f 1'
-          cmd += ' && ( ls -l && echo %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
-          cmd += ' && %s/plugins/clas12/bin/postprocess %s -o pp.hipo %s'%(self.cfg['clara'],opts,x)
-          cmd += ' && rm -f %s && mv -f pp.hipo %s'%(x,x)
-          cmd += ' && %s/bin/hipo-utils -test %s || rm -f %s'%(self.cfg['coatjava'],x,x)
-          cmd += ' && ls %s )'%(x)
+          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/postprocess %s -o pp.hipo $o'%(opts)
+          cmd += ' && rm -f $o && mv -f pp.hipo $o'
+          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
+          cmd += ' && ls $o )'
     CLAS12Job.setCmd(self,cmd)
 
 class TrainJob(CLAS12Job):
@@ -189,8 +187,6 @@ class TrainJob(CLAS12Job):
     self.addTag('mode','ana')
     # TODO: choose time based on #events:
     self.setTime('24h')
-    self.addInput('train.sh',os.path.dirname(os.path.realpath(__file__))+'/../scripts/train.sh')
-    self.addInput('clara.yaml',cfg['trainYaml'])
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     TrainJob.HOURS_INC = 0.5
@@ -215,7 +211,8 @@ class TrainJob(CLAS12Job):
     self.nfiles += len(filenames)
     self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
   def setCmd(self,hack):
-    cmd = './train.sh -t 12 '
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
+    cmd += ' -t 12 -y '+self.cfg['trainYaml']
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)

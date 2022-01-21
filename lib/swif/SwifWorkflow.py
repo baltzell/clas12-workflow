@@ -1,4 +1,4 @@
-import tempfile,subprocess
+import tempfile,subprocess,collections,json
 from RunFileUtil import RunFileGroups
 from SwifJob import SwifJob
 from SwifStatus import SWIF,SwifStatus
@@ -11,6 +11,11 @@ class SwifWorkflow(RunFileGroups):
     self.name=name
     self.jobs=[]
     self.phase=0
+    # new for swif2:
+    self.maxConcurrent=int(1e4)
+    self.site='jlab/enp'
+    #self.storage='enp:luster'
+    #self.siteLogin=None
 
   def getStatus(self):
     return SwifStatus(self.name)
@@ -34,17 +39,25 @@ class SwifWorkflow(RunFileGroups):
     return jobs
 
   def getShell(self):
-    return '\n'.join([job.getShell() for job in self.jobs])
+    ret=[]
+    cmd=[SWIF,'create','-workflow',self.name,'-site',self.site]
+    cmd.extend(('-max-concurrent',str(self.maxConcurrent)))
+    ret.append(' '.join(cmd))
+    for job in self.jobs:
+      ret.append(job.getShell())
+    return '\n'.join(ret)
 
   def getJson(self):
-    json  = '{"name":"'+self.name+'","jobs":[\n'
-    json += ',\n'.join([job.getJson() for job in self.jobs])
-    json += '\n]}'
-    return json
+    data = collections.OrderedDict()
+    data['name'] = self.name
+    data['site'] = self.site
+    data['max_dispatched'] = self.maxConcurrent
+    data['jobs']=[job.toJson() for job in self.jobs]
+    return json.dumps(data,**{'indent':2,'separators':(',',': ')})
 
   def submitShell(self):
-    for job in self.jobs:
-      print((subprocess.check_output(job.getShell().split())))
+    for cmd in self.getShell():
+      print((subprocess.check_output(cmd)))
 
   def submitJson(self):
     with tempfile.NamedTemporaryFile() as jsonFile:
@@ -66,16 +79,18 @@ class SwifPhase():
     return 'Phase %d : %s (%d)'%(self.phase,self.jobs[0],len(self.jobs))
 
 if __name__ == '__main__':
-  name = 'myWorkflow'
+  name = 'test'
   workflow = SwifWorkflow(name)
   for ii in range(3):
     job = SwifJob(name)
-    job.setPhase(ii+1)
+    job.setDisk('3GB')
+    job.setRam('500MB')
+    job.setTime('30m')
+    job.setPartition('priority')
     job.addTag('meal',['breakfast','lunch','dinner'][ii])
-    job.addInput('in.evio','/mss/clas12/foo%d.evio'%ii)
-    job.addOutput('out.evio','/my/dir/foo%d.xml'%ii)
-    job.setCmd('evio2xml in.evio > out.xml')
-    job.setLogDir('/tmp/log')
+    job.addInput('in.evio','/mss/hallb/hps/physrun2021/data/hps_014244/hps_014244.evio.01235')
+    job.addOutput('x.txt','/home/baltzell/swif2-test/xx-%d.txt'%ii)
+    job.setCmd('ls -l > x.txt')
     workflow.addJob(job)
   print((workflow.getShell()))
   print((workflow.getJson()))

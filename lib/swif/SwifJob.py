@@ -1,4 +1,4 @@
-import os,sys,json,logging,collections
+import os,sys,json,getpass,logging,collections
 
 from SwifStatus import SWIF
 
@@ -14,8 +14,8 @@ class SwifJob:
     self.number=-1
     self.workflow=workflow
     self.phase=0
-    self.project='clas12'
-    self.track='reconstruction'
+    self.account='clas12'
+    self.partition='production'
     self.cores=1
     self.os='general'
     self.time='2h'
@@ -25,7 +25,7 @@ class SwifJob:
     self.tags=collections.OrderedDict()
     self.antecedents=[]
     self.conditions=[]
-    self.logDir=None
+    self.logDir='/farm_out/'+getpass.getuser()
     self.cmd=''
     # for Auger staging:
     self.inputs=[]
@@ -45,8 +45,8 @@ class SwifJob:
   def addEnv(self,key,val):
     self.env[key]=val
 
-  def setTrack(self,track):
-    self.track=track
+  def setPartition(self,partition):
+    self.partition=partition
 
   def getCores(self):
     return self.cores
@@ -236,6 +236,10 @@ class SwifJob:
 
   def _createCommand(self):
     cmd='unalias -a ; '
+    if self.shell.endswith('tcsh'):
+      cmd+='set echo; '
+    else:
+      cmd+='set -v; '
     cmd+='mkdir -p %s ; touch %s ;'%(self.logDir,self.logDir)
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'
@@ -256,57 +260,56 @@ class SwifJob:
       cmd+=' && mkdir -p %s '%(' '.join(d))
     cmd+=' && ( '+self.cmd+' )'
     #cmd+=self._getJputOutputsCmd()
+    if len(cmd)>(1e4-1):
+      logging.getLogger(__name__).critical('Command might be too long:\n '+cmd)
     return cmd
 
   def getShell(self):
-
-    job=(SWIF+' add-job -create -workflow '+self.workflow+' -slurm '
-      '-project '+self.project+' -track '+self.track+' '+' -os '+self.os+' '
-      '-time '+self.time+' -cores '+str(self.cores)+' '
-      '-disk '+self.disk+' -ram '+self.ram+' -shell '+self.shell)
-
-    for ant in self.antecedents: job += ' -antecedent '+ant
-    if con in self.conditions: job += ' -condition file:///'+con
-
-    if not self.phase is None: job += ' -phase '+str(self.phase)
-
-    for key,val in list(self.tags.items()): job += ' -tag %s %s'   %(key,val)
-    for xx in self.inputs:  job += ' -input %s %s' %(xx['local'],xx['remote'])
-    for xx in self.outputs: job += ' -output %s %s'%(xx['local'],xx['remote'])
-
+    cmd=[SWIF]
+    cmd.extend(['add-job','-workflow',self.workflow,'-constraint',self.os])
+    cmd.extend(['-account',self.account,'-partition',self.partition])
+    cmd.extend(['-time',self.time,'-cores',str(self.cores)])
+    cmd.extend(['-disk',self.disk,'-ram',self.ram,'-shell',self.shell])
+    for ant in self.antecedents: cmd.extend(['-antecedent',ant])
+    for con in self.conditions: cmd.extend(['-condition','file:///'+con])
+    if self.phase is not None: cmd.extend(['-phase',str(self.phase)])
+    for key,val in list(self.tags.items()): cmd.extend(['-tag',key,str(val)])
+    for xx in self.inputs: cmd.extend(['-input',xx['local'],xx['remote']])
+    for xx in self.outputs: cmd.extend(['-output',xx['local'],xx['remote']])
     if self.logDir is not None:
-      job += ' -stdout file:'+self.getLogPrefix()+'.out'
-      job += ' -stderr file:'+self.getLogPrefix()+'.err'
-
-    job += ' \''+self._createCommand()+'\''
-
-    return job
+      cmd.extend(['-stdout',self.getLogPrefix()+'.out'])
+      cmd.extend(['-stderr',self.getLogPrefix()+'.err'])
+    cmd.append('\''+self._createCommand()+'\'')
+    return ' '.join(cmd)
 
   def toJson(self):
     jsonData = collections.OrderedDict()
-    jsonData['os']=self.os
+    jsonData['constraint']=self.os
     jsonData['name']=self.getJobName()
     jsonData['phase']=self.phase
-    jsonData['project']=self.project
-    jsonData['track']=self.track
+    jsonData['account']=self.account
+    jsonData['partition']=self.partition
     jsonData['shell']=self.shell
-    jsonData['cpuCores']=self.cores
-    jsonData['diskBytes']=self.getBytes(self.disk)
-    jsonData['ramBytes']=self.getBytes(self.ram)
-    jsonData['timeSecs']=self.getSeconds(self.time)
-    jsonData['tags']=self.tags
-    jsonData['command']=self._createCommand()
+    jsonData['cpu_cores']=self.cores
+    jsonData['disk_bytes']=self.getBytes(self.disk)
+    jsonData['ram_bytes']=self.getBytes(self.ram)
+    jsonData['time_secs']=self.getSeconds(self.time)
+    jsonData['command']=[self._createCommand()]
+    if len(self.tags)>0:
+      jsonData['tags']=[]
+      for k,v in list(self.tags.items()):
+        jsonData['tags'].append({'name':k,'value':v})
     if len(self.antecedents)>0:
       jsonData['antecedents']=self.antecedents
     if len(self.conditions)>0:
       jsonData['conditions']=self.conditions
     if len(self.inputs)>0:
-      jsonData['input']=self.inputs
+      jsonData['inputs']=self.inputs
     if len(self.outputs)>0:
-      jsonData['output']=self.outputs
+      jsonData['outputs']=self.outputs
     if self.logDir is not None:
-      jsonData['stdout']='file:'+self.getLogPrefix()+'.out'
-      jsonData['stderr']='file:'+self.getLogPrefix()+'.err'
+      jsonData['stdout']=self.getLogPrefix()+'.out'
+      jsonData['stderr']=self.getLogPrefix()+'.err'
     return jsonData
 
   def getJson(self):
@@ -337,8 +340,6 @@ if __name__ == '__main__':
   job.setCmd('ls -l')
   job.addTag('key','val')
   job.addTag('foo','bar')
-  job.setLogDir('/tmp/logs')
-  job.setPhase(77)
   print((job.getShell()))
   print((job.getJson()))
 

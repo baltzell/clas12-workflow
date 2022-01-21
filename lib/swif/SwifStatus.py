@@ -1,70 +1,46 @@
 import os,sys,glob,json,copy,subprocess,getpass,datetime,collections
+import FileUtil
 
-SWIF='/site/bin/swif'
-
-# FIXME:  incomplete?
-SWIF_PROBLEMS=[
-'SWIF-MISSING-OUTPUT',
-'SWIF-USER-NON-ZERO',
-'SWIF-SYSTEM-ERROR',
-'AUGER-FAILED',
-'AUGER-OUTPUT',
-'AUGER-CANCELLED',
-'AUGER-TIMEOUT',
-'AUGER-SUBMIT',
-'AUGER-OUTPUT-FAIL',
-'AUGER-INPUT-FAIL'
-]
-
-SWIF_JSON_KEYS=[
-'workflow_name',
-'workflow_id',
-'workflow_user'
-'job_limit',
-'error_limit',
-'phase_limit',
-'phase',
-'jobs',
-'succeeded',
-'attempts',
-'frozen',
-'dispatched',
-'undispatched',
-'failed',
-'canceled',
-'suspended',
-'auger_active',
-'auger_depend',
-'auger_pending',
-'auger_staging_in',
-'auger_finishing',
-'auger_staging_out',
-'problems',
-'problem_types',
-'problem_swif_user_non_zero',
-'problem_swif_system_error',
-'problem_swif_missing_output',
-'problem_auger_canceled',
-'problem_auger_input_fail',
-'problem_auger_output_fail',
-'problem_auger_timeout',
-'problem_auger_unknown',
-'problem_auger_failed',
-'problem_auger_over_rlimit',
-'update_ts',
-'create_ts',
-'current_ts',
-]
+SWIF='/site/bin/swif2'
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
+# keeping this just for sorting the darned dictionary for printing, until can
+# figure out how to make json.loads preserve sorting without manipulating structure,
+# key/value to 2-long tuples, apparently json.loads as of python 3.7 preserves order
+# by default, presumably without manipulating structure..
+SWIF_JSON_KEYS=[
+'workflow_name',
+'workflow_user',
+'workflow_site',
+'workflow_id',
+'jobs',
+'max_concurrent',
+'phase',
+'succeeded',
+'attempts',
+'undispatched',
+'abandoned',
+'dispatched',
+'dispatched_preparing',
+'dispatched_running',
+'dispatched_pending',
+'dispatched_other',
+'dispatched_reaping',
+'problems',
+'problem_types',
+'input_mb_processed',
+'output_mb_generated',
+'update_ts',
+'create_ts',
+'summary_ts',
+'xfer_mb_from_tape'
+]
+
 def getWorkflowNames():
-  workflows=[]
-  for line in subprocess.check_output([SWIF,'list']).splitlines():
-    line=line.decode('UTF-8').strip()
-    if line.find('workflow_name')==0:
-      workflows.append(line.split('=')[1].strip())
-  return workflows
+  for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
+    if x.get('workflow_name') is not None:
+      yield x.get('workflow_name')
 
 def deleteWorkflow(name):
   print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
@@ -109,6 +85,8 @@ class SwifStatus():
     if self.__status is None:
       if source is None:
         cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
+        # if we hook to OrderedDict here, the order is preserved, but key/values get converted to tuple.
+        # python3 apparently preserves ordering
         self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
       elif isinstance(source,list) or isinstance(source,dict):
         self.__status=source
@@ -196,29 +174,35 @@ class SwifStatus():
     return json.dumps(self.getDetails(),**_JSONFORMAT)
 
   def getPrettyStatus(self):
-    statuses=[]
+    # This is the same as running "swif status" without specifying JSON,
+    # but we recreate it here just to avoid running swif again ...
+    row=[]
     for status in self.getStatus():
-      for key in SWIF_JSON_KEYS:
-        if key not in status:
-          continue
-        if status[key] is None:
-          continue
-        if key.find('_ts')==len(key)-3:
-          dt=datetime.datetime.fromtimestamp(int(status[key])/1000)
-          statuses.append('%-30s = %s'%(key,dt.strftime('%Y/%m/%d %H:%M:%S')))
-        else:
-          statuses.append('%-30s = %s'%(key,status[key]))
-    return '\n'.join(statuses)
+      # wanted to do this via pair/hook and OrderedDict in json.loads just
+      # to preserve ordering from SWIF, but that converted stuff to tuples,
+      # so here we sort manually, grr ....
+      #
+      # FIXME:  sounds like this syntax changes in python3:
+      for k,v in sorted(status.items(), key=lambda (i,j): SWIF_JSON_KEYS.index(i)):
+      #for k,v in sorted(status.items(), key=lambda (i): SWIF_JSON_KEYS.index(i[0])):
+        if k.endswith('_ts'):
+          v = datetime.datetime.fromtimestamp(int(v)/1000).strftime('%Y/%m/%d %H:%M:%S')
+        row.append('%-30s = %s'%(k,v))
+    return '\n'.join(row)
 
-  def getProblems(self):
-    problems=[]
+  def getCurrentProblems(self):
+    ret=[]
     for status in self.getStatus():
-      if 'problem_types' not in status:
-        continue
-      if status['problem_types'] is None:
-        continue
-      problems.extend(status['problem_types'].split(','))
-    return problems
+      # hmm, this picked up unicode when switching to SWIF2 apparentely,
+      # This makes no sense, must've been some other change, maybe different python2 versions ...
+      # This should all go away with python3
+      if status.get(u'problem_types') is not None:
+        for p in status[u'problem_types'].split(','):
+          ret.append(p)
+      elif status.get('problem_types') is not None:
+        for p in status['problem_types'].split(','):
+          ret.append(p)
+    return ret
 
   def tallyAllProblems(self):
     data=collections.OrderedDict()
@@ -243,9 +227,20 @@ class SwifStatus():
               data[problem]['counts']['modes'][mode]+=1
     return data
 
+  def getAllProblems(self):
+    ret=set()
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
+        if ['attempts'] in job:
+          for attempt in job['attempts']:
+            if 'problem' in attempt:
+              ret.add('problem')
+    return ret
+
   def summarizeProblems(self,pernode=False):
     ret=''
     data=sorted(self.tallyAllProblems().items())
+    problems=self.getAllProblems()
     # YUK! FIXME
     if pernode:
       data2={'nodes':{},'modes':{}}
@@ -253,22 +248,22 @@ class SwifStatus():
       for k,v in data:
         for node in v['counts']['nodes']:
           if node not in nodes:
-            nodes[node]=dict(zip(SWIF_PROBLEMS,[0]*len(SWIF_PROBLEMS)))
+            nodes[node]=dict(zip(problems,[0]*len(problems)))
           nodes[node][k]+=v['counts']['nodes'][node]
         for mode in v['counts']['modes']:
           if mode not in modes:
-            modes[mode]=dict(zip(SWIF_PROBLEMS,[0]*len(SWIF_PROBLEMS)))
+            modes[mode]=dict(zip(problems,[0]*len(problems)))
           modes[mode][k]+=v['counts']['modes'][mode]
-      header_fmt='%12s '+(' '.join(['%20s']*len(SWIF_PROBLEMS)))
+      header_fmt='%12s '+(' '.join(['%20s']*len(problems)))
       header=['Node']
-      header.extend(sorted(SWIF_PROBLEMS))
+      header.extend(sorted(problems))
       ret+=header_fmt%tuple(header)
-      fmt='%12s '+' '.join(['%20d']*len(SWIF_PROBLEMS))
+      fmt='%12s '+' '.join(['%20d']*len(problems))
       for node in sorted(nodes.keys()):
         if sum(nodes[node].values())==0:
           continue
         x=[node]
-        x.extend([nodes[node][k] for k in sorted(SWIF_PROBLEMS)])
+        x.extend([nodes[node][k] for k in sorted(problems)])
         ret+='\n'+fmt%tuple(x)
       ret+='\n'+header_fmt%tuple(header)
       ret+='\n\n'
@@ -321,7 +316,7 @@ class SwifStatus():
 
   def retryProblems(self):
     ret=[]
-    problems=self.getProblems()
+    problems=self.getCurrentProblems()
     ret.extend(self.modifyJobReqs(problems))
     for problem in problems:
       retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
@@ -331,7 +326,7 @@ class SwifStatus():
 
   def abandonProblems(self,types):
     ret=[]
-    for problem in self.getProblems():
+    for problem in self.getCurrentProblems():
       if problem not in types and 'ANY' not in types:
         continue
       retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
@@ -483,6 +478,75 @@ class SwifStatus():
         ret.extend(glob.glob('%s/%s*'%(logdir,job['name'])))
     return ret
 
+  def tailPersistentProblemLogs(self,logdir=None):
+    for x in self.getPersistentProblemLogs(logdir):
+      FileUtil.tail(x,20)
+
+# FIXME:  update for SWIF2
+#SWIF_PROBLEMS=[
+#'SWIF-MISSING-OUTPUT',
+#'SWIF-USER-NON-ZERO',
+#'SWIF-SYSTEM-ERROR',
+#'AUGER-FAILED',
+#'AUGER-OUTPUT',
+#'AUGER-CANCELLED',
+#'AUGER-TIMEOUT',
+#'AUGER-SUBMIT',
+#'AUGER-OUTPUT-FAIL',
+#'AUGER-INPUT-FAIL'
+#]
+
+# FIXME:  update for SWIF2
+#SWIF_JSON_KEYS=[
+#'workflow_name',
+#'workflow_site',
+#'workflow_id',
+#'workflow_user'
+#'max_concurrent',
+#'job_limit',
+#'error_limit',
+#'phase_limit',
+#'phase',
+#'jobs',
+#'succeeded',
+#'attempts',
+#'frozen',
+#'undispatched',
+#'dispatched',
+#'dispatched_preparing',
+#'dispatched_running',
+#'dispatched_pending',
+#'dispatched_other',
+#'dispatched_reaping',
+#'abandoned'
+#'failed',
+#'canceled',
+#'suspended',
+#'auger_active',
+#'auger_depend',
+#'auger_pending',
+#'auger_staging_in',
+#'auger_finishing',
+#'auger_staging_out',
+#'problems',
+#'problem_types',
+#'problem_swif_user_non_zero',
+#'problem_swif_system_error',
+#'problem_swif_missing_output',
+#'problem_auger_canceled',
+#'problem_auger_input_fail',
+#'problem_auger_output_fail',
+#'problem_auger_timeout',
+#'problem_auger_unknown',
+#'problem_auger_failed',
+#'problem_auger_over_rlimit',
+#'input_mb_processed',
+#'output_mb_generated',
+#'update_ts',
+#'create_ts',
+#'current_ts',
+#'summary_ts'
+#]
 
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')

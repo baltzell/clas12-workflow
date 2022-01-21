@@ -13,11 +13,13 @@ export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 nevents=
 logdir=.
 threads=12
-while getopts "p:l:t:n:" OPTION; do
+yaml=clara.yaml
+while getopts "p:l:t:n:y:" OPTION; do
     case $OPTION in
         l)  logdir=$OPTARG ;;
         t)  threads=$OPTARG ;;
         n)  nevents="-e $OPTARG" ;;
+        y)  yaml=$OPTARG ;;
         ?)  exit 1 ;;
     esac
 done
@@ -50,14 +52,7 @@ done
 export CLASSPATH
 
 # get train ids for expected output files:
-trainids=`python - <<'EOF'
-ids=[]
-for line in open('clara.yaml','r').readlines():
-  if line.strip().find('id: ')==0:
-    ids.append(int(line.strip().split()[1]))
-print(' '.join(sorted(set(map(str,ids)))))
-EOF`
-
+trainids=`sed 's/^\s*//' $yaml | grep '^id:' | awk '{print$2}' | sort -n | uniq`
 echo "train.sh: INFO: Train IDs:  "$trainids
 
 # check existence, size, and hipo-utils -test:
@@ -92,7 +87,7 @@ $CLARA_HOME/lib/clara/run-clara \
         -t $threads \
         $nevents \
         -s $jobname \
-        ./clara.yaml \
+        $yaml \
         ./filelist.txt
 claraexit=$?
 ls -lt

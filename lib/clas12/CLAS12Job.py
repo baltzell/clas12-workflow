@@ -18,7 +18,7 @@ class CLAS12Job(SwifJob):
       self.addInput('clas12.sqlite',cfg['ccdbsqlite'])
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
-    self.project=cfg['project']
+    self.account=cfg['project']
     self.os=cfg['node']
     self.cfg=cfg
 
@@ -54,8 +54,10 @@ class CLAS12Job(SwifJob):
     if os.path.isfile(cfgfile):
       # check for conflict with pre-existing config file:
       with open(cfgfile,'r') as f:
-        if self.cfg != ChefConfig.ChefConfig(json.load(f)):
+        diff = self.cfg.diff(ChefConfig.ChefConfig(json.load(f)))
+        if len(diff) != 0:
           _LOGGER.critical('Configuration conflicts with '+cfgfile)
+          _LOGGER.critical('Conflicts on:  '+','.join(diff))
           sys.exit()
     elif os.access(cfgdir,os.W_OK):
       # write new config file:

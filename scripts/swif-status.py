@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os,sys,subprocess,argparse,logging
 import Matcher
 import SwifStatus
@@ -100,8 +100,8 @@ def processWorkflow(workflow,args):
 
     if args.retry:
       sunz_inputs=[]
-      if 'SWIF-USER-NON-ZERO' in status.getProblems():
-        sunz_inputs = status.getPersistentProblemInputs('SWIF-USER-NON-ZERO')
+      if 'SLURM_FAILED' in status.getCurrentProblems():
+        sunz_inputs = status.getPersistentProblemInputs('SLURM_FAILED')
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
@@ -140,12 +140,9 @@ def processWorkflow(workflow,args):
 
 if __name__ == '__main__':
 
-  problem_types = SwifStatus.SWIF_PROBLEMS[:]
-  problem_types.append('ANY')
-
   df='\n(default=%(default)s)'
 
-  epilog = 'Valid PROBLEMs: '+','.join(problem_types)+'\n\nNote, to pass argument values that start with a dash, use the "=" syntax, e.g. "swif-status.py -m=-123-".'
+  epilog = 'Note, to pass argument values that start with a dash, use the "=" syntax, e.g. "swif-status.py -m=-123-".'
   cli = argparse.ArgumentParser('Do SWIF stuff.',epilog=epilog)
   cli.add_argument('--list',         help='list workflows',    action='store_true',default=False)
   cli.add_argument('--workflow',     help='workflow name else all workflows (repeatable)', metavar='NAME', action='append',default=[])
@@ -161,11 +158,11 @@ if __name__ == '__main__':
   cli.add_argument('--missing',      help='list missing output files for jobs reported as success', action='store_true',default=False)
   cli.add_argument('--missingTape',  help='same as --missing, but assume /mss if originally written to /cache', action='store_true',default=False)
   cli.add_argument('--abandonRun',   help='abandon all jobs associated with particular run numbers (repeatable)', metavar='#', action='append', default=[], type=int)
-  cli.add_argument('--abandon',      help='abandon jobs corresponding to a problem type (repeatable)',  metavar='PROBLEM', action='append',default=[],choices=problem_types)
-  cli.add_argument('--problems',     help='show details of jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=problem_types)
+  cli.add_argument('--abandon',      help='abandon jobs corresponding to a problem type (repeatable)',  metavar='PROBLEM', action='append',default=[])
+  cli.add_argument('--problems',     help='show details of jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False)
   cli.add_argument('--problemStats', help='show summary of all problems during the workflow', default=False,action='store_true')
   cli.add_argument('--problemNodes', help='same as --problemStats but per node', default=False,action='store_true')
-  cli.add_argument('--problemInputs',help='generate list of input files for jobs with problems', metavar='PROBLEM',nargs='?',const='ANY',default=False,choices=problem_types)
+  cli.add_argument('--problemInputs',help='generate list of input files for jobs with problems', metavar='PROBLEM',nargs='?',const='ANY',default=False)
   cli.add_argument('--problemLogs',  help='directory of log files', metavar='PATH',nargs='?',const=None,default=False)
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
