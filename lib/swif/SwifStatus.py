@@ -1,8 +1,41 @@
 import os,sys,glob,json,copy,subprocess,getpass,datetime,collections
+import FileUtil
 
 SWIF='/site/bin/swif2'
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
+
+# keeping this just for sorting the darned dictionary for printing, until can
+# figure out how to make json.loads preserve sorting without manipulating structure,
+# key/value to 2-long tuples, apparently json.loads as of python 3.7 preserves order
+# by default, presumably without manipulating structure..
+SWIF_JSON_KEYS=[
+'workflow_name',
+'workflow_user',
+'workflow_site',
+'workflow_id',
+'jobs',
+'max_concurrent',
+'phase',
+'succeeded',
+'attempts',
+'undispatched',
+'abandoned',
+'dispatched',
+'dispatched_preparing',
+'dispatched_running',
+'dispatched_pending',
+'dispatched_other',
+'dispatched_reaping',
+'problems',
+'problem_types',
+'input_mb_processed',
+'output_mb_generated',
+'update_ts',
+'create_ts',
+'summary_ts',
+'xfer_mb_from_tape'
+]
 
 def getWorkflowNames():
   for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
@@ -52,7 +85,9 @@ class SwifStatus():
     if self.__status is None:
       if source is None:
         cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
-        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
+        # if we hook to OrderedDict here, the order is preserved, but key/values get converted to tuple.
+        # python3 apparently preserves ordering
+        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
       elif isinstance(source,list) or isinstance(source,dict):
         self.__status=source
       elif os.path.isfile(source):
@@ -68,7 +103,7 @@ class SwifStatus():
     if self.__details is None:
       if source is None:
         cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
-        self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
+        self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
       elif isinstance(source,list) or isinstance(source,dict):
         self.__details=source
       elif os.path.isfile(source):
@@ -143,17 +178,31 @@ class SwifStatus():
     # but we recreate it here just to avoid running swif again ...
     row=[]
     for status in self.getStatus():
-      for k,v in list(status.items()):
+      # wanted to do this via pair/hook and OrderedDict in json.loads just
+      # to preserve ordering from SWIF, but that converted stuff to tuples,
+      # so here we sort manually, grr ....
+      #
+      # FIXME:  sounds like this syntax changes in python3:
+      for k,v in sorted(status.items(), key=lambda (i,j): SWIF_JSON_KEYS.index(i)):
+      #for k,v in sorted(status.items(), key=lambda (i): SWIF_JSON_KEYS.index(i[0])):
         if k.endswith('_ts'):
           v = datetime.datetime.fromtimestamp(int(v)/1000).strftime('%Y/%m/%d %H:%M:%S')
         row.append('%-30s = %s'%(k,v))
     return '\n'.join(row)
 
   def getCurrentProblems(self):
+    ret=[]
     for status in self.getStatus():
-      if status.get('problem_types') is not None:
+      # hmm, this picked up unicode when switching to SWIF2 apparentely,
+      # This makes no sense, must've been some other change, maybe different python2 versions ...
+      # This should all go away with python3
+      if status.get(u'problem_types') is not None:
+        for p in status[u'problem_types'].split(','):
+          ret.append(p)
+      elif status.get('problem_types') is not None:
         for p in status['problem_types'].split(','):
-          yield p
+          ret.append(p)
+    return ret
 
   def tallyAllProblems(self):
     data=collections.OrderedDict()
@@ -429,6 +478,10 @@ class SwifStatus():
         ret.extend(glob.glob('%s/%s*'%(logdir,job['name'])))
     return ret
 
+  def tailPersistentProblemLogs(self,logdir=None):
+    for x in self.getPersistentProblemLogs(logdir):
+      FileUtil.tail(x,20)
+
 # FIXME:  update for SWIF2
 #SWIF_PROBLEMS=[
 #'SWIF-MISSING-OUTPUT',
@@ -444,28 +497,6 @@ class SwifStatus():
 #]
 
 # FIXME:  update for SWIF2
-#SWIF_JSON_KEYS=[
-#'workflow_name',
-#'workflow_site',
-#'workflow_id',
-#'jobs',
-#'succeeded',
-#'attempts',
-#'undispatched',
-#'dispatched',
-#'dispatched_preparing',
-#'dispatched_running',
-#'dispatched_pending',
-#'dispatched_other',
-#'dispatched_reaping',
-#'problems',
-#'problem_types',
-#'input_mb_processed',
-#'output_mb_generated',
-#'update_ts',
-#'create_ts',
-#'summary_ts'
-#]
 #SWIF_JSON_KEYS=[
 #'workflow_name',
 #'workflow_site',

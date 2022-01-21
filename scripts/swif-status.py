@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os,sys,subprocess,argparse,logging
 import Matcher
 import SwifStatus
@@ -100,8 +100,8 @@ def processWorkflow(workflow,args):
 
     if args.retry:
       sunz_inputs=[]
-      if 'SWIF-USER-NON-ZERO' in status.getCurrentProblems():
-        sunz_inputs = status.getPersistentProblemInputs('SWIF-USER-NON-ZERO')
+      if 'SLURM_FAILED' in status.getCurrentProblems():
+        sunz_inputs = status.getPersistentProblemInputs('SLURM_FAILED')
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
