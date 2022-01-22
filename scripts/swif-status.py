@@ -105,7 +105,7 @@ def processWorkflow(workflow,args):
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
-        print('\n'+str(res))
+        print('\n'+'\n'.join(res))
       # print input files for SWIF-USER-NON-ZERO:
       if len(sunz_inputs)>0:
         n = min(len(sunz_inputs),9)

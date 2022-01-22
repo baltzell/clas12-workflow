@@ -336,7 +336,7 @@ class SwifStatus():
     ret.extend(self.modifyJobReqs(problems))
     for problem in problems:
       retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
-      ret.append(retryCmd)
+      ret.append(' '.join(retryCmd))
       ret.append(subprocess.check_output(retryCmd))
     return ret
 
@@ -357,14 +357,14 @@ class SwifStatus():
       modifyCmd.extend(['-time','add','300m'])
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
-      ret.append(modifyCmd)
+      ret.append(' '.join(modifyCmd))
       ret.append(subprocess.check_output(modifyCmd))
     if 'AUGER-OVER_RLIMIT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-ram','add','1gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
-      ret.append(modifyCmd)
+      ret.append(' '.join(modifyCmd))
       ret.append(subprocess.check_output(modifyCmd))
     return ret
 
