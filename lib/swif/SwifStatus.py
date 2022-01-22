@@ -37,6 +37,22 @@ SWIF_JSON_KEYS=[
 'xfer_mb_from_tape'
 ]
 
+# FIXME:  update for SWIF2
+SWIF_PROBLEMS=[
+'SLURM_FAILED',
+'SITE_LAUNCH_FAIL'
+]
+#'SWIF-MISSING-OUTPUT',
+#'SWIF-USER-NON-ZERO',
+#'SWIF-SYSTEM-ERROR',
+#'AUGER-FAILED',
+#'AUGER-OUTPUT',
+#'AUGER-CANCELLED',
+#'AUGER-TIMEOUT',
+#'AUGER-SUBMIT',
+#'AUGER-OUTPUT-FAIL',
+#'AUGER-INPUT-FAIL'
+
 def getWorkflowNames():
   for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
     if x.get('workflow_name') is not None:
@@ -481,20 +497,6 @@ class SwifStatus():
   def tailPersistentProblemLogs(self,logdir=None):
     for x in self.getPersistentProblemLogs(logdir):
       FileUtil.tail(x,20)
-
-# FIXME:  update for SWIF2
-#SWIF_PROBLEMS=[
-#'SWIF-MISSING-OUTPUT',
-#'SWIF-USER-NON-ZERO',
-#'SWIF-SYSTEM-ERROR',
-#'AUGER-FAILED',
-#'AUGER-OUTPUT',
-#'AUGER-CANCELLED',
-#'AUGER-TIMEOUT',
-#'AUGER-SUBMIT',
-#'AUGER-OUTPUT-FAIL',
-#'AUGER-INPUT-FAIL'
-#]
 
 # FIXME:  update for SWIF2
 #SWIF_JSON_KEYS=[
