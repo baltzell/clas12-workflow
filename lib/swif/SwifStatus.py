@@ -232,9 +232,7 @@ class SwifStatus():
         if 'job_attempt_problem' not in attempt:
           continue
         problem,node,mode=attempt['job_attempt_problem'],'unknown','unknown'
-        # FIXME:  SWIF2 no longer reports node
-        if 'auger_node' in attempt:
-          node = attempt['auger_node']
+        node = attempt.get('slurm_nodelist')
         if 'tags' in job and 'mode' in job['tags']:
           mode = job['tags']['mode']
         if problem not in data:
