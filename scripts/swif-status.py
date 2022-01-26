@@ -99,17 +99,17 @@ def processWorkflow(workflow,args):
         print(res)
 
     if args.retry:
+      user_error_type = 'SLURM_FAILED'
       sunz_inputs=[]
-      if 'SLURM_FAILED' in status.getCurrentProblems():
-        sunz_inputs = status.getPersistentProblemInputs('SLURM_FAILED')
+      if user_error_type in status.getCurrentProblems():
+        sunz_inputs = status.getPersistentProblemInputs(user_error_type)
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
         print('\n'+'\n'.join(res))
-      # print input files for SWIF-USER-NON-ZERO:
       if len(sunz_inputs)>0:
         n = min(len(sunz_inputs),9)
-        print('\nSWIF-USER-NON-ZERO Inputs:\n'+'\n'.join(sunz_inputs[0:n]))
+        print('\n'+user_error_type+' Inputs:\n'+'\n'.join(sunz_inputs[0:n]))
         if len(sunz_inputs)>10:
           print('... (truncated)')
         print('\n')
