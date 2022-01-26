@@ -222,44 +222,48 @@ class SwifStatus():
     return ret
 
   def tallyAllProblems(self):
-    data=collections.OrderedDict()
-    if 'jobs' in self.getDetails():
-      for job in self.getDetails()['jobs']:
-        if 'attempts' in job:
-          for attempt in job['attempts']:
-            if 'problem' in attempt:
-              problem,node,mode=attempt['problem'],'unknown','unknown'
-              if 'auger_node' in attempt:
-                node=attempt['auger_node']
-              if 'tags' in job and 'mode' in job['tags']:
-                mode=job['tags']['mode']
-              if problem not in data:
-                data[problem]={'count':0,'counts':{'nodes':{},'modes':{}}}
-              if node not in data[problem]['counts']['nodes']:
-                data[problem]['counts']['nodes'][node]=0
-              if mode not in data[problem]['counts']['modes']:
-                data[problem]['counts']['modes'][mode]=0
-              data[problem]['count']+=1
-              data[problem]['counts']['nodes'][node]+=1
-              data[problem]['counts']['modes'][mode]+=1
+    data = collections.OrderedDict()
+    if 'jobs' not in self.getDetails():
+      return data
+    for job in self.getDetails()['jobs']:
+      if 'attempts' not in job:
+        continue
+      for attempt in job['attempts']:
+        if 'job_attempt_problem' not in attempt:
+          continue
+        problem,node,mode=attempt['job_attempt_problem'],'unknown','unknown'
+        # FIXME:  SWIF2 no longer reports node
+        if 'auger_node' in attempt:
+          node = attempt['auger_node']
+        if 'tags' in job and 'mode' in job['tags']:
+          mode = job['tags']['mode']
+        if problem not in data:
+          data[problem] = {'count':0,'counts':{'nodes':{},'modes':{}}}
+        if node not in data[problem]['counts']['nodes']:
+          data[problem]['counts']['nodes'][node] = 0
+        if mode not in data[problem]['counts']['modes']:
+          data[problem]['counts']['modes'][mode] = 0
+        data[problem]['count'] += 1
+        data[problem]['counts']['nodes'][node] += 1
+        data[problem]['counts']['modes'][mode] += 1
     return data
 
   def getAllProblems(self):
     ret=set()
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
-        if ['attempts'] in job:
+        if 'attempts' in job:
           for attempt in job['attempts']:
-            if 'problem' in attempt:
-              ret.add('problem')
+            if 'job_attempt_problem' in attempt:
+              ret.add(attempt.get('job_attempt_problem'))
     return ret
 
   def summarizeProblems(self,pernode=False):
     ret=''
     data=sorted(self.tallyAllProblems().items())
-    problems=self.getAllProblems()
     # YUK! FIXME
     if pernode:
+      problems=self.getAllProblems()
       data2={'nodes':{},'modes':{}}
       nodes,modes={},{}
       for k,v in data:
