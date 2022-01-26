@@ -327,9 +327,17 @@ class SwifStatus():
 
   def isComplete(self):
     for status in self.getStatus():
-      if 'jobs' in status and 'succeeded' in status:
-        return status['jobs']>0 and status['jobs']==status['succeeded']
-    return False
+      tot = status.get('jobs')
+      suc = status.get('succeeded')
+      aba = status.get('abandoned')
+      if tot is not None and tot>0:
+        try:
+          if aba is None:
+            return tot == suc
+          else:
+            return tot == suc+aba
+        except TypeError:
+          return False
 
   def retryProblems(self):
     ret=[]
