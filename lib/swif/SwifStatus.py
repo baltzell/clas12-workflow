@@ -455,7 +455,7 @@ class SwifStatus():
           if tag in job['tags']:
             mode = job['tags'][tag]
         ret.add({mode:{'jobs':1}})
-        if 'status' in job and job['status']=='succeeded':
+        if job.get('job_status') == 'done':
           ret.add({mode:{'succeeded':1}})
     return ret
 
