@@ -137,15 +137,6 @@ class SwifStatus():
         return s[key]
     return None
 
-  def getTagValues(self,tag):
-    vals=[]
-    if 'jobs' in self.getDetails():
-      for job in self.getDetails()['jobs']:
-        if 'tags' in job and tag in job['tags']:
-          if job['tags'][tag] not in vals:
-            vals.append(job['tags'][tag])
-    return sorted(vals)
-
   # pull user-defined swif tags from all jobs into the global status
   def mergeTags(self):
     if 'jobs' not in self.getDetails():
@@ -207,94 +198,33 @@ class SwifStatus():
         row.append('%-30s = %s'%(k,v))
     return '\n'.join(row)
 
-  def getCurrentProblems(self):
-    ret=[]
-    for status in self.getStatus():
-      # hmm, this picked up unicode when switching to SWIF2 apparentely,
-      # This makes no sense, must've been some other change, maybe different python2 versions ...
-      # This should all go away with python3
-      if status.get(u'problem_types') is not None:
-        for p in status[u'problem_types'].split(','):
-          ret.append(p)
-      elif status.get('problem_types') is not None:
-        for p in status['problem_types'].split(','):
-          ret.append(p)
+  def getSummaryStats(self,tag):
+    ret = Stats()
+    details = copy.deepcopy(self.getDetails())
+    if 'jobs' in details:
+      for job in details['jobs']:
+        mode = 'unknown'
+        if 'tags' in job:
+          if 'phase' in job:
+            job['tags']['phase'] = job['phase']
+          if tag in job['tags']:
+            mode = job['tags'][tag]
+        ret.add({mode:{'jobs':1}})
+        if job.get('job_status') == 'done':
+          ret.add({mode:{'succeeded':1}})
     return ret
 
-  def tallyAllProblems(self):
-    data = collections.OrderedDict()
-    if 'jobs' not in self.getDetails():
-      return data
-    for job in self.getDetails()['jobs']:
-      if 'attempts' not in job:
-        continue
-      for attempt in job['attempts']:
-        if 'job_attempt_problem' not in attempt:
-          continue
-        problem,node,mode=attempt['job_attempt_problem'],'unknown','unknown'
-        node = attempt.get('slurm_nodelist')
-        if 'tags' in job and 'mode' in job['tags']:
-          mode = job['tags']['mode']
-        if problem not in data:
-          data[problem] = {'count':0,'counts':{'nodes':{},'modes':{}}}
-        if node not in data[problem]['counts']['nodes']:
-          data[problem]['counts']['nodes'][node] = 0
-        if mode not in data[problem]['counts']['modes']:
-          data[problem]['counts']['modes'][mode] = 0
-        data[problem]['count'] += 1
-        data[problem]['counts']['nodes'][node] += 1
-        data[problem]['counts']['modes'][mode] += 1
-    return data
+##############################################################################
+##############################################################################
 
-  def getAllProblems(self):
-    ret=set()
+  def getTagValues(self,tag):
+    vals=[]
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
-        if 'attempts' in job:
-          for attempt in job['attempts']:
-            if 'job_attempt_problem' in attempt:
-              ret.add(attempt.get('job_attempt_problem'))
-    return ret
-
-  def summarizeProblems(self,pernode=False):
-    ret=''
-    data=sorted(self.tallyAllProblems().items())
-    # YUK! FIXME
-    if pernode:
-      problems=self.getAllProblems()
-      data2={'nodes':{},'modes':{}}
-      nodes,modes={},{}
-      for k,v in data:
-        for node in v['counts']['nodes']:
-          if node not in nodes:
-            nodes[node]=dict(zip(problems,[0]*len(problems)))
-          nodes[node][k]+=v['counts']['nodes'][node]
-        for mode in v['counts']['modes']:
-          if mode not in modes:
-            modes[mode]=dict(zip(problems,[0]*len(problems)))
-          modes[mode][k]+=v['counts']['modes'][mode]
-      header_fmt='%12s '+(' '.join(['%20s']*len(problems)))
-      header=['Node']
-      header.extend(sorted(problems))
-      ret+=header_fmt%tuple(header)
-      fmt='%12s '+' '.join(['%20d']*len(problems))
-      for node in sorted(nodes.keys()):
-        if sum(nodes[node].values())==0:
-          continue
-        x=[node]
-        x.extend([nodes[node][k] for k in sorted(problems)])
-        ret+='\n'+fmt%tuple(x)
-      ret+='\n'+header_fmt%tuple(header)
-      ret+='\n\n'
-    for k,v in data:
-      ret+='%20s :'%k
-      for mode,count in v['counts']['modes'].items():
-        ret+=' %s:%d'%(mode,count)
-      ret+='\n'
-    ret+='\n'
-    for k,v in data:
-      ret+='%20s :  %8d\n'%(k,v['count'])
-    return ret
+        if 'tags' in job and tag in job['tags']:
+          if job['tags'][tag] not in vals:
+            vals.append(job['tags'][tag])
+    return sorted(vals)
 
   def getTagValue(self,tag):
     if not self.tagsMerged:
@@ -340,51 +270,6 @@ class SwifStatus():
             return tot == suc+aba
         except TypeError:
           return False
-
-  def retryProblems(self):
-    ret=[]
-    problems=self.getCurrentProblems()
-    ret.extend(self.modifyJobReqs(problems))
-    for problem in problems:
-      retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
-      ret.append(' '.join(retryCmd))
-      ret.append(subprocess.check_output(retryCmd))
-    return ret
-
-  def abandonProblems(self,types):
-    ret=[]
-    for problem in self.getCurrentProblems():
-      if problem not in types and 'ANY' not in types:
-        continue
-      retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
-      ret.append(retryCmd)
-      ret.append(subprocess.check_output(retryCmd))
-    return ret
-
-  def modifyJobReqs(self,problems):
-    ret=[]
-    if 'AUGER-TIMEOUT' in problems:
-      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-time','add','300m'])
-      modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
-      problems.remove('AUGER-TIMEOUT')
-      ret.append(' '.join(modifyCmd))
-      ret.append(subprocess.check_output(modifyCmd))
-    if 'AUGER-OVER_RLIMIT' in problems:
-      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-ram','add','1gb'])
-      modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
-      problems.remove('AUGER-OVER_RLIMIT')
-      ret.append(' '.join(modifyCmd))
-      ret.append(subprocess.check_output(modifyCmd))
-    return ret
-
-  def exists(self,path,tape=False):
-    ret = os.path.exists(path)
-    if tape or not ret:
-      if path.startswith('/cache/'):
-        ret = os.path.exists('/mss/'+path[7:])
-    return ret
 
   def findMissingOutputs(self,tape=False):
     ret=[]
@@ -453,30 +338,25 @@ class SwifStatus():
       ret+='No files found for run numbers:  '+','.join(runs)
     return ret
 
-  def getSummaryStats(self,tag):
-    ret = Stats()
-    details = copy.deepcopy(self.getDetails())
-    if 'jobs' in details:
-      for job in details['jobs']:
-        mode = 'unknown'
-        if 'tags' in job:
-          if 'phase' in job:
-            job['tags']['phase'] = job['phase']
-          if tag in job['tags']:
-            mode = job['tags'][tag]
-        ret.add({mode:{'jobs':1}})
-        if job.get('job_status') == 'done':
-          ret.add({mode:{'succeeded':1}})
-    return ret
+##############################################################################
+##############################################################################
 
   def getPersistentProblems(self,problem='ANY'):
     jobs=[]
     for job in self.getDetails()['jobs']:
+      # FIXME at python3.
       if 'attempts' in job:
-        # only look at the last attempt:
-        if 'problem' in job['attempts'][-1]:
-          if problem=='ANY' or job['attempts'][-1]['problem']==problem:
-            jobs.append(job)
+        last_attempt = job['attempts'][-1]
+      elif u'attempts' in job:
+        last_attempt = job[u'attempts'][-1]
+      else:
+        continue
+      if 'job_attempt_problem' in last_attempt:
+        if problem=='ANY' or last_attempt['job_attempt_problem']==problem:
+          jobs.append(job)
+      elif u'job_attempt_problem' in last_attempt:
+        if problem=='ANY' or str(last_attempt[u'job_attempt_problem'])==problem:
+          jobs.append(job)
     return jobs
 
   def getPersistentProblemInputs(self,problem='ANY'):
@@ -498,16 +378,157 @@ class SwifStatus():
 
   def getPersistentProblemLogs(self,logdir=None):
     ret = []
-    if logdir is None:
+    if logdir is None or logdir is False:
       logdir = '/farm_out/%s/%s'%(getpass.getuser(),self.name)
     for job in self.getPersistentProblems():
-      if 'name' in job:
-        ret.extend(glob.glob('%s/%s*'%(logdir,job['name'])))
+      if 'job_name' in job:
+        ret.extend(glob.glob('%s/%s*'%(logdir,job['job_name'])))
     return ret
 
-  def tailPersistentProblemLogs(self,logdir=None):
+  def tailPersistentProblemLogs(self,logdir=None,nlines=10):
     for x in self.getPersistentProblemLogs(logdir):
-      FileUtil.tail(x,20)
+      print('##########################################################')
+      print('  '+x)
+      print('##########################################################')
+      print('\n'.join(FileUtil.tail(x,nlines)))
+
+  def getCurrentProblems(self):
+    ret=[]
+    for status in self.getStatus():
+      # hmm, this picked up unicode when switching to SWIF2 apparentely,
+      # This makes no sense, must've been some other change, maybe different python2 versions ...
+      # This should all go away with python3
+      if status.get(u'problem_types') is not None:
+        for p in status[u'problem_types'].split(','):
+          ret.append(p)
+      elif status.get('problem_types') is not None:
+        for p in status['problem_types'].split(','):
+          ret.append(p)
+    return ret
+
+  def tallyAllProblems(self):
+    data = collections.OrderedDict()
+    if 'jobs' not in self.getDetails():
+      return data
+    for job in self.getDetails()['jobs']:
+      if 'attempts' not in job:
+        continue
+      for attempt in job['attempts']:
+        if 'job_attempt_problem' not in attempt:
+          continue
+        problem,node,mode=attempt['job_attempt_problem'],'unknown','unknown'
+        node = attempt.get('slurm_nodelist')
+        if 'tags' in job and 'mode' in job['tags']:
+          mode = job['tags']['mode']
+        if problem not in data:
+          data[problem] = {'count':0,'counts':{'nodes':{},'modes':{}}}
+        if node not in data[problem]['counts']['nodes']:
+          data[problem]['counts']['nodes'][node] = 0
+        if mode not in data[problem]['counts']['modes']:
+          data[problem]['counts']['modes'][mode] = 0
+        data[problem]['count'] += 1
+        data[problem]['counts']['nodes'][node] += 1
+        data[problem]['counts']['modes'][mode] += 1
+    return data
+
+  def getAllProblems(self):
+    ret=set()
+    if 'jobs' in self.getDetails():
+      for job in self.getDetails()['jobs']:
+        if 'attempts' in job:
+          for attempt in job['attempts']:
+            if 'job_attempt_problem' in attempt:
+              ret.add(attempt.get('job_attempt_problem'))
+    return ret
+
+  def tallyNodeProblems(self,data):
+    ret=''
+    problems=self.getAllProblems()
+    data2={'nodes':{},'modes':{}}
+    nodes,modes={},{}
+    for k,v in data:
+      for node in v['counts']['nodes']:
+        if node not in nodes:
+          nodes[node]=dict(zip(problems,[0]*len(problems)))
+        nodes[node][k]+=v['counts']['nodes'][node]
+      for mode in v['counts']['modes']:
+        if mode not in modes:
+          modes[mode]=dict(zip(problems,[0]*len(problems)))
+        modes[mode][k]+=v['counts']['modes'][mode]
+    header_fmt='%12s '+(' '.join(['%20s']*len(problems)))
+    header=['Node']
+    header.extend(sorted(problems))
+    ret+=header_fmt%tuple(header)
+    fmt='%12s '+' '.join(['%20d']*len(problems))
+    for node in sorted(nodes.keys()):
+      if sum(nodes[node].values())==0:
+        continue
+      x=[node]
+      x.extend([nodes[node][k] for k in sorted(problems)])
+      ret+='\n'+fmt%tuple(x)
+    ret+='\n'+header_fmt%tuple(header)
+    ret+='\n\n'
+    return ret
+
+  def summarizeProblems(self,pernode=False):
+    ret=''
+    data=sorted(self.tallyAllProblems().items())
+    if pernode:
+      ret += self.tallyNodeProblems(data)
+    for k,v in data:
+      ret+='%20s :'%k
+      for mode,count in v['counts']['modes'].items():
+        ret+=' %s:%d'%(mode,count)
+      ret+='\n'
+    ret+='\n'
+    for k,v in data:
+      ret+='%20s :  %8d\n'%(k,v['count'])
+    return ret
+
+  def retryProblems(self):
+    ret=[]
+    problems=self.getCurrentProblems()
+    ret.extend(self.modifyJobReqs(problems))
+    for problem in problems:
+      retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
+      ret.append(' '.join(retryCmd))
+      ret.append(subprocess.check_output(retryCmd))
+    return ret
+
+  def abandonProblems(self,types):
+    ret=[]
+    for problem in self.getCurrentProblems():
+      if problem not in types and 'ANY' not in types:
+        continue
+      retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
+      ret.append(retryCmd)
+      ret.append(subprocess.check_output(retryCmd))
+    return ret
+
+  def modifyJobReqs(self,problems):
+    ret=[]
+    if 'AUGER-TIMEOUT' in problems:
+      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
+      modifyCmd.extend(['-time','add','300m'])
+      modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
+      problems.remove('AUGER-TIMEOUT')
+      ret.append(' '.join(modifyCmd))
+      ret.append(subprocess.check_output(modifyCmd))
+    if 'AUGER-OVER_RLIMIT' in problems:
+      modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
+      modifyCmd.extend(['-ram','add','1gb'])
+      modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
+      problems.remove('AUGER-OVER_RLIMIT')
+      ret.append(' '.join(modifyCmd))
+      ret.append(subprocess.check_output(modifyCmd))
+    return ret
+
+  def exists(self,path,tape=False):
+    ret = os.path.exists(path)
+    if tape or not ret:
+      if path.startswith('/cache/'):
+        ret = os.path.exists('/mss/'+path[7:])
+    return ret
 
 # FIXME:  update for SWIF2
 #SWIF_JSON_KEYS=[

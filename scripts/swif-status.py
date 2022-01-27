@@ -71,12 +71,11 @@ def processWorkflow(workflow,args):
     return
 
   # print contents of logs from jobs problems:
-  if args.problemLogs is not False:
-    for f in status.getPersistentProblemLogs(args.problemLogs):
-      print(f)
-      with open(f,'r') as f:
-        for line in f.readlines():
-          print(line.strip())
+  if args.problemLogs is not False or args.problemLogsTail is not False:
+    if args.problemLogsTail > 0:
+      status.tailPersistentProblemLogs(args.problemLogs,args.problemLogsTail)
+    else:
+      print('\n'.join(status.getPersistentProblemLogs(args.problemLogs)))
     return
 
   # print inputs of jobs with problems:
@@ -163,7 +162,8 @@ if __name__ == '__main__':
   cli.add_argument('--problemStats', help='show summary of all problems during the workflow', default=False,action='store_true')
   cli.add_argument('--problemNodes', help='same as --problemStats but per node', default=False,action='store_true')
   cli.add_argument('--problemInputs',help='generate list of input files for jobs with problems', metavar='PROBLEM',nargs='?',const='ANY',default=False)
-  cli.add_argument('--problemLogs',  help='directory of log files', metavar='PATH',nargs='?',const=None,default=False)
+  cli.add_argument('--problemLogs',  help='directory to print names of log files with problems', metavar='PATH',nargs='?',const=None,default=False)
+  cli.add_argument('--problemLogsTail', help='number of lines to tail from the problem logs', metavar='#',nargs='?',const=10,default=False)
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')

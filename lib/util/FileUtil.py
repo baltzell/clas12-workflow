@@ -1,17 +1,10 @@
 import os,gzip
 
-def fopen(path):
-  f = None
-  if path is not None:
-    if os.path.isfile(path):
-      if path.endswith('.gz'):
-        f = gzip.open(path, errors='replace')
-      else:
-        f = open(path, errors='replace')
-  return None
-
 def head(path, max_lines=0):
-  f = fopen(path)
+  if path.endswith('.gz'):
+    f = gzip.open(path, errors='replace')
+  else:
+    f = open(path)#, errors='replace')
   if f is not None:
     n_lines = 0
     for line in f.readlines():
@@ -22,7 +15,10 @@ def head(path, max_lines=0):
     f.close()
 
 def tail(path, max_lines=0):
-  f = fopen(path)
+  if path.endswith('.gz'):
+    f = gzip.open(path, errors='replace')
+  else:
+    f = open(path)#, errors='replace')
   if f is not None:
     n_lines = 0
     f.seek(0, os.SEEK_END)
