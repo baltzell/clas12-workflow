@@ -146,9 +146,9 @@ class ClaraLog(JobSpecs):
           sys.exit('Invalid threads: %d!=%d'%(threads,self.threads))
     elif len(cols)==4:
       if x.find('shutdown DPE')>0:
-        print(x)
+        #print(x)
         self.endtime=self.stringToTimestamp(x)
-        print(self.endtime)
+        #print(self.endtime)
       elif x.find('Input directory')==0:
         self.inputdir=cols[3]
       elif x.find('Output directory')==0:

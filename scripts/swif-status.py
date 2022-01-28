@@ -163,7 +163,7 @@ if __name__ == '__main__':
   cli.add_argument('--problemNodes', help='same as --problemStats but per node', default=False,action='store_true')
   cli.add_argument('--problemInputs',help='generate list of input files for jobs with problems', metavar='PROBLEM',nargs='?',const='ANY',default=False)
   cli.add_argument('--problemLogs',  help='directory to print names of log files with problems', metavar='PATH',nargs='?',const=None,default=False)
-  cli.add_argument('--problemLogsTail', help='number of lines to tail from the problem logs', metavar='#',nargs='?',const=10,default=False)
+  cli.add_argument('--problemLogsTail', help='number of lines to tail from the problem logs', metavar='#',type=str,nargs='?',const=10,default=False)
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
