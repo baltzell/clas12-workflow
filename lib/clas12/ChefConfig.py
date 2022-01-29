@@ -13,7 +13,7 @@ _VALIDREMOTES=['/mss','/volatile','/cache']
 CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
-'threads' : [16, 20, 24, 32],
+'threads' : [0, 16, 20, 24, 32],
 'node'    : ['general','centos77','centos72','farm19','farm18','farm16','farm14','farm13','qcd12s','amd','xeon']
 }
 
