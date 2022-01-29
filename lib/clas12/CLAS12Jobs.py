@@ -132,7 +132,10 @@ class ReconJob(CLAS12Job):
     self.setDisk('20GB')
     self.nfiles = 0
   def setRequestIncrements(self,filename):
-    ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
+    if self.cfg['threads'] == 0:
+      ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/32
+    else:
+      ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
     ReconJob.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
     ReconJob.BYTES_INC += ChefUtil.DEFAULT_DECODED_BYTES
   def addInputData(self,filename):
