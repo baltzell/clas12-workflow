@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ulimit -u 49152
+
 export CLARA_USER_DATA=.
 export CLAS12DIR=${CLARA_HOME}/plugins/clas12
 export PATH=${PATH}:$CLAS12DIR/bin
