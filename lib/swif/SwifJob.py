@@ -295,6 +295,7 @@ class SwifJob:
       jsonData['ram_bytes']=self.getBytes(self.ram)
     else:
       jsonData['exclusive']=True
+      jsonData['ram_bytes']=0
     jsonData['disk_bytes']=self.getBytes(self.disk)
     jsonData['time_secs']=self.getSeconds(self.time)
     jsonData['command']=[self._createCommand()]
