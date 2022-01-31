@@ -115,8 +115,8 @@ class DecodingJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
-  THRD_MEM_REQ={0:0,   16:12, 20:16, 24:20, 32:28}
-  THRD_MEM_LIM={0:256, 16:10, 20:14, 24:18, 32:26}
+  THRD_MEM_REQ={0:0, 16:12, 20:16, 24:20, 32:28}
+  THRD_MEM_LIM={0:0, 16:10, 20:14, 24:18, 32:26}
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
@@ -124,7 +124,9 @@ class ReconJob(CLAS12Job):
     # $COATJAVA has to be set for postprocessing to find bankdefs:
     if not cfg['nopostproc']:
       self.addEnv('COATJAVA',cfg['clara']+'/plugins/clas12')
-    self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
+    # only limit the memory for non-exclusive jobs:
+    if ReconJob.THRD_MEM_LIM[cfg['threads']] > 0:
+      self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
     self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
