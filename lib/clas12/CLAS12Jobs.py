@@ -133,7 +133,7 @@ class ReconJob(CLAS12Job):
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     if self.cfg['threads'] == 0:
-      ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/32
+      ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/48
     else:
       ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
     ReconJob.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
