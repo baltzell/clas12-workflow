@@ -145,18 +145,19 @@ def getRunList(data):
     if os.access(data,os.R_OK):
       _LOGGER.info('Reading run numbers from file: '+data)
       for line in open(data,'r').readlines():
-        run=line.strip().split()
         # ignore comment lines starting with a "#":
-        if line.strip().startswith("#"):
+        if line.startswith("#"):
           continue
         # ignore empty lines:
-        if len(run)<1:
+        if len(line.strip())<1:
           continue
+        # first column is the run:
+        run = line.strip().split().pop(0).strip()
         # otherwise first column must be the number:
         try:
-          runs.append(int(run[0]))
+          runs.append(int(run))
         except:
-          _LOGGER.critical('Run numbers must be integers:  %s (%s)'%(fileName,line))
+          _LOGGER.critical('Run numbers must be integers:  %s (%s)'%(data,line))
           sys.exit()
       _LOGGER.info('Read run numbers:  '+','.join([str(x) for x in runs]))
     # else it's a string run list:
@@ -212,5 +213,6 @@ def hipoIntegrityCheck(filename):
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')
   logger=logging.getLogger(__name__)
-  print(countHipoEvents(sys.argv[1]))
+  print(getRunList(sys.argv[1]))
+  #print(countHipoEvents(sys.argv[1]))
 
