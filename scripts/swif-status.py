@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-import os,sys,subprocess,argparse,logging
+import os,re,sys,subprocess,argparse,logging
 import Matcher
 import SwifStatus
 import CLAS12SwifStatus
@@ -33,8 +33,9 @@ def processWorkflow(workflow,args):
     SwifStatus.deleteWorkflow(workflow)
     return
 
-  if args.deleteComplete and status.isComplete():
-    SwifStatus.deleteWorkflow(workflow)
+  if args.deleteComplete:
+    if status.isComplete():
+      SwifStatus.deleteWorkflow(workflow)
     return
 
   if args.listDirs:
@@ -141,10 +142,10 @@ if __name__ == '__main__':
 
   df='\n(default=%(default)s)'
 
-  epilog = 'Note, to pass argument values that start with a dash, use the "=" syntax, e.g. "swif-status.py -m=-123-".'
+  epilog = 'Note, to pass argument values that start with a dash, use the "=" syntax, e.g. "swif-status.py --matchAny=-123-".'
   cli = argparse.ArgumentParser('Do SWIF stuff.',epilog=epilog)
   cli.add_argument('--list',         help='list workflows',    action='store_true',default=False)
-  cli.add_argument('--workflow',     help='workflow name else all workflows (repeatable)', metavar='NAME', action='append',default=[])
+  cli.add_argument('--workflow',     help='regex of workflow names, else all workflows (repeatable)', metavar='NAME', action='append',default=[])
   cli.add_argument('--retry',        help='retry problem jobs',action='store_true',default=False)
   cli.add_argument('--details',      help='show all job details',  action='store_true',default=False)
   cli.add_argument('--quiet',        help='do not print retries (for cron jobs)', action='store_true',default=False)
@@ -197,8 +198,10 @@ if __name__ == '__main__':
     if len(args.workflow)==0:
       if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
         workflows.append(wf)
-    elif wf in args.workflow:
-      workflows.append(wf)
+    else:
+      for x in args.workflow:
+        if re.match(x,wf) is not None:
+          workflows.append(wf)
 
   # require user input before deleting workflows:
   if args.delete and len(workflows)>0:
