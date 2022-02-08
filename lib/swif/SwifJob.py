@@ -200,13 +200,16 @@ class SwifJob:
 
   # copy Auger symlinked inputs:
   def _getCopyInputsCmd(self):
-    cmd='ls -l'
-    for item in self.inputs:
-      if item['remote'].find('mss:/mss')==0:
-        remote = item['remote'].replace('mss:/mss','/cache')
-        cmd += ' && rm -f %s'%item['local']
-        cmd += ' && /bin/dd bs=1M if=%s of=%s'%(remote,item['local'])
-    return cmd
+    # SWIF1/Auger used to do symlinks in some cases, instead of a copy,
+    # and here we overrode that.  No longer relevant but left commented out for now.
+    #cmd='ls -l'
+    #for item in self.inputs:
+    #  if item['remote'].find('mss:/mss')==0:
+    #    remote = item['remote'].replace('mss:/mss','/cache')
+    #    cmd += ' && rm -f %s'%item['local']
+    #    cmd += ' && /bin/dd bs=1M if=%s of=%s'%(remote,item['local'])
+    #return cmd
+    return ''
 
   # rsync non-Auger outputs:
   def _getCopyOutputsCmd(self):
