@@ -13,6 +13,10 @@ class CLAS12Job(SwifJob):
     self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'})
     if cfg['ccdbsqlite'] is None:
       self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
+    elif cfg['ccdbsqlite'].startswith('/cvmfs'):
+      # SWIF2 only allows staging from /volatile and /cache
+      # So here we drop the staging for now:
+      self.addEnv('CCDB_CONNECTION','sqlite:///'+cfg['ccdbsqlite'])
     else:
       self.addEnv('CCDB_CONNECTION','sqlite:///clas12.sqlite')
       self.addInput('clas12.sqlite',cfg['ccdbsqlite'])
