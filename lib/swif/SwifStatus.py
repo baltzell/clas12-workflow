@@ -39,9 +39,10 @@ SWIF_JSON_KEYS=[
 
 # FIXME:  update for SWIF2
 SWIF_PROBLEMS=[
-'SLURM_FAILED',
+'SLURM_FAILED',  # this one can happen for many reasons, including internal job failure and invalid account/partition
 'SITE_LAUNCH_FAIL',
-'SLURM_NODE_FAIL'
+'SLURM_NODE_FAIL',
+'SLURM_PREP_FAIL' # this one can happen if disk request is smaller than inputs
 ]
 #'SWIF-MISSING-OUTPUT',
 #'SWIF-USER-NON-ZERO',
