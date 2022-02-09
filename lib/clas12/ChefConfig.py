@@ -205,6 +205,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
+    cli.add_argument('--hattawy', help='rigorous, slow disk request calculation', action='store_true', default=False)
     cli.add_argument('--version',action='version',version='clas12-workflow/0.99')
 
     return cli

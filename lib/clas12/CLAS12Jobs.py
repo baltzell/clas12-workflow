@@ -134,19 +134,22 @@ class ReconJob(CLAS12Job):
     self.setDisk('20GB')
     self.nfiles = 0
   def setRequestIncrements(self,filename):
-    if self.cfg['threads'] == 0:
-      ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/48
-    else:
-      ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
-    ReconJob.BYTES_INC = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
-    ReconJob.BYTES_INC += ChefUtil.DEFAULT_DECODED_BYTES
+    if ReconJob.HOURS_INC is None:
+      if self.cfg['threads'] == 0:
+        ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/48
+      else:
+        ReconJob.HOURS_INC = ChefUtil.getReconSeconds(filename)/60/60/self.cfg['threads']
+    tmp = ChefUtil.getReconFileBytes(self.cfg['reconYaml'],filename)
+    tmp += ChefUtil.DEFAULT_DECODED_BYTES
+    if ReconJob.BYTES_INC is None or tmp>ReconJob.BYTES_INC:
+      ReconJob.BYTES_INC = tmp
   def addInputData(self,filename):
     CLAS12Job.addInputData(self,filename)
     basename=filename.split('/').pop()
     outDir='%s/%s/recon/%s/'%(self.cfg['outDir'],self.cfg['schema'],self.getTag('run'))
     CLAS12Job.addOutputData(self,'rec_'+basename,outDir)
     # here we choose request increment based on the first file:
-    if ReconJob.HOURS_INC is None or ReconJob.BYTES_INC is None:
+    if self.cfg['hattawy'] or ReconJob.HOURS_INC is None or ReconJob.BYTES_INC is None:
       self.setRequestIncrements(filename)
     # and now update the resource requests when every file is added:
     self.nfiles += 1
