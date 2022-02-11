@@ -34,7 +34,8 @@ SWIF_JSON_KEYS=[
 'update_ts',
 'create_ts',
 'summary_ts',
-'xfer_mb_from_tape'
+'xfer_mb_from_tape',
+'workflow_suspended'
 ]
 
 # FIXME:  update for SWIF2
