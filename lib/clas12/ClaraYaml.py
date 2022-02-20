@@ -1,4 +1,4 @@
-import re,sys,yaml,glob,logging,argparse
+import re,sys,yaml,glob,datetime,logging,argparse
 
 import ccdb
 import JarUtil
@@ -174,7 +174,7 @@ class ClaraYaml:
       _LOGGER.critical('Space found in \''+service['name']+'\' in YAML: '+self.filename)
       return False
     if not self.findClass(service['class']):
-      _LOGGER.critical('Could not find class '+service['class']+' in YAML: '+self.filename)
+      _LOGGER.critical('Could not find class '+service['class']+' specified in YAML: '+self.filename)
       return False
     self.names.append(service['name'])
     return True
@@ -187,16 +187,32 @@ class ClaraYaml:
       if variation == v.name.strip():
         return True
     self.ccdb.disconnect()
-    _LOGGER.critical('Could not find variation '+variation+' in CCDB in YAML: '+self.filename)
+    _LOGGER.critical('Could not find CCDB variation '+variation+' as specified in YAML: '+self.filename)
     return False
 
   def checkTimestamp(self,timestamp):
+    # check the basic format is valid:
     m = re.match('\d\d/\d\d/\d\d\d\d$',timestamp)
     if m is None:
       m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',timestamp)
     if m is None:
       _LOGGER.critical('Invalid timestamp format '+timestamp+' in YAML: '+self.filename)
+      _LOGGER.critical('Expected either MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
       return False
+    # check it's really a possible timestamp:
+    try:
+      if timestamp.find('-') < 0:
+        t = datetime.datetime.strptime(timestamp,'%m/%d/%Y')
+      else:
+        t = datetime.datetime.strptime(timestamp,'%m/%d/%Y-%H:%M:%S')
+    except ValueError:
+      _LOGGER.critical('Impossible timestamp %s in YAML: %s'%(timestamp,self.filename))
+      _LOGGER.critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
+      return False
+    # warn of possible day/month swap:
+    if t.day < 13:
+      _LOGGER.warning('Possible day/month swap in timestamp %s in YAML: %s'%(timestamp,self.filename))
+      _LOGGER.warning('Expected format is MM/DD/YYYY')
     return True
 
   def checkConfiguration(self,cfg):
