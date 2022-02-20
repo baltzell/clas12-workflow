@@ -1,4 +1,4 @@
-import os,re,sys,yaml,glob,logging
+import re,sys,yaml,glob,logging,argparse
 
 import ccdb
 import JarUtil
@@ -18,8 +18,8 @@ _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 # there's spaces in any names
 #
 
-def checkIntegrity(yamlfile,clara):
-  return ClaraYaml(yamlfile,clara).checkIntegrity()
+def checkIntegrity(yamlfile,clara,ccdb_sqlite_file=None):
+  return ClaraYaml(yamlfile,clara,ccdb_sqlite_file).checkIntegrity()
 
 def getSchemaName(yamlfile):
   return ClaraYaml(yamlfile,None).getSchemaName()
@@ -32,9 +32,13 @@ def getTrainIndices(yamlfile):
 
 class ClaraYaml:
 
-  def __init__(self,yamlfile,clara):
+  def __init__(self,yamlfile,clara,ccdb_sqlite_file=None):
     self.filename = yamlfile
     self.clara = clara
+    if ccdb_sqlite_file is None:
+      self.ccdb_connection = _CCDBURI
+    else:
+      self.ccdb_connection = 'sqlite:///'+ccdb_sqlite_file
     self.ccdb = None
     self.jars = None
     self.names = []
@@ -178,7 +182,7 @@ class ClaraYaml:
   def checkVariation(self,variation):
     if self.ccdb is None:
       self.ccdb = ccdb.AlchemyProvider()
-    self.ccdb.connect(_CCDBURI)
+    self.ccdb.connect(self.ccdb_connection)
     for v in self.ccdb.get_variations():
       if variation == v.name.strip():
         return True
@@ -246,16 +250,12 @@ class ClaraYaml:
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
-  usage = 'Usage:  ClaraYaml yamlfile $CLARA_HOME'
-  if len(sys.argv) < 3:
-    print(usage)
-  elif not os.path.isdir(sys.argv[2]):
-    print('Missing CLARA installation:  '+sys.argv[2])
-    print(usage)
-  elif not os.path.isfile(sys.argv[1]):
-    print('Missing YAML file:  '+sys.argv[2])
-    print(usage)
-  else:
-    cy = ClaraYaml(sys.argv[1],sys.argv[2])
-    cy.checkIntegrity()
+  cli = argparse.ArgumentParser('Check integrity of a CLARA YAML file.')
+  cli.add_argument('--clara',help='path to clara installation',metavar='PATH',type=str,default='/group/clas12/packages/clara/5.0.2_7.1.0')
+  cli.add_argument('--ccdbsqlite',help='CCDB sqlite file to use',metavar='FILE',type=str,default=None)
+  cli.add_argument('yaml',help='YAML file to check',type=str)
+  args = cli.parse_args(sys.argv[1:])
+  if not checkIntegrity(args.yaml,args.clara,args.ccdbsqlite):
+    sys.exit(1)
+
 
