@@ -3,6 +3,7 @@ import re,os,sys,logging,getpass
 import RunFileUtil
 import ChefUtil
 from SwifJob import SwifJob
+from SwifStatus import SWIF
 
 _LOGGER=logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ class EvioTriggerFilterJob(HPSJob):
       trigger = triggers[abb]
       basename = outfile.replace('hps_','hps_%s_'%abb)
       cmd += '$exe -T %s -o out_%s.evio ./*.evio* ;'%(trigger,abb)
-      cmd += '[ -e out_%s.evio ] && /site/bin/swif outfile out_%s.evio file:%s;' % (abb,abb,'%s/%s/%.6d/%s'%(outdir,abb,r,basename))
+      cmd += '[ -e out_%s.evio ] && %s outfile out_%s.evio file:%s;' % (abb,SWIF,abb,'%s/%s/%.6d/%s'%(outdir,abb,r,basename))
       self.outputData.append('%s/%s/%.6d/%s'%(outdir,abb,r,basename))
     cmd += 'ls -lhtr ; '
     self.addTag('run','%.6d'%rf1.runNumber)
