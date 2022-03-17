@@ -84,6 +84,10 @@ class ClaraYaml:
     for service in self.yaml['services']:
       if not self.checkService(service):
         return False
+    for x in ['reader','writer']:
+      if x in self.yaml['io-services']:
+        if not self.checkService(self.yaml['io-services'][x]):
+          return False
     if not self.checkConfiguration(self.yaml):
       return False
     for i in self.getTrainIndices():
