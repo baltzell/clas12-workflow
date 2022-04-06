@@ -247,10 +247,10 @@ class SwifJob:
     cmd+='echo $PWD ; pwd ;'
     cmd+='expr $PWD : ^/scratch/slurm'
     for xx in list(self.env.keys()):
-      if self.shell.endswith('tcsh'):
-        cmd+=' && setenv '+xx+' "'+self.env[xx]+'"'
+      if self.shell.endswith('csh'):
+        cmd+=' && setenv %s "%s"'%(xx,self.env[xx])
       else:
-        cmd+=' && export '+xx+'="'+self.env[xx]+'"'
+        cmd+=' && export %s="%s"'%(xx,self.env[xx])
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
     d=[]
