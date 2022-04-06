@@ -38,23 +38,14 @@ SWIF_JSON_KEYS=[
 'workflow_suspended'
 ]
 
-# FIXME:  update for SWIF2
 SWIF_PROBLEMS=[
-'SLURM_FAILED',  # this one can happen for many reasons, including internal job failure and invalid account/partition
-'SITE_LAUNCH_FAIL',
-'SLURM_NODE_FAIL',
-'SLURM_PREP_FAIL' # this one can happen if disk request is smaller than inputs
+'SLURM_FAILED',     # the job returned non-zero exit code, swif itself returns 13 in some cases
+'SITE_LAUNCH_FAIL', # problem with the submission, e.g. sbatch failed due to invalid SLURM partition/constraint
+'SLURM_NODE_FAIL',  # system problem on the particular node on which the job landed
+'SLURM_PREP_FAIL'   # e.g. disk request is smaller than inputs
 ]
 #'SWIF-MISSING-OUTPUT',
-#'SWIF-USER-NON-ZERO',
 #'SWIF-SYSTEM-ERROR',
-#'AUGER-FAILED',
-#'AUGER-OUTPUT',
-#'AUGER-CANCELLED',
-#'AUGER-TIMEOUT',
-#'AUGER-SUBMIT',
-#'AUGER-OUTPUT-FAIL',
-#'AUGER-INPUT-FAIL'
 
 def getWorkflowNames():
   for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
