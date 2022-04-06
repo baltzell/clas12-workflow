@@ -2,6 +2,9 @@
 
 ulimit -u 49152
 
+export JAVA_HOME=${CLARA_HOME}/jre/linux-64/jre
+export PATH=${JAVA_HOME}/bin:${PATH}
+
 export CLARA_USER_DATA=.
 export CLAS12DIR=${CLARA_HOME}/plugins/clas12
 export PATH=${PATH}:$CLAS12DIR/bin
