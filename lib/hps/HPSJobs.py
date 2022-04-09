@@ -12,7 +12,7 @@ class HPSJob(SwifJob):
     SwifJob.__init__(self,workflow.name)
     self.cfg = cfg
 #    self.copyInputs = False
-    self.project = 'hps'
+    self.account = 'hps'
     self.shell = '/bin/bash'
     if self.cfg['logDir'] is None:
       self.setLogDir('/farm_out/'+getpass.getuser()+'/'+workflow.name)
