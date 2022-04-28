@@ -389,7 +389,8 @@ class ChefConfig(collections.OrderedDict):
           self['clara']=os.path.normpath(path)
         self['coatjava']=os.path.normpath(path+'/plugins/clas12')
       else:
-        self.cli.error('Coatjava version not found: '+self['coatjava'])
+        self.cli.error('Coatjava version not found: '+self['coatjava']+'\n'+
+            'Avaliable coatjava versions:  '+' '.join(reversed(sorted(claras.keys()))))
 
     # use coatjava from clara if coatjava isn't defined:
     if self['coatjava'] is None:

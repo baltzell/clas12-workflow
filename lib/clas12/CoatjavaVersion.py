@@ -3,7 +3,7 @@ import re,os,sys,glob,logging
 _LOGGER=logging.getLogger(__name__)
 
 CLAS12_PACKAGES_DIR='/group/clas12/packages/'
-CLARA_VERSION='4.3.12'
+CLARA_VERSIONS=['5.0.2','4.3.12'] # ordered by preference
 SEARCH_PATHS = ['plugins/clas12/lib/clas','lib/clas','coatjava/lib/clas']
 
 class CoatjavaVersion():
@@ -84,16 +84,18 @@ class CoatjavaVersion():
 
 def getCoatjavaVersions():
   cjvs={}
-  for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+CLARA_VERSION+'_*'):
-    if clara.find('nightly')>=0:
-      continue
-    clara=os.path.normpath(clara)
-    if os.path.isdir(clara):
-      try:
-        cjv=CoatjavaVersion(clara)
-        cjvs[cjv.version]={'path':clara, 'version':cjv}
-      except:
-        pass
+  for clara in CLARA_VERSIONS:
+    for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+clara+'_*'):
+      if clara.find('nightly')>=0:
+        continue
+      clara=os.path.normpath(clara)
+      if os.path.isdir(clara):
+        try:
+          cjv=CoatjavaVersion(clara)
+          if cjv.version not in cjvs:
+            cjvs[cjv.version]={'path':clara, 'version':cjv}
+        except:
+          pass
   return cjvs
 
 if __name__ == '__main__':
