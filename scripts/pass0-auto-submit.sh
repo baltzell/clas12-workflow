@@ -4,13 +4,47 @@ d=`/usr/bin/readlink -f $0`
 d=`/usr/bin/dirname $d`/..
 export PYTHONPATH=${d}/lib/swif:${d}/lib/util:${d}/lib/clas12:${d}/lib/ccdb
 
+USAGE () {
+    echo -e "\nUsage:  pass0-auto-submit.sh [-d] TAG WORKDIR INPUTDIR\n"
+    echo -e "\t-d       dry run, do not submit"
+    echo -e "\tTAG      tag for workflow generator (--tag)"
+    echo -e "\tWORKDIR  directory containing config.json and blacklist.txt"
+    echo -e "\tINPUTDIR input directory for workflow generator (--inputs)\n"
+}
+
+DRYRUN=0
+while getopts "dh" opt
+do
+    case "${opt}" in
+        d)
+            DRYRUN=1
+            ;;
+        h)
+            USAGE
+            exit
+            ;;
+        *)
+            USAGE
+            exit
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ $# -ne 3 ] && USAGE && exit 1
+
 tag=$1
 workdir=$2
 inputdir=$3
+
 config=$workdir/config.json
 blacklist=$workdir/blacklist.txt
 
-[ $# -ne 3 ] && echo Usage:  pass0-auto-submit.sh workdir inputdir && exit 1
+if ! [ -e $blacklist ]
+then
+    touch $blacklist
+fi
+
 ! [ -d $workdir ] && echo Nonexistent work directory:  $workdir && exit 2
 ! [ -w $workdir ] && echo Error with write access:  $workdir && exit 3
 ! [ -d $inputdir ] && echo Nonexistent input directory:  $inputdir && exit 4
@@ -28,7 +62,12 @@ find $inputdir -type f -name '*.evio.0004?' -mmin +90 | grep -v -f $blacklist >>
 
 # submit the jobs:
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../env.sh
-cmd="clas12-workflow.py --config $config --inputs $filelist --tag $tag --submit"
+if [ $DRYRUN -eq 0 ]
+then
+    cmd="clas12-workflow.py --config $config --inputs $filelist --tag $tag --submit"
+else
+    cmd="clas12-workflow.py --config $config --inputs $filelist --tag $tag"
+fi
 echo $cmd >> $logfile
 $cmd >> $logfile 2>&1
 [ $? -ne 0 ] && echo !!!!!!!!!ERROR GENERATING WORKFLOW!!!!!!!! && cat $logfile && exit 7
