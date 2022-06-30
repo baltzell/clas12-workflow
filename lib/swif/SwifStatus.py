@@ -42,7 +42,7 @@ SWIF_PROBLEMS=[
 'SLURM_FAILED',     # the job returned non-zero exit code, swif itself returns 13 in some cases
 'SITE_LAUNCH_FAIL', # problem with the submission, e.g. sbatch failed due to invalid SLURM partition/constraint
 'SLURM_NODE_FAIL',  # system problem on the particular node on which the job landed
-'SLURM_PREP_FAIL'   # e.g. disk request is smaller than inputs
+'SITE_PREP_FAIL'   # e.g. disk request is smaller than inputs
 ]
 #'SWIF-MISSING-OUTPUT',
 #'SWIF-SYSTEM-ERROR',
