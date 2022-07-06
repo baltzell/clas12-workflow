@@ -24,7 +24,7 @@ if CFG['logDir'] is None:
   CFG['logDir'] = '/farm_out/'+getpass.getuser()
 
 # override default project for priority accounts:
-if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','hps']:
+if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','clas12-5','clas12-6','clas12-7','clas12-8','clas12-9','hps']:
   CFG['project']='hallb-pro'
 
 def compactModel(model):
@@ -62,12 +62,12 @@ class ChefConfig(collections.OrderedDict):
       self._verifyConfig()
       self._storeYamls()
       if self.args.lowpriority:
-        CFG['project']='clas12'
+        self['project']='clas12'
       if self.args.show:
         c=copy.deepcopy(collections.OrderedDict(self))
         c.pop('ignored')
         print((json.dumps(c,**_JSONFORMAT)))
-        sys.exit()
+        sys.exit(0)
 
   def diff(self,cfg):
     ret = []
