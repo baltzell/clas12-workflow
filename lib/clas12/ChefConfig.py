@@ -1,4 +1,4 @@
-import os,sys,glob,json,copy,logging,getpass,argparse,traceback,collections
+import os,re,sys,glob,json,copy,logging,getpass,argparse,traceback,collections
 import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
@@ -258,6 +258,9 @@ class ChefConfig(collections.OrderedDict):
         self[key]=val
 
   def _verifyConfig(self):
+
+    if re.fullmatch('^[a-zA-Z0-9.]+$',self['tag']) is None:
+      self.cli.error('only letters, numbers, and periods are allowed in "--tag"')
 
     if self['model'] is None:
       self.cli.error('"model" must be defined.')
