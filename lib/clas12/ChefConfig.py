@@ -260,7 +260,7 @@ class ChefConfig(collections.OrderedDict):
   def _verifyConfig(self):
 
     if re.match('^[a-zA-Z0-9._]+$',self['tag']) is None:
-      self.cli.error('only letters, numbers, and periods are allowed in "--tag"')
+      self.cli.error('only letters, numbers, periods, and underscords are allowed in "--tag"')
 
     if self['model'] is None:
       self.cli.error('"model" must be defined.')
