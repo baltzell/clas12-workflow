@@ -57,7 +57,7 @@ logfile=$(mktemp $workdir/logs/log_$timestamp.XXXXXX)
 
 # find files to process:
 echo FILELIST: $filelist >> $logfile
-find $inputdir -type f -name '*.evio.0004?' -mmin +150 | grep -v -f $blacklist >> $filelist
+find $inputdir -type f -name '*.evio.0004?' -mmin +120 | grep -v -f $blacklist >> $filelist
 ! [ -s $filelist ] && echo NO NEW FILES >> $logfile && exit 0
 
 # submit the jobs:
