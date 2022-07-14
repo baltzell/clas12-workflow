@@ -59,7 +59,7 @@ def processWorkflow(workflow,args):
 
   if args.problemStats or args.problemNodes:
     print('\nProblem summary for '+workflow+':')
-    print(status.summarizeProblems(args.problemNodes))
+    print(status.summarizeProblems(pernode=True))
     return
 
   if len(args.listRun)>0:
@@ -107,6 +107,7 @@ def processWorkflow(workflow,args):
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
         print('\n'+'\n'.join(res))
+        print(status.summarizeProblems(pernode=True))
       if len(sunz_inputs)>0:
         n = min(len(sunz_inputs),9)
         print('\n'+user_error_type+' Inputs:\n'+'\n'.join(sunz_inputs[0:n]))
