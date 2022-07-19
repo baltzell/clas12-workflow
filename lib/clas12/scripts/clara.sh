@@ -5,7 +5,6 @@ ulimit -u 49152
 export CLARA_USER_DATA=.
 export CLAS12DIR=${CLARA_HOME}/plugins/clas12
 export PATH=${PATH}:$CLAS12DIR/bin
-
 unset CLARA_MONITOR_FE
 #export CLARA_MONITOR_FE="129.57.70.24%9000_java"
 
@@ -20,6 +19,7 @@ if [ $v -ge 11 ]
 then
     JAVA_OPTS="$JAVA_OPTS $expopts" 
 fi
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/logging.properties"
 
 outprefix=rec_
 logdir=.
