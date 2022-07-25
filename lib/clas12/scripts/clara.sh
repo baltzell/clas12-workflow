@@ -19,7 +19,7 @@ if [ $v -ge 11 ]
 then
     JAVA_OPTS="$JAVA_OPTS $expopts" 
 fi
-JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/logging.properties"
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
 
 outprefix=rec_
 logdir=.
