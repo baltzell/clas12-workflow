@@ -3,10 +3,12 @@ from JobSpecs import JobSpecs
 from ClaraErrors import ClaraErrors
 from JobErrors import SlurmErrors
 
+# indexed by node flavor:
 _COLORS =[1,  2,    4,    3,    94,  51]
 
-_THREADS=[12, 20,   16,   24,   32]
-_FILLS  =[0,  3007, 3003, 3004, 3005]
+# indexed by thread count:
+_THREADS=[12, 20,   16,   24,   32,  48]
+_FILLS  =[0,  3007, 3003, 3004, 3005, 3006]
 
 _DCAI = ['DCAC','DCATB','MLT']
 _DCCONV = ['DCRPC','DCRTB']
