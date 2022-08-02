@@ -21,7 +21,7 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    self.shell='/bin/tcsh'
+    self.shell=os.getenv('SHELL')
     self.tags=collections.OrderedDict()
     self.antecedents=[]
     self.conditions=[]
@@ -34,6 +34,10 @@ class SwifJob:
     self.inputData=[]
     self.outputData=[]
     self.copyInputs=True
+
+    if self.shell!='/bin/tcsh' and self.shell!='/bin/bash':
+      logging.critical('Unsupported shell:  '+self.shell)
+      sys.exit(1)
 
   def __str__(self):
     s = 'Phase %d : %s'%(self.phase,self.getJobName())
