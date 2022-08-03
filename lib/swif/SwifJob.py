@@ -35,6 +35,13 @@ class SwifJob:
     self.outputData=[]
     self.copyInputs=True
 
+    # FIXME:  remove this stuff, it only came about because
+    # someone was switching shells in their login shell's setup
+    #
+    # cronjobs run as /bin/sh, in which case assume the login
+    # shell SWIF will actually try to run will be JLab's default:
+    if self.shell=='/bin/sh':
+      self.shell='/bin/tcsh'
     if self.shell!='/bin/tcsh' and self.shell!='/bin/bash':
       logging.critical('Unsupported shell:  '+self.shell)
       sys.exit(1)
