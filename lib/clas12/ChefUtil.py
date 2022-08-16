@@ -76,7 +76,8 @@ def getTrainDiskBytes(schema,reconfile):
   else:
     s += getFileBytes(reconfile)
   # this 1.5 assumes trains will be at most half of recon:
-  return 1.5*s
+  # the additional 12% is an empirical fudge factor
+  return 1.5*s*1.12
 
 def getMergeDiskReq(nfiles):
   return str(int(2*nfiles*0.5)+3)+'GB'
