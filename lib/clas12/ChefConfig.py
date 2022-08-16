@@ -171,6 +171,8 @@ class ChefConfig(collections.OrderedDict):
     if getpass.getuser().find('clas12-')<0 and getpass.getuser().find('hps')<0:
       cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
+    cli.add_argument('--decTimestamp',metavar='MM/DD/YYYY-HH:MM:SS', help='set CCDB timestamp for decoding if specified, else use YAML', type=str, default=False, const=True, nargs='?')
+
     cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number (or install location)', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
 
@@ -374,6 +376,15 @@ class ChefConfig(collections.OrderedDict):
     # set user-defined regex for input files:
     if self['fileRegex'] != RunFileUtil.getFileRegex():
       RunFileUtil.setFileRegex(self['fileRegex'])
+
+    # check decoding timestamp:
+    if self['decTimestamp'] is not False:
+      if self['decTimestamp'] is True:
+        if self['mode'].find('rec')<0:
+          self.cli.error('--decTimestamp can only find timestamp from YAML for workflows including "rec"')
+        self['decTimestamp'] = ClaraYaml(self['reconYaml']).getGlobalTimestamp()
+      elif not ChefUtil.checkTimestamp(self['decTimestamp']):
+        self.cli.error('--decTimestamp argument is invalid')
 
     # check sqlite file:
     if self['ccdbsqlite'] is not None:

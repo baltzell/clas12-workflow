@@ -2,6 +2,7 @@ import re,sys,yaml,glob,datetime,logging,argparse
 
 import ccdb
 import JarUtil
+from ChefUtil import checkTimestamp
 
 _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
 
@@ -192,30 +193,11 @@ class ClaraYaml:
     logging.getLogger(__name__).critical('Could not find CCDB variation '+variation+' as specified in YAML: '+self.filename)
     return False
 
-  def checkTimestamp(self,timestamp):
-    # check the basic format is valid:
-    m = re.match('\d\d/\d\d/\d\d\d\d$',timestamp)
-    if m is None:
-      m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',timestamp)
-    if m is None:
-      logging.getLogger(__name__).critical('Invalid timestamp format '+timestamp+' in YAML: '+self.filename)
-      logging.getLogger(__name__).critical('Expected either MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
-      return False
-    # check it's really a possible timestamp:
-    try:
-      if timestamp.find('-') < 0:
-        t = datetime.datetime.strptime(timestamp,'%m/%d/%Y')
-      else:
-        t = datetime.datetime.strptime(timestamp,'%m/%d/%Y-%H:%M:%S')
-    except ValueError:
-      logging.getLogger(__name__).critical('Impossible timestamp %s in YAML: %s'%(timestamp,self.filename))
-      logging.getLogger(__name__).critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
-      return False
-    # warn of possible day/month swap:
-    if t.day < 13:
-      logging.getLogger(__name__).warning('Possible day/month swap in timestamp %s in YAML: %s'%(timestamp,self.filename))
-      logging.getLogger(__name__).warning('Expected format is MM/DD/YYYY')
-    return True
+  def getGlobalTimestamp(self):
+    if 'global' in self.yaml['configuration']:
+      if 'timestamp' in self.yaml['configuration']['global']:
+        return self.yaml['configuration']['global']['timestamp']
+    return None
 
   def checkConfiguration(self,cfg):
     #if 'io-services' not in cfg:
@@ -226,7 +208,7 @@ class ClaraYaml:
     if 'global' in cfg:
       if 'timestamp' in cfg['global']:
         timestamp = cfg['global']['timestamp']
-        if not self.checkTimestamp(timestamp):
+        if not checkTimestamp(timestamp):
           return False
       if 'variation' in cfg['global']:
         variation = cfg['global']['variation']
@@ -245,7 +227,7 @@ class ClaraYaml:
       elif variation is None and self.check_ccdb:
         logging.getLogger(__name__).warning('No CCDB variation specified for '+name+' in YAML: '+self.filename)
       if 'timestamp' in val:
-        if not self.checkTimestamp(val['timestamp']):
+        if not checkTimestamp(val['timestamp']):
           return False
       elif timestamp is None and self.check_ccdb:
         logging.getLogger(__name__).warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)

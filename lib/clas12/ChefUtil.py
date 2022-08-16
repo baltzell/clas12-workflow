@@ -213,6 +213,32 @@ def hipoIntegrityCheck(filename):
   p.wait()
   return p.returncode
 
+def checkTimestamp(timestamp):
+  fmtmsg = 'Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS') 
+  # check the basic format is valid:
+  m = re.match('\d\d/\d\d/\d\d\d\d$',timestamp)
+  if m is None:
+    m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',timestamp)
+  if m is None:
+    logging.getLogger(__name__).critical('Invalid timestamp format:  '+timestamp)
+    logging.getLogger(__name__).critical(fmtmsg)
+    return False
+  # check it's really a possible timestamp:
+  try:
+    if timestamp.find('-') < 0:
+      t = datetime.datetime.strptime(timestamp,'%m/%d/%Y')
+    else:
+      t = datetime.datetime.strptime(timestamp,'%m/%d/%Y-%H:%M:%S')
+  except ValueError:
+    logging.getLogger(__name__).critical('Impossible timestamp:  '+timestamp)
+    logging.getLogger(__name__).critical(fmtmsg)
+    return False
+  # warn of possible day/month swap:
+  if t.day < 13:
+    logging.getLogger(__name__).warning('Possible day/month swap in timestamp:  '+timestamp)
+    logging.getLogger(__name__).warning(fmtmsg)
+  return True
+
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')
   logger=logging.getLogger(__name__)
