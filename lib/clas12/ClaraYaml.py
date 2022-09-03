@@ -222,8 +222,6 @@ class ClaraYaml:
     #  return False
     services = cfg['services']
     cfg = cfg['configuration']
-    if 'services' not in cfg:
-      return False
     timestamp,variation = None,None
     if 'global' in cfg:
       if 'timestamp' in cfg['global']:
@@ -234,6 +232,9 @@ class ClaraYaml:
         variation = cfg['global']['variation']
         if not self.checkVariation(variation):
           return False
+    if 'services' not in cfg:
+      logging.getLogger(__name__).warning('Configuration section does not contain a services subsetion in YAML: '+self.filename)
+      return True
     for name,val in cfg['services'].items():
       if name not in self.names:
         logging.getLogger(__name__).critical('Could not find '+name+' in service list in YAML: '+self.filename)
@@ -273,7 +274,9 @@ if __name__ == '__main__':
   cli.add_argument('--ccdbsqlite',help='CCDB sqlite file to use',metavar='FILE',type=str,default=None)
   cli.add_argument('yaml',help='YAML file to check',type=str)
   args = cli.parse_args(sys.argv[1:])
-  if not checkIntegrity(args.yaml,args.clara,args.ccdbsqlite):
+  if checkIntegrity(args.yaml,args.clara,args.ccdbsqlite):
+    logging.getLogger(__name__).info('YAML checks passed.')
+  else:
+    logging.getLogger(__name__).critical('YAML checks failed.')
     sys.exit(1)
-
 

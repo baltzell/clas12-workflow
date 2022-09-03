@@ -238,15 +238,16 @@ class ClaraStats:
       toterrors+=self.errors[x]
     for x in list(self.slurmerrors.keys()):
       totslurmerrors+=self.slurmerrors[x]
+    title='Jobs:%d/%d, Files:%d/%d'%(self.successes,self.incomplete+self.successes,len(self.foundfiles),len(self.expectedfiles))
     tot=self.successes+self.incomplete
     #tot=self.successes+toterrors
-    self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%% (%d)'%('TOT',float(toterrors)/tot*100,toterrors))
-    for i,x in enumerate(ClaraErrors._BITS):
-      self.text.DrawTextNDC(0.83,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.errors[x])/tot*100))
-    self.text.DrawTextNDC(0.01,0.90,'%s=%.2f%% (%d)'%('TOT',float(totslurmerrors)/tot*100,totslurmerrors))
-    for i,x in enumerate(SlurmErrors._BITS):
-      self.text.DrawTextNDC(0.01,0.90-(i+1.5)*0.05,'%s=%.1f%% (%d)'%(x,float(self.slurmerrors[x])/tot*100,self.slurmerrors[x]))
-    title='Jobs:%d/%d, Files:%d/%d'%(self.successes,self.incomplete+self.successes,len(self.foundfiles),len(self.expectedfiles))
+    if tot>0:
+      self.text.DrawTextNDC(0.83,0.90,'%s=%.2f%% (%d)'%('TOT',float(toterrors)/tot*100,toterrors))
+      for i,x in enumerate(ClaraErrors._BITS):
+        self.text.DrawTextNDC(0.83,0.90-(i+1.5)*0.05,'%s=%.1f%%'%(x,float(self.errors[x])/tot*100))
+      self.text.DrawTextNDC(0.01,0.90,'%s=%.2f%% (%d)'%('TOT',float(totslurmerrors)/tot*100,totslurmerrors))
+      for i,x in enumerate(SlurmErrors._BITS):
+        self.text.DrawTextNDC(0.01,0.90-(i+1.5)*0.05,'%s=%.1f%% (%d)'%(x,float(self.slurmerrors[x])/tot*100,self.slurmerrors[x]))
     for i,f in enumerate(JobSpecs._FLAVORS):
       ret=f+' '
       if self.flavors[f]['total']>0:
