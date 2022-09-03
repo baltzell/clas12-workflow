@@ -86,7 +86,8 @@ class MinimalDependency(CLAS12Workflow):
         xx = self.train(self.phase,xx)
         xx.extend(self.trainmerge(self.phase,xx))
         jput_jobs.extend(xx)
-        self.trainclean(self.phase,xx)
+        if not self.cfg['noclean']:
+          self.trainclean(self.phase,xx)
 
       self.jput(self.phase+1,jput_jobs)
 
@@ -133,7 +134,8 @@ class RollingRuns(CLAS12Workflow):
         trainJobs = self.train(xx.phase,xx.jobs)
         trainJobs.extend(self.trainmerge(xx.phase,trainJobs))
         jput_jobs.extend(trainJobs)
-        self.trainclean(xx.phase,trainJobs)
+        if not self.cfg['noclean']:
+          self.trainclean(xx.phase,trainJobs)
 
       if len(reconQ)>0:
         xx = reconQ.pop(0)

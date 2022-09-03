@@ -171,7 +171,7 @@ class ChefConfig(collections.OrderedDict):
     if getpass.getuser().find('clas12-')<0 and getpass.getuser().find('hps')<0:
       cli.add_argument('--logDir',metavar='PATH',help='log location (otherwise the SLURM default)', type=str,default=None)
 
-    cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number (or install location)', type=str,default=None)
+    cli.add_argument('--coatjava',metavar='VERSION/PATH',help='coatjava version number or install location (unnecessary if clara is specified)', type=str,default=None)
     cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
@@ -207,6 +207,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--submit', help='submit and run jobs immediately', action='store_true', default=False)
     cli.add_argument('--hattawy', help='rigorous, slow disk request calculation', action='store_true', default=False)
     cli.add_argument('--version',action='version',version='clas12-workflow/0.99')
+
+    cli.add_argument('--noclean', help='do not cleanup intermediate train files', action='store_true', default=False)
 
     return cli
 
