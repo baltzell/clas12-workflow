@@ -197,6 +197,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
 
     cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format for matching run and file numbers, default="%s"'%CFG['fileRegex'], type=str, default=None)
+    cli.add_argument('--forties', help='set --fileRegex for files in the 40s', default=False, action='store_true')
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
@@ -258,6 +259,9 @@ class ChefConfig(collections.OrderedDict):
         self[key]=val
 
   def _verifyConfig(self):
+
+    if self['forties']:
+      self['fileRegex'] = '.*clas[_A-Za-z]*_(\d+)\.evio\.(0004\d+)'
 
     if re.match('^[a-zA-Z0-9._]+$',self['tag']) is None:
       self.cli.error('only letters, numbers, periods, and underscords are allowed in "--tag"')

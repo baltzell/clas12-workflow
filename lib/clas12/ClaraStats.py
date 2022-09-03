@@ -3,10 +3,10 @@ from JobSpecs import JobSpecs
 from ClaraErrors import ClaraErrors
 from JobErrors import SlurmErrors
 
-# indexed by node flavor:
+# indexed by node flavor, tied to JobSpecs._FLAVORS (FIXME, make it dynamic):
 _COLORS =[1,  2,    4,    3,    94,  51]
 
-# indexed by thread count:
+# indexed by thread count (FIXME, make it dynamic):
 _THREADS=[12, 20,   16,   24,   32,  48]
 _FILLS  =[0,  3007, 3003, 3004, 3005, 3006]
 

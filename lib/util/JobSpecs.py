@@ -10,6 +10,7 @@ def getNodeFlavor(hostname):
 
 class JobSpecs:
 
+  # FIXME:  make this dynamic, not sure if that's feasible:
   _FLAVORS=['farm19','farm18','farm16','farm14','farm13','qcd12s']
 
   def __init__(self):
