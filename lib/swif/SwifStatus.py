@@ -42,10 +42,10 @@ SWIF_PROBLEMS=[
 'SLURM_FAILED',     # the job returned non-zero exit code, swif itself returns 13 in some cases
 'SITE_LAUNCH_FAIL', # problem with the submission, e.g. sbatch failed due to invalid SLURM partition/constraint
 'SLURM_NODE_FAIL',  # system problem on the particular node on which the job landed
-'SITE_PREP_FAIL'   # e.g. disk request is smaller than inputs
+'SITE_PREP_FAIL',   # e.g. disk request is smaller than inputs
+'SLURM_CANCELLED',
+'SLURM_TIMEOUT'
 ]
-#'SWIF-MISSING-OUTPUT',
-#'SWIF-SYSTEM-ERROR',
 
 def getWorkflowNames():
   for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
@@ -334,15 +334,11 @@ class SwifStatus():
 ##############################################################################
 ##############################################################################
 
-  def getPersistentProblems(self,problem='ANY'):
+  def getCurrentProblemJobs(self,problem='ANY'):
     jobs=[]
     for job in self.getDetails()['jobs']:
-      # FIXME at python3.
-      if 'attempts' in job:
-        last_attempt = job['attempts'][-1]
-      elif u'attempts' in job:
-        last_attempt = job[u'attempts'][-1]
-      else:
+      last_attempt = self.getLastAttempt(job)
+      if last_attempt is None:
         continue
       if 'job_attempt_problem' in last_attempt:
         if problem=='ANY' or last_attempt['job_attempt_problem']==problem:
@@ -352,9 +348,34 @@ class SwifStatus():
           jobs.append(job)
     return jobs
 
-  def getPersistentProblemInputs(self,problem='ANY'):
+  def getLastAttempt(self,job):
+    attempt=None
+    # FIXME at python3.
+    if 'attempts' in job:
+      attempt = job['attempts'][-1]
+    elif u'attempts' in job:
+      attempt = job[u'attempts'][-1]
+    return attempt
+
+  def getCurrentDiskProblemJobs(self):
+    jobs=[]
+    for x in self.getCurrentProblemJobs('SITE_PREP_FAIL'):
+      last_attempt = self.getLastAttempt(job)
+      if last_attempt is None:
+        continue
+      details = last_attempt.get('job_attempt_problem_details')
+      if details is None:
+        continue
+      if details.find('Requested disk reservation') == 0:
+        jobs.append(job)
+    return jobs
+
+  def showCurrentProblemJobs(self,problem='ANY'):
+    print(json.dumps(self.getCurrentProblemJobs(problem),**_JSONFORMAT))
+
+  def getCurrentProblemInputs(self,problem='ANY'):
     ret=[]
-    for job in self.getPersistentProblems(problem):
+    for job in self.getCurrentProblemJobs(problem):
       if 'inputs' in job:
         for x in job['inputs']:
           ignore=False
@@ -366,20 +387,17 @@ class SwifStatus():
             ret.append(x['remote'])
     return ret
 
-  def getPersistentProblemJobs(self,problem='ANY'):
-    return json.dumps(self.getPersistentProblems(problem),**_JSONFORMAT)
-
-  def getPersistentProblemLogs(self,logdir=None):
+  def getCurrentProblemLogs(self,logdir=None):
     ret = []
     if logdir is None or logdir is False:
       logdir = '/farm_out/%s/%s'%(getpass.getuser(),self.name)
-    for job in self.getPersistentProblems():
+    for job in self.getCurrentProblemJobs():
       if 'job_name' in job:
         ret.extend(glob.glob('%s/%s*'%(logdir,job['job_name'])))
     return ret
 
-  def tailPersistentProblemLogs(self,logdir=None,nlines=10):
-    for x in self.getPersistentProblemLogs(logdir):
+  def showCurrentProblemLogs(self,logdir=None,nlines=10):
+    for x in self.getCurrentProblemLogs(logdir):
       print('##########################################################')
       print('  '+x)
       print('##########################################################')
@@ -500,20 +518,29 @@ class SwifStatus():
 
   def modifyJobReqs(self,problems):
     ret=[]
-    if 'AUGER-TIMEOUT' in problems:
+    if 'SLURM_TIMEOUT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-time','add','300m'])
-      modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
-      problems.remove('AUGER-TIMEOUT')
+      modifyCmd.extend(['-problems','SLURM_TIMEOUT'])
+      problems.remove('SLURM_TIMEOUT')
       ret.append(' '.join(modifyCmd))
       ret.append(subprocess.check_output(modifyCmd))
-    if 'AUGER-OVER_RLIMIT' in problems:
+    for job in self.getCurrentDiskProblemJobs():
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-ram','add','1gb'])
-      modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
-      problems.remove('AUGER-OVER_RLIMIT')
-      ret.append(' '.join(modifyCmd))
-      ret.append(subprocess.check_output(modifyCmd))
+      modifyCmd.extend(['-disk','add','10g'])
+      modifyCmd.extend(['-names',job.get('name')])
+      pass
+    #
+    # FIXME:
+    # with SWIF2, memory/disk limits are no longer a unique problem
+    # type, but instead we have to check deeper in the job details
+    # to figure it out
+    #if 'AUGER-OVER_RLIMIT' in problems:
+    #  modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
+    #  modifyCmd.extend(['-ram','add','1gb'])
+    #  modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
+    #  problems.remove('AUGER-OVER_RLIMIT')
+    #
     return ret
 
   def exists(self,path,tape=False):
@@ -522,58 +549,6 @@ class SwifStatus():
       if path.startswith('/cache/'):
         ret = os.path.exists('/mss/'+path[7:])
     return ret
-
-# FIXME:  update for SWIF2
-#SWIF_JSON_KEYS=[
-#'workflow_name',
-#'workflow_site',
-#'workflow_id',
-#'workflow_user'
-#'max_concurrent',
-#'job_limit',
-#'error_limit',
-#'phase_limit',
-#'phase',
-#'jobs',
-#'succeeded',
-#'attempts',
-#'frozen',
-#'undispatched',
-#'dispatched',
-#'dispatched_preparing',
-#'dispatched_running',
-#'dispatched_pending',
-#'dispatched_other',
-#'dispatched_reaping',
-#'abandoned'
-#'failed',
-#'canceled',
-#'suspended',
-#'auger_active',
-#'auger_depend',
-#'auger_pending',
-#'auger_staging_in',
-#'auger_finishing',
-#'auger_staging_out',
-#'problems',
-#'problem_types',
-#'problem_swif_user_non_zero',
-#'problem_swif_system_error',
-#'problem_swif_missing_output',
-#'problem_auger_canceled',
-#'problem_auger_input_fail',
-#'problem_auger_output_fail',
-#'problem_auger_timeout',
-#'problem_auger_unknown',
-#'problem_auger_failed',
-#'problem_auger_over_rlimit',
-#'input_mb_processed',
-#'output_mb_generated',
-#'update_ts',
-#'create_ts',
-#'current_ts',
-#'summary_ts'
-#]
 
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')

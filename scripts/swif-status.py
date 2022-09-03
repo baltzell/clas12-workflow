@@ -74,19 +74,19 @@ def processWorkflow(workflow,args):
   # print contents of logs from jobs problems:
   if args.problemLogs is not False or args.problemLogsTail is not False:
     if args.problemLogsTail > 0:
-      status.tailPersistentProblemLogs(args.problemLogs,args.problemLogsTail)
+      status.showCurrentProblemLogs(args.problemLogs,args.problemLogsTail)
     else:
-      print('\n'.join(status.getPersistentProblemLogs(args.problemLogs)))
+      print('\n'.join(status.getCurrentProblemLogs(args.problemLogs)))
     return
 
   # print inputs of jobs with problems:
   if args.problemInputs:
-    print(('\n'.join(status.getPersistentProblemInputs(args.problemInputs))))
+    print(('\n'.join(status.getCurrentProblemInputs(args.problemInputs))))
     return
 
   # print details of jobs with problems:
   if args.problems:
-    print(status.getPersistentProblemJobs(args.problems))
+    status.showCurrentProblemJobs(args.problems)
     return
 
   # if retrying or abandoning, only print status if problems exist:
@@ -102,7 +102,7 @@ def processWorkflow(workflow,args):
       user_error_type = 'SLURM_FAILED'
       sunz_inputs=[]
       if user_error_type in status.getCurrentProblems():
-        sunz_inputs = status.getPersistentProblemInputs(user_error_type)
+        sunz_inputs = status.getCurrentProblemInputs(user_error_type)
       res = status.retryProblems()
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
