@@ -30,6 +30,7 @@
   "claraLogDir": null,
   "logDir": null,
   "submit": false,
+  "forties": false,
   "fileRegex": ".*clas[_A-Za-z]*_(\\d+)\\.evio\\.(\\d+)",
   "mergePattern": "clas_%.6d.evio.%.5d-%.5d.hipo",
   "singlePattern": "clas_%.6d.evio.%.5d.hipo",
