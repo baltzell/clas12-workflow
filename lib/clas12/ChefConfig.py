@@ -1,4 +1,4 @@
-import os,re,sys,glob,json,copy,logging,getpass,argparse,traceback,collections
+import os,re,sys,stat,glob,json,copy,logging,getpass,argparse,traceback,collections
 import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
@@ -108,6 +108,8 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.critical('Nonexistent user yaml: '+self[x])
           sys.exit(1)
         self[x] = os.path.abspath(self[x])
+        # set it to read-only:
+        os.path.chmod(self[x], stat.IRUSR|stat.IRGRP|stat.IROTH)
       else:
         yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
         if os.path.isfile(yamlprefix+self[x]+'.yaml'):
