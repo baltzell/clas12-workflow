@@ -109,7 +109,7 @@ class ChefConfig(collections.OrderedDict):
           sys.exit(1)
         self[x] = os.path.abspath(self[x])
         # set it to read-only:
-        os.path.chmod(self[x], stat.IRUSR|stat.IRGRP|stat.IROTH)
+        os.chmod(self[x], stat.IRUSR|stat.IRGRP|stat.IROTH)
       else:
         yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
         if os.path.isfile(yamlprefix+self[x]+'.yaml'):
