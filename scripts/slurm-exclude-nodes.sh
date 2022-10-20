@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE () {
-    echo -e "\nUsage:  slurm-exclude.nodes.sh [-h] [-k] NODES\n"
+    echo -e "\nUsage:  slurm-exclude.nodes.sh [-h] [-k] [-e] NODES\n"
     echo -e "\t-h     print this usage"
     echo -e "\t-k     kill jobs running on the specified nodes"
     echo -e "\t-e     exclude the specified nodes from pending jobs"
