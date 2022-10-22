@@ -90,7 +90,7 @@ def processWorkflow(workflow,args):
     return
 
   # if retrying or abandoning, only print status if problems exist:
-  if len(args.abandon)>0 or args.retry or len(args.clas12mon)>0:
+  if len(args.abandon)>0 or len(args.retry)>0 or len(args.clas12mon)>0:
 
     if len(args.abandon)>0:
       res = status.abandonProblems(args.abandon)
@@ -98,12 +98,12 @@ def processWorkflow(workflow,args):
         print(status.getPrettyStatus())
         print(res)
 
-    if args.retry:
+    if len(args.retry)>0:
       user_error_type = 'SLURM_FAILED'
       sunz_inputs=[]
       if user_error_type in status.getCurrentProblems():
         sunz_inputs = status.getPersistentProblemInputs(user_error_type)
-      res = status.retryProblems()
+      res = status.retryProblems(args.retry)
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
         print('\n'+'\n'.join(res))
@@ -147,8 +147,8 @@ if __name__ == '__main__':
   cli = argparse.ArgumentParser('Do SWIF stuff.',epilog=epilog)
   cli.add_argument('--list',         help='list workflows',    action='store_true',default=False)
   cli.add_argument('--workflow',     help='regex of workflow names, else all workflows (repeatable)', metavar='NAME', action='append',default=[])
-  cli.add_argument('--retry',        help='retry problem jobs',action='store_true',default=False)
-  cli.add_argument('--details',      help='show all job details',  action='store_true',default=False)
+  cli.add_argument('--retry',        help='retry problem jobs',metavar='PROBLEMTYPE', nargs='?',action='append',default=[])
+  cli.add_argument('--details',      help='show all job details', action='store_true', default=False)
   cli.add_argument('--quiet',        help='do not print retries (for cron jobs)', action='store_true',default=False)
   cli.add_argument('--delete',       help='delete workflow(s)', action='store_true',default=False)
   cli.add_argument('--stats',        help='show completion status of each workflow component', action='store_true',default=False)

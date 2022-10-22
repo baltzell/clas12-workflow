@@ -42,10 +42,23 @@ SWIF_PROBLEMS=[
 'SLURM_FAILED',     # the job returned non-zero exit code, swif itself returns 13 in some cases
 'SITE_LAUNCH_FAIL', # problem with the submission, e.g. sbatch failed due to invalid SLURM partition/constraint
 'SLURM_NODE_FAIL',  # system problem on the particular node on which the job landed
-'SITE_PREP_FAIL'   # e.g. disk request is smaller than inputs
+'SITE_PREP_FAIL',   # e.g. disk request is smaller than inputs
+'SWIF_INPUT_FAIL'   # e.g. requested input files do not exist
 ]
 #'SWIF-MISSING-OUTPUT',
 #'SWIF-SYSTEM-ERROR',
+
+# Never retry these, unless explicitly requested:
+SWIF_PROBLEMS_NO_RETRY=[
+'SWIF_INPUT_FAIL',
+'SITE_PREP_FAIL',
+'SLURM_FAILED'
+]
+
+# Always retry these, regardless the request:
+SWIF_PROBLEMS_ALWAYS_RETRY=[
+'SLURM_NODE_FAIL'
+]
 
 def getWorkflowNames():
   for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
@@ -478,11 +491,17 @@ class SwifStatus():
       ret+='%20s :  %8d\n'%(k,v['count'])
     return ret
 
-  def retryProblems(self):
+  def retryProblems(self,problem_request=[]):
     ret=[]
     problems=self.getCurrentProblems()
     ret.extend(self.modifyJobReqs(problems))
     for problem in problems:
+      if problem in problem_request:
+        pass
+      elif problem in SWIF_PROBLEMS_ALWAYS_RETRY:
+        pass
+      elif problem in SWIF_PROBLEMS_NO_RETRY:
+        continue
       retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
       ret.append(' '.join(retryCmd))
       ret.append(subprocess.check_output(retryCmd))
