@@ -57,7 +57,8 @@ SWIF_PROBLEMS_NO_RETRY=[
 
 # Always retry these, regardless the request:
 SWIF_PROBLEMS_ALWAYS_RETRY=[
-'SLURM_NODE_FAIL'
+'SLURM_NODE_FAIL',
+'SLURM_CANCELLED'
 ]
 
 def getWorkflowNames():
