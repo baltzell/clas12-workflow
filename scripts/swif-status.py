@@ -109,7 +109,7 @@ def processWorkflow(workflow,args):
         print(status.getPrettyStatus())
         print('\n'+'\n'.join(res))
         print(status.summarizeProblems(pernode=True))
-      if len(sunz_inputs)>0:
+      if user_error_type in args.retry and len(sunz_inputs)>0:
         n = min(len(sunz_inputs),9)
         print('\n'+user_error_type+' Inputs:\n'+'\n'.join(sunz_inputs[0:n]))
         if len(sunz_inputs)>10:
