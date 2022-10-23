@@ -100,9 +100,10 @@ def processWorkflow(workflow,args):
 
     if len(args.retry)>0:
       user_error_type = 'SLURM_FAILED'
-      sunz_inputs=[]
-      if user_error_type in status.getCurrentProblems():
-        sunz_inputs = status.getPersistentProblemInputs(user_error_type)
+      if user_error_type in args.retry:
+        sunz_inputs=[]
+        if user_error_type in status.getCurrentProblems():
+          sunz_inputs = status.getPersistentProblemInputs(user_error_type)
       res = status.retryProblems(args.retry)
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
