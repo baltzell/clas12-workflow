@@ -257,7 +257,7 @@ class TrainMrgJob(CLAS12Job):
 class TrainCleanupJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
-    self.setRam('100MB')
+    self.setRam('200MB')
     self.setTime('2h')
     self.addTag('mode','anaclean')
   def setCmd(self):
