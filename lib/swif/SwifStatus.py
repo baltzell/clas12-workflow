@@ -58,6 +58,7 @@ SWIF_PROBLEMS_NO_RETRY=[
 # Always retry these, regardless the request:
 SWIF_PROBLEMS_ALWAYS_RETRY=[
 'SLURM_NODE_FAIL',
+'SITE_LAUNCH_FAIL',
 'SLURM_CANCELLED'
 ]
 
