@@ -43,10 +43,11 @@ SWIF_PROBLEMS=[
 'SITE_LAUNCH_FAIL', # problem with the submission, e.g. sbatch failed due to invalid SLURM partition/constraint
 'SLURM_NODE_FAIL',  # system problem on the particular node on which the job landed
 'SITE_PREP_FAIL',   # e.g. disk request is smaller than inputs
-'SWIF_INPUT_FAIL'   # e.g. requested input files do not exist
+'SWIF_INPUT_FAIL',  # e.g. requested input files do not exist
+'SLURM_CANCELLED',
+'SWIF_SYSTEM_ERROR',
+'SWIF-MISSING-OUTPUT'
 ]
-#'SWIF-MISSING-OUTPUT',
-#'SWIF-SYSTEM-ERROR',
 
 # Never retry these, unless explicitly requested:
 SWIF_PROBLEMS_NO_RETRY=[
@@ -59,7 +60,8 @@ SWIF_PROBLEMS_NO_RETRY=[
 SWIF_PROBLEMS_ALWAYS_RETRY=[
 'SLURM_NODE_FAIL',
 'SITE_LAUNCH_FAIL',
-'SLURM_CANCELLED'
+'SLURM_CANCELLED',
+'SWIF_SYSTEM_ERROR'
 ]
 
 def getWorkflowNames():
