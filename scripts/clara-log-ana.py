@@ -30,7 +30,7 @@ if args.i and os.environ.get('DISPLAY') is None:
 logfiles=[]
 for path in args.p:
   if os.path.isfile(path):
-    if path.endswith('orch.log') or path.endswith('.out'):
+    if path.endswith('orch.log') or path.endswith('.out') or path.endswith('orch.log.gz') or path.endswith('.out.gz'):
       basename=path
       if path.find('/')>=0:
         basename=path.split('/').pop()
@@ -39,7 +39,7 @@ for path in args.p:
   elif os.path.isdir(path):
     for d,x,files in os.walk(path):
       for f in files:
-        if f.endswith('orch.log') or f.endswith('.out'):
+        if f.endswith('orch.log') or f.endswith('.out') or f.endswith('orch.log.gz') or f.endswith('.out.gz'):
           if Matcher.matchAll(f,args.M) and Matcher.matchAny(f,args.m):
             logfiles.append(d+'/'+f)
 
