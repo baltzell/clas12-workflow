@@ -12,7 +12,10 @@ class CLAS12Job(SwifJob):
     SwifJob.__init__(self,workflow)
     self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'})
     self.addEnv('CLARA_HOME',cfg['clara'])
-    self.addEnv('JAVA_HOME','${CLARA_HOME}/jre/linux-64/jre')
+    if cfg['graalvm']:
+      self.addEnv('JAVA_HOME','/group/clas12/packages/graalvm/22.2.0_java11')
+    else:
+      self.addEnv('JAVA_HOME','${CLARA_HOME}/jre/linux-64/jre')
     self.addEnv('PATH','${JAVA_HOME}/bin:${PATH}')
     if cfg['ccdbsqlite'] is None:
       self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
