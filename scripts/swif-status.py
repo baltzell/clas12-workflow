@@ -29,6 +29,10 @@ def processWorkflow(workflow,args):
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
 
+  if args.exitStats:
+    status.listExitCodes()
+    return
+
   if args.delete:
     SwifStatus.deleteWorkflow(workflow)
     return
@@ -153,6 +157,7 @@ if __name__ == '__main__':
   cli.add_argument('--quiet',        help='do not print retries (for cron jobs)', action='store_true',default=False)
   cli.add_argument('--delete',       help='delete workflow(s)', action='store_true',default=False)
   cli.add_argument('--stats',        help='show completion status of each workflow component', action='store_true',default=False)
+  cli.add_argument('--exitStats',    help='show exit code tallies for current problem jobs', action='store_true',default=False)
   cli.add_argument('--runStats',     help='show completion status of each run number', action='store_true',default=False)
   cli.add_argument('--phaseStats',   help='show completion status of each phase', action='store_true',default=False)
   cli.add_argument('--listRun',      help='list all job names associated with the given run number(s) (repeatable)', metavar='#', action='append', default=[], type=int)

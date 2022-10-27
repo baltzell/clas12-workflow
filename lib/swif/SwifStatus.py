@@ -351,15 +351,19 @@ class SwifStatus():
 ##############################################################################
 ##############################################################################
 
+  def getLastAttempt(self,job):
+    # FIXME at python3.
+    if 'attempts' in job:
+      return job['attempts'][-1]
+    elif u'attempts' in job:
+      return job[u'attempts'][-1]
+    return None
+
   def getPersistentProblems(self,problem='ANY'):
     jobs=[]
     for job in self.getDetails()['jobs']:
-      # FIXME at python3.
-      if 'attempts' in job:
-        last_attempt = job['attempts'][-1]
-      elif u'attempts' in job:
-        last_attempt = job[u'attempts'][-1]
-      else:
+      last_attempt = self.getLastAttempt(job)
+      if last_attempt is None:
         continue
       if 'job_attempt_problem' in last_attempt:
         if problem=='ANY' or last_attempt['job_attempt_problem']==problem:
@@ -368,6 +372,17 @@ class SwifStatus():
         if problem=='ANY' or str(last_attempt[u'job_attempt_problem'])==problem:
           jobs.append(job)
     return jobs
+
+  def listExitCodes(self):
+    for job in self.getPersistentProblems('SLURM_FAILED'):
+      last_attempt = self.getLastAttempt(job)
+      if last_attempt is None:
+        continue
+      exit = last_attempt.get('slurm_exitcode')
+      slurmid = last_attempt.get('slurm_id')
+      swifid = last_attempt.get('job_id')
+      stdout = last_attempt.get('site_job_stdout')
+      print(str(exit)+' '+str(slurmid)+' '+str(swifid)+' '+str(stdout))
 
   def getPersistentProblemInputs(self,problem='ANY'):
     ret=[]
