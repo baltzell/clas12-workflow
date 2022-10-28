@@ -113,7 +113,7 @@ configuration:
       id: 7
       forward: 11:X+:X-:Xn
       tagger: 1n:X+:X-:Xn
-    FTn:
+    FTt:
       id: 7
       tagger: 2n:X+:X-:Xn      
 #################################################### BAND
