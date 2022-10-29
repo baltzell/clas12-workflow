@@ -37,6 +37,8 @@ services:
     name: FTm
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: FTn
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: FTt
 #################################################### BAND
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: BAND
