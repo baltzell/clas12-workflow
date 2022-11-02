@@ -80,6 +80,10 @@ do
     hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
 done
 
+echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
+cat $yaml
+echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
+
 # run clara:
 $CLARA_HOME/lib/clara/run-clara \
         -i . \
