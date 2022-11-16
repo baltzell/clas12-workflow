@@ -1,0 +1,116 @@
+io-services:
+  reader:
+    class: org.jlab.jnp.grapes.io.HipoFrameReader
+    name: HipoFrameReader
+  writer:
+    class: org.jlab.jnp.grapes.io.HipoFrameWriter
+    name: HipoFrameWriter
+services:
+#################################################### RF
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: RF
+#################################################### DC
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: DCm
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: DCp
+#################################################### FTOF
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: FTOFm
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: FTOFp
+#################################################### HTCC
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: HTCCm
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: HTCCp
+#################################################### CTOF
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CTOF
+#################################################### CND
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: CND
+#################################################### BAND
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: BAND
+#################################################### ECAL
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ECALp
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: ECALm
+  - class: org.jlab.jnp.grapes.services.GenericWagon
+    name: FMT
+####################################################
+configuration:
+  custom-names:
+    1: rf 
+    2: dc
+    3: ftof
+    4: htcc
+    5: ctof
+    6: cnd 
+    7: ft 
+    8: band
+    9: ecal
+    10: fmt
+  io-services:
+    writer:
+      compression: 2
+      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-2-RASTER::*,RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments,REC::*-3-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-4-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-5-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks,CVTRec::Trajectory-6-RUN::config,REC::Particle,REC::Event,CVTRec::Tracks,CVTRec::Trajectory,CND::*-8-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler-9-RUN::config,REC::Event,REC::Calorimeter,REC::Scintillator,REC::Particle,ECAL::*-10-RUN::config,REC::Particle,REC::Track,TimeBasedTrkg::TBTracks,TimeBasedTrkg:Trajectory,FMT*
+  services:
+#################################################### RF
+    RF:
+      id: 1
+      forward: 11:X+:X-:Xn  
+#################################################### DC
+    DCm:
+      id: 2
+      forward: 1-:11:X+:X-:Xn
+    DCp:
+      id: 2
+      forward: 1+:11:X+:X-:Xn  
+#################################################### FTOF
+    FTOFm:
+      id: 3
+      forward: 1-:11:X+:X-:Xn
+    FTOFp:
+      id: 3
+      forward: 1+:11:X+:X-:Xn
+#################################################### HTCC
+    HTCCm:
+      id: 4
+      forward: 1-:11:X+:X-:Xn
+    HTCCp:
+      id: 4
+      forward: 1+:11:X+:X-:Xn
+#################################################### CTOF
+    CTOF:
+      id: 5
+      forward: 11:X+:X-:Xn
+      central: 1-:X+:X-:Xn
+#################################################### CND
+    CND:
+      id: 6
+      forward: 11:X+:X-:Xn
+      central: 1-:X+:X-:Xn
+#################################################### FT
+    BAND:
+      id: 8
+      forward: 11:X+:X-:Xn
+      tagger: X+:X-:Xn
+      central: X+:X-:Xn
+#################################################### ECAL
+    ECALm:
+      id: 9
+      forward: 1-:11:X+:X-:Xn
+    ECALp:
+      id: 9
+      forward: 1+:11:X+:X-:Xn
+#################################################### FMT
+    FMT:
+      id: 10
+      forward: 11:X+:X-:Xn
+####################################################
+
+mime-types:
+  - binary/data-hipo-frame
