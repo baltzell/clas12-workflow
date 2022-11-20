@@ -21,6 +21,12 @@ then
 fi
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
 
+# more aggressive memory releasing:
+JAVA_OPTS="$JAVA_OPTS -XX:MinHeapFreeRatio=5"
+JAVA_OPTS="$JAVA_OPTS -XX:MaxHeapFreeRatio=10"
+JAVA_OPTS="$JAVA_OPTS -XX:GCTimeRatio=4"
+JAVA_OPTS="$JAVA_OPTS -XX:AdaptiveSizePolicyWeight=90"
+
 outprefix=rec_
 logdir=.
 threads=16
