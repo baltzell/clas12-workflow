@@ -27,6 +27,20 @@ JAVA_OPTS="$JAVA_OPTS -XX:MaxHeapFreeRatio=10"
 JAVA_OPTS="$JAVA_OPTS -XX:GCTimeRatio=4"
 JAVA_OPTS="$JAVA_OPTS -XX:AdaptiveSizePolicyWeight=90"
 
+# supposed to be on by default in OpenJDK 11:
+JAVA_OPTS="$JAVA_OPTS -XX:+UseContainerSupport"
+# fraction of supposed to default to 25%:
+JAVA_OPTS="$JAVA_OPTS -XX:MaxRAMPercentage=75"
+
+JAVA_OPTS="$JAVA_OPTS XX:+UseCGroupMemoryLimitForHeap"
+
+#JAVA_OPTS="$JAVA_OPTS -XX:NativeMemoryTracking=summary"
+#JAVA_OPTS="$JAVA_OPTS -XX:+PrintNMTStatistics"
+
+#JAVA_OPTS="$JAVA_OPTS -XX:ThreadStackSize"
+
+export JAVA_OPTS
+
 outprefix=rec_
 logdir=.
 threads=16
