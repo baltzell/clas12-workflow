@@ -22,17 +22,17 @@ fi
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
 
 # more aggressive memory releasing:
-JAVA_OPTS="$JAVA_OPTS -XX:MinHeapFreeRatio=5"
-JAVA_OPTS="$JAVA_OPTS -XX:MaxHeapFreeRatio=10"
-JAVA_OPTS="$JAVA_OPTS -XX:GCTimeRatio=4"
-JAVA_OPTS="$JAVA_OPTS -XX:AdaptiveSizePolicyWeight=90"
+#JAVA_OPTS="$JAVA_OPTS -XX:MinHeapFreeRatio=5"
+#JAVA_OPTS="$JAVA_OPTS -XX:MaxHeapFreeRatio=10"
+#JAVA_OPTS="$JAVA_OPTS -XX:GCTimeRatio=4"
+#JAVA_OPTS="$JAVA_OPTS -XX:AdaptiveSizePolicyWeight=90"
 
 # supposed to be on by default in OpenJDK 11:
-JAVA_OPTS="$JAVA_OPTS -XX:+UseContainerSupport"
+#JAVA_OPTS="$JAVA_OPTS -XX:+UseContainerSupport"
 # fraction of supposed to default to 25%:
-JAVA_OPTS="$JAVA_OPTS -XX:MaxRAMPercentage=75"
+#JAVA_OPTS="$JAVA_OPTS -XX:MaxRAMPercentage=75"
 
-JAVA_OPTS="$JAVA_OPTS XX:+UseCGroupMemoryLimitForHeap"
+#JAVA_OPTS="$JAVA_OPTS XX:+UseCGroupMemoryLimitForHeap"
 
 #JAVA_OPTS="$JAVA_OPTS -XX:NativeMemoryTracking=summary"
 #JAVA_OPTS="$JAVA_OPTS -XX:+PrintNMTStatistics"
