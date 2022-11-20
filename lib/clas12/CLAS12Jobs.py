@@ -126,7 +126,7 @@ class ReconJob(CLAS12Job):
       self.addEnv('COATJAVA',cfg['clara']+'/plugins/clas12')
     # only limit the memory for non-exclusive jobs:
     if ReconJob.THRD_MEM_LIM[cfg['threads']] > 0:
-      self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
+      self.addEnv('JAVA_OPTS','-Xmx%dg -Xms%dg'%(ReconJob.THRD_MEM_LIM[cfg['threads']],ReconJob.THRD_MEM_LIM[cfg['threads']]))
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
     self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
@@ -189,7 +189,7 @@ class TrainJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
-    self.addEnv('JAVA_OPTS','-Xmx8g -Xms6g')
+    self.addEnv('JAVA_OPTS','-Xmx8g -Xms8g')
     self.setRam('10GB')
     self.setCores(12)
     self.addTag('mode','ana')
