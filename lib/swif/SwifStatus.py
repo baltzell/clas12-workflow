@@ -41,11 +41,11 @@ SWIF_JSON_KEYS=[
 SWIF_PROBLEMS=[
 'SLURM_FAILED',        # the job returned non-zero exit code, swif itself returns 13 in some cases
 'SITE_LAUNCH_FAIL',    # problem with the submission, e.g. sbatch failed due to invalid SLURM partition/constraint
-'SITE_REAP_FAIL',      # this is a new one in November 2022 ...
 'SLURM_NODE_FAIL',     # system problem on the particular node on which the job landed
 'SITE_PREP_FAIL',      # e.g. disk request is smaller than inputs
 'SWIF_INPUT_FAIL',     # requested input files do not exist
 'SWIF-MISSING-OUTPUT', # requested output files do not exist
+'SITE_REAP_FAIL',      # this can happen if the output file isn't in the swif tarball
 'SLURM_CANCELLED',     # unclear what all can trigger this
 'SWIF_SYSTEM_ERROR',   # some system problem
 'SLURM_OUT_OF_MEMORY'  # cgroups OOM
@@ -55,7 +55,6 @@ SWIF_PROBLEMS=[
 SWIF_PROBLEMS_ALWAYS_RETRY=[
 'SLURM_NODE_FAIL',
 'SITE_LAUNCH_FAIL',
-'SITE_REAP_FAIL',
 'SLURM_CANCELLED',
 'SWIF_SYSTEM_ERROR'
 ]
