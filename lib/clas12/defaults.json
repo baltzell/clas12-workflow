@@ -16,7 +16,7 @@
   "trainDir": null,
   "phaseSize": -1,
   "mergeSize": 5,
-  "reconSize": 3,
+  "reconSize": 2,
   "trainSize": 30,
   "threads": 16,
   "torus": null,
