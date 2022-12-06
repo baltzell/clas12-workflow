@@ -21,7 +21,7 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    self.shell=os.getenv('SHELL')
+    self.shell='/bin/tcsh'#os.getenv('SHELL')
     self.tags=collections.OrderedDict()
     self.antecedents=[]
     self.conditions=[]
