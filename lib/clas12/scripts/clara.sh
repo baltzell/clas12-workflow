@@ -45,6 +45,7 @@ outprefix=rec_
 logdir=.
 threads=16
 yaml=clara.yaml
+jobname=recon
 while getopts "p:l:t:n:y:" OPTION; do
     case $OPTION in
         p)  outprefix=$OPTARG ;;
@@ -57,17 +58,10 @@ while getopts "p:l:t:n:y:" OPTION; do
 done
 
 shift $((OPTIND-1))
-if [[ $# -ne 1 ]]; then
-    echo "usage: clara.sh [ OPTIONS ] jobname"
-    exit 1
-fi
-jobname=$1
+[[ $# -ne 0 ]] && jobname=$1
 
 # if it's an exclusive job:
-if [ $threads -eq 0 ]
-then
-  threads=`grep -c ^processor /proc/cpuinfo`
-fi
+[[ $threads -eq 0 ]] && threads=`grep -c ^processor /proc/cpuinfo`
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
