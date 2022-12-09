@@ -27,10 +27,6 @@ class CLAS12Workflow(SwifWorkflow):
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
       ChefUtil.mkdir(self.logDir,'slurm log')
-    if self.cfg['claraLogDir'] is not None:
-      logDir = '%s/%s'%(self.cfg['claraLogDir'],self.name)
-      self.cfg['claraLogDir'] = logDir
-      ChefUtil.mkdir(logDir,'clara log')
 
   def addJob(self,job):
     if isinstance(job,list):

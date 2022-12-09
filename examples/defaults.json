@@ -1,7 +1,6 @@
 
 {
   "clara": null,
-  "claraLogDir": null,
   "coatjava": null,
   "decDir": null,
   "fileRegex": ".*clas[_A-Za-z]*_(\\d+)\\.evio\\.(\\d+)",

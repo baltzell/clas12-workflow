@@ -159,8 +159,6 @@ class ReconJob(CLAS12Job):
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
-    if self.cfg['claraLogDir'] is not None:
-      cmd += ' -l '+self.cfg['claraLogDir']+' '
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
@@ -220,8 +218,6 @@ class TrainJob(CLAS12Job):
   def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
-    if self.cfg['claraLogDir'] is not None:
-      cmd += ' -l '+self.cfg['claraLogDir']+' '
     cmd += ' && ls -lhtr'
     CLAS12Job.setCmd(self,cmd)
 
