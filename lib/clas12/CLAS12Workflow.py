@@ -57,7 +57,7 @@ class CLAS12Workflow(SwifWorkflow):
         if len(ants)>0:
           job.antecedents.extend([x.getJobName() for x in ants])
         for x in inps: job.addInputData(x)
-        job.setCmd(len(self.jobs))
+        job.setCmd()
         jobs.append(job)
         inps,ants=[],[]
     self.addJob(jobs)
@@ -84,7 +84,7 @@ class CLAS12Workflow(SwifWorkflow):
             job.antecedents.append(x.getJobName())
         else:
           job.addInputData(inps)
-        job.setCmd(len(self.jobs))
+        job.setCmd()
         jobs.append(job)
         self.addJob(job)
         inps=[]

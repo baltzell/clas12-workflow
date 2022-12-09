@@ -154,14 +154,13 @@ class ReconJob(CLAS12Job):
     # and now update the resource requests when every file is added:
     self.nfiles += 1
     self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
-  def setCmd(self,hack):
+  def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
-    cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
@@ -218,12 +217,11 @@ class TrainJob(CLAS12Job):
       self.setRequestIncrements(filenames[0])
     self.nfiles += len(filenames)
     self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
-  def setCmd(self,hack):
+  def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
     if self.cfg['claraLogDir'] is not None:
       cmd += ' -l '+self.cfg['claraLogDir']+' '
-    cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
     cmd += ' && ls -lhtr'
     CLAS12Job.setCmd(self,cmd)
 
