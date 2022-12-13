@@ -20,5 +20,5 @@ do
   mv -f dn_${x} $x # replace the input file
 done
 
-echo 0
+exit 0
 
