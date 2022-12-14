@@ -18,12 +18,9 @@ tally = SwifStatus.Stats()
 
 def processWorkflow(workflow,args):
 
-  status = CLAS12SwifStatus.CLAS12SwifStatus(workflow,args)
+  status = CLAS12SwifStatus.CLAS12SwifStatus(workflow,args,args.read)
 
   tally.add(status.getSummaryStats('mode'))
-
-#  if args.input:
-#    status.getStatus(args.input)
 
 #  if args.jobLogs:
 #    if status.isComplete() and status.isPreviousComplete():
@@ -176,13 +173,13 @@ if __name__ == '__main__':
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--deleteComplete', help='delete all completed workflows', default=False, action='store_true')
+  cli.add_argument('--read',        help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
 #  cli.add_argument('--logDir',      help='local log directory'+df, metavar='PATH',type=str,default=None)
 #  cli.add_argument('--save',        help='save to logs', action='store_true',default=False)
 #  cli.add_argument('--jobLogs',    help='move job logs when complete', action='store_true',default=False)
 #  cli.add_argument('--publish',    help='rsync to www dir', action='store_true',default=False)
 #  cli.add_argument('--webdir',     help='rsync target dir'+df, type=str,default=None)
 #  cli.add_argument('--webhost',    help='rsync target host'+df, type=str,default='jlabl5')
-#  cli.add_argument('--input',      help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
 
   args = cli.parse_args()
 
@@ -201,14 +198,17 @@ if __name__ == '__main__':
 
   # generate the list of workflows to process:
   workflows=[]
-  for wf in SwifStatus.getWorkflowNames():
-    if len(args.workflow)==0:
-      if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
-        workflows.append(wf)
-    else:
-      for x in args.workflow:
-        if re.match(x,wf) is not None:
+  if args.read is not None:
+    workflows.append(''.join(args.read.split('.')[0:-1]))
+  else:
+    for wf in SwifStatus.getWorkflowNames():
+      if len(args.workflow)==0:
+        if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
           workflows.append(wf)
+      else:
+        for x in args.workflow:
+          if re.match(x,wf) is not None:
+            workflows.append(wf)
 
   # require user input before deleting workflows:
   if args.delete and len(workflows)>0:

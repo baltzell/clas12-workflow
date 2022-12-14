@@ -93,45 +93,52 @@ class Stats(collections.OrderedDict):
 
 class SwifStatus():
 
-  def __init__(self,name):
+  def __init__(self,name,source=None):
     self.name=name
     self.__status=None
     self.__details=None
     self.tagsMerged=False
     self.user=getpass.getuser()
+    self.source=source
 
   def __str__(self):
     return json.dumps(self.getStatus(),**_JSONFORMAT)
 
-  def getStatus(self,source=None):
+  def getStatus(self):
     if self.__status is None:
-      if source is None:
+      if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
         # if we hook to OrderedDict here, the order is preserved, but key/values get converted to tuple.
         # python3 apparently preserves ordering
         self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
-      elif isinstance(source,list) or isinstance(source,dict):
-        self.__status=source
-      elif os.path.isfile(source):
-        self.__status=json.load(open(source,'r'))
-      elif isinstance(source,str):
-        self.__status=json.loads(source)
+      elif os.path.isfile(self.source):
+        with open(self.source,'rb') as f:
+          self.__status=json.loads(f.read().decode('UTF-8'))
+        # with python3, that can become:
+        #self.__details=json.load(open(self.source,encoding='UTF-8'))
+      elif isinstance(self.source,str):
+        self.__status=json.loads(self.source)
+      elif isinstance(self.source,list) or isinstance(self.source,dict):
+        self.__status=self.source
       else:
         raise TypeError('Cannot set SwifStatus.status')
     return self.__status
 
-  def getDetails(self,source=None):
-    self.getStatus(source)
+  def getDetails(self):
+    self.getStatus()
     if self.__details is None:
-      if source is None:
+      if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
         self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
-      elif isinstance(source,list) or isinstance(source,dict):
-        self.__details=source
-      elif os.path.isfile(source):
-        self.__details=json.load(open(source,'r'))
-      elif isinstance(source,str):
-        self.__details=json.loads(source)
+      elif os.path.isfile(self.source):
+        with open(self.source,'rb') as f:
+          self.__details=json.loads(f.read().decode('UTF-8'))
+        # with python3, that can become:
+        #json.load(open(self.source,encoding='UTF-8'))
+      elif isinstance(self.source,str):
+        self.__details=json.loads(self.source)
+      elif isinstance(self.source,list) or isinstance(self.source,dict):
+        self.__details=self.source
       else:
         raise TypeError('Cannot set SwifStatus.details')
     return self.__details
