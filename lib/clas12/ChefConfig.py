@@ -18,6 +18,10 @@ CHOICES={
 'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
 }
 
+STOCK_TRAIN_YAMLS={}
+for x in sorted(glob.glob(_TOPDIR+'/yamls/train_*.yaml')):
+  STOCK_TRAIN_YAMLS[os.path.basename(x)[6:][:-5]] = x
+
 CFG=json.load(open(_TOPDIR+'/lib/clas12/defaults.json','r'))
 
 if CFG['logDir'] is None:
@@ -103,21 +107,16 @@ class ChefConfig(collections.OrderedDict):
     for x in ['reconYaml','trainYaml']:
       if self[x] is None:
         continue
-      elif self[x].startswith('/') or self[x].startswith('.'):
+      elif x is 'trainYaml' and self[x] in STOCK_TRAIN_YAMLS:
+        _LOGGER.info('Using stock train yaml: '+self[x])
+        self[x] = STOCK_TRAIN_YAMLS[self[x]]
+      else:
         if not os.path.isfile(self[x]):
           _LOGGER.critical('Nonexistent user yaml: '+self[x])
           sys.exit(1)
         self[x] = os.path.abspath(self[x])
         # set it to read-only:
         os.chmod(self[x], stat.S_IRUSR|stat.S_IRGRP|stat.S_IROTH)
-      else:
-        yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
-        if os.path.isfile(yamlprefix+self[x]+'.yaml'):
-          self[x] = yamlprefix+self[x]+'.yaml'
-          _LOGGER.info('Using stock yaml: '+self[x])
-        else:
-          _LOGGER.critical('Nonexistent stock yaml: '+self[x])
-          sys.exit(1)
       if x=='reconYaml':
         good=False
         with open(self[x],'r') as f:
@@ -150,12 +149,6 @@ class ChefConfig(collections.OrderedDict):
 
   def getCli(self):
 
-    stockReconYamls,stockTrainYamls=[],[]
-    for x in sorted(glob.glob(_TOPDIR+'/yamls/recon_*.yaml')):
-      stockReconYamls.append(os.path.basename(x)[6:][:-5])
-    for x in sorted(glob.glob(_TOPDIR+'/yamls/train_*.yaml')):
-      stockTrainYamls.append(os.path.basename(x)[6:][:-5])
-
     cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
         epilog='(*) = required option for all models, from command-line or config file')
 
@@ -177,8 +170,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
-    cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
-    cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
+    cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file', type=str,default=None)
+    cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (or a stock option: %s)'%('/'.join(STOCK_TRAIN_YAMLS.keys())), type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, while negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
