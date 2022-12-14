@@ -155,7 +155,10 @@ class ReconJob(CLAS12Job):
     self.nfiles += 1
     self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
   def setCmd(self):
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
+    cmd = ''
+    if self.cfg['denoise']:
+      cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh && '
+    cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
