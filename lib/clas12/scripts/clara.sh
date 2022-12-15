@@ -91,6 +91,7 @@ cat $yaml
 echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
 
 # run clara:
+date +'CLARA START: %F %H:%M:%S'
 $CLARA_HOME/lib/clara/run-clara \
         -i . \
         -o . \
@@ -102,6 +103,7 @@ $CLARA_HOME/lib/clara/run-clara \
         $yaml \
         ./filelist.txt
 claraexit=$?
+date +'CLARA STOP: %F %H:%M:%S'
 ls -lt
 
 # check outputs:
