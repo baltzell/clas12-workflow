@@ -230,13 +230,11 @@ class SwifStatus():
 ##############################################################################
 
   def getTagValues(self,tag):
-    vals=[]
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
         if 'tags' in job and tag in job['tags']:
           if job['tags'][tag] not in vals:
-            vals.append(job['tags'][tag])
-    return sorted(vals)
+            yield job['tags'][tag]
 
   def getTagValue(self,tag):
     if not self.tagsMerged:
@@ -284,7 +282,6 @@ class SwifStatus():
           return False
 
   def findMissingOutputs(self,tape=False):
-    ret=[]
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
         if 'attempts' in job:
@@ -294,11 +291,9 @@ class SwifStatus():
                 for out in job['outputs']:
                   if 'remote' in out:
                     if not self.exists(out['remote'],tape):
-                      ret.append(out['remote'])
-    return ret
+                      yield out['remote']
 
   def getOutputDirs(self):
-    ret=[]
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:
         if 'outputs' in job:
@@ -311,8 +306,7 @@ class SwifStatus():
                 x = os.path.dirname(x)
               except:
                 pass
-              ret.append(x)
-    return set(ret)
+              yield x
 
   def getJobNamesByTag(self,tags):
     ret={}
@@ -330,13 +324,12 @@ class SwifStatus():
     return ret
 
   def getJobNamesByRun(self,runs):
-    ret=[]
     data=self.getJobNamesByTag(['run'])
     if 'run' in data:
       for r,f in data['run'].items():
         if int(r) in runs:
-          ret.extend(f)
-    return ret
+          for x in f:
+            yield x
 
   def abandonJobsByRun(self,runs):
     ret=''
@@ -353,41 +346,63 @@ class SwifStatus():
 ##############################################################################
 ##############################################################################
 
-  def getLastAttempt(self,job):
-    # FIXME at python3.
-    if 'attempts' in job:
-      return job['attempts'][-1]
-    elif u'attempts' in job:
-      return job[u'attempts'][-1]
+  @staticmethod
+  def get(dictionary,key):
+    if key in dictionary:
+      return dictionary.get(key)
+    if unicode(key,'utf-8') in dictionary:
+      return dicionary.get(unicode(key,'utf-8'))
     return None
 
+  @staticmethod
+  def getLastAttempt(job):
+    attempts = SwifStatus.get(job,'attempts')
+    # used to assume ordering:
+    #if attempts is not None and len(attempts)>0:
+    #  return attempts[-1]
+    last_attempt = None
+    if attempts is not None:
+      for i in range(len(attempts)):
+        ss = SwifStatus.get(attempts[i],'slurm_start')
+        if ss is not None:
+          if last_attempt is None or ss > last_attempt.get('slurm_start'):
+            last_attempt = attempts[i]
+    return last_attempt
+
+  @staticmethod
+  def isJobProblematic(job,problem='ANY'):
+    last_attempt = SwifStatus.getLastAttempt(job)
+    if last_attempt is not None:
+      p = SwifStatus.get(last_attempt,'job_attempt_problem')
+      if problem == 'ANY':
+        if p is not None:
+          return True
+        s = SwifStatus.get(last_attempt,'job_attempt_status')
+        if s is None or (s!='done' and s!=u'done'):
+          return True
+      elif problem == p:
+        return True
+    return False
+
+##############################################################################
+##############################################################################
+
   def getPersistentProblems(self,problem='ANY'):
-    jobs=[]
     for job in self.getDetails()['jobs']:
-      last_attempt = self.getLastAttempt(job)
-      if last_attempt is None:
-        continue
-      if 'job_attempt_problem' in last_attempt:
-        if problem=='ANY' or last_attempt['job_attempt_problem']==problem:
-          jobs.append(job)
-      elif u'job_attempt_problem' in last_attempt:
-        if problem=='ANY' or str(last_attempt[u'job_attempt_problem'])==problem:
-          jobs.append(job)
-    return jobs
+      if SwifStatus.isJobProblematic(job,problem):
+        yield(job)
 
   def listExitCodes(self):
     for job in self.getPersistentProblems('SLURM_FAILED'):
-      last_attempt = self.getLastAttempt(job)
-      if last_attempt is None:
-        continue
-      exit = last_attempt.get('slurm_exitcode')
-      slurmid = last_attempt.get('slurm_id')
-      swifid = last_attempt.get('job_id')
-      stdout = last_attempt.get('site_job_stdout')
-      print(str(exit)+' '+str(slurmid)+' '+str(swifid)+' '+str(stdout))
+      last_attempt = SwifStatus.getLastAttempt(job)
+      if last_attempt is not None:
+        exit = last_attempt.get('slurm_exitcode')
+        slurmid = last_attempt.get('slurm_id')
+        swifid = last_attempt.get('job_id')
+        stdout = last_attempt.get('site_job_stdout')
+        print(str(exit)+' '+str(slurmid)+' '+str(swifid)+' '+str(stdout))
 
   def getPersistentProblemInputs(self,problem='ANY'):
-    ret=[]
     for job in self.getPersistentProblems(problem):
       if 'inputs' in job:
         for x in job['inputs']:
@@ -397,41 +412,36 @@ class SwifStatus():
               ignore=True
               break
           if not ignore:
-            ret.append(x['remote'])
-    return ret
+            yield(x['remote'])
 
   def getPersistentProblemJobs(self,problem='ANY'):
-    return json.dumps(self.getPersistentProblems(problem),**_JSONFORMAT)
+    return json.dumps(list(self.getPersistentProblems(problem)),**_JSONFORMAT)
 
-  def getPersistentProblemLogs(self,logdir=None):
-    ret = []
-    if logdir is None or logdir is False:
-      logdir = '/farm_out/%s/%s'%(getpass.getuser(),self.name)
+  def getPersistentProblemLogs(self):
     for job in self.getPersistentProblems():
-      if 'job_name' in job:
-        ret.extend(glob.glob('%s/%s*'%(logdir,job['job_name'])))
-    return ret
+      if 'site_job_stdout' in job:
+        yield job.get('site_job_stdout')
+      if 'site_job_stderr' in job:
+        yield job.get('site_job_stderr')
 
-  def tailPersistentProblemLogs(self,logdir=None,nlines=10):
-    for x in self.getPersistentProblemLogs(logdir):
+  def tailPersistentProblemLogs(self,nlines=10):
+    for x in self.getPersistentProblemLogs():
       print('##########################################################')
       print('  '+x)
       print('##########################################################')
       print('\n'.join(FileUtil.tail(x,nlines)))
 
   def getCurrentProblems(self):
-    ret=[]
     for status in self.getStatus():
       # hmm, this picked up unicode when switching to SWIF2 apparentely,
       # This makes no sense, must've been some other change, maybe different python2 versions ...
       # This should all go away with python3
       if status.get(u'problem_types') is not None:
         for p in status[u'problem_types'].split(','):
-          ret.append(p)
+          yield p
       elif status.get('problem_types') is not None:
         for p in status['problem_types'].split(','):
-          ret.append(p)
-    return ret
+          yield p
 
   def tallyAllProblems(self):
     data = collections.OrderedDict()
@@ -513,45 +523,40 @@ class SwifStatus():
     return ret
 
   def retryProblems(self,problem_request=[]):
-    ret=[]
     problems=self.getCurrentProblems()
-    ret.extend(self.modifyJobReqs(problems))
+    for x in self.modifyJobReqs(problems):
+      yield x
     for problem in problems:
       if problem not in problem_request:
         if problem not in SWIF_PROBLEMS_ALWAYS_RETRY:
           continue
       retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
-      ret.append(' '.join(retryCmd))
-      ret.append(subprocess.check_output(retryCmd))
-    return ret
+      yield ' '.join(retryCmd)
+      yield subprocess.check_output(retryCmd)
 
   def abandonProblems(self,types):
-    ret=[]
     for problem in self.getCurrentProblems():
       if problem not in types and 'ANY' not in types:
         continue
       retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
-      ret.append(retryCmd)
-      ret.append(subprocess.check_output(retryCmd))
-    return ret
+      yield retryCmd
+      yield subprocess.check_output(retryCmd)
 
   def modifyJobReqs(self,problems):
-    ret=[]
     if 'AUGER-TIMEOUT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-time','add','300m'])
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
-      ret.append(' '.join(modifyCmd))
-      ret.append(subprocess.check_output(modifyCmd))
+      yield ' '.join(modifyCmd)
+      yield subprocess.check_output(modifyCmd)
     if 'AUGER-OVER_RLIMIT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-ram','add','1gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
-      ret.append(' '.join(modifyCmd))
-      ret.append(subprocess.check_output(modifyCmd))
-    return ret
+      yield ' '.join(modifyCmd)
+      yield subprocess.check_output(modifyCmd)
 
   def exists(self,path,tape=False):
     ret = os.path.exists(path)
@@ -560,63 +565,11 @@ class SwifStatus():
         ret = os.path.exists('/mss/'+path[7:])
     return ret
 
-# FIXME:  update for SWIF2
-#SWIF_JSON_KEYS=[
-#'workflow_name',
-#'workflow_site',
-#'workflow_id',
-#'workflow_user'
-#'max_concurrent',
-#'job_limit',
-#'error_limit',
-#'phase_limit',
-#'phase',
-#'jobs',
-#'succeeded',
-#'attempts',
-#'frozen',
-#'undispatched',
-#'dispatched',
-#'dispatched_preparing',
-#'dispatched_running',
-#'dispatched_pending',
-#'dispatched_other',
-#'dispatched_reaping',
-#'abandoned'
-#'failed',
-#'canceled',
-#'suspended',
-#'auger_active',
-#'auger_depend',
-#'auger_pending',
-#'auger_staging_in',
-#'auger_finishing',
-#'auger_staging_out',
-#'problems',
-#'problem_types',
-#'problem_swif_user_non_zero',
-#'problem_swif_system_error',
-#'problem_swif_missing_output',
-#'problem_auger_canceled',
-#'problem_auger_input_fail',
-#'problem_auger_output_fail',
-#'problem_auger_timeout',
-#'problem_auger_unknown',
-#'problem_auger_failed',
-#'problem_auger_over_rlimit',
-#'input_mb_processed',
-#'output_mb_generated',
-#'update_ts',
-#'create_ts',
-#'current_ts',
-#'summary_ts'
-#]
-
 if __name__ == '__main__':
   s=SwifStatus(sys.argv[1])#'test-rec-v0_R5038x6')
 #  s.mergeTags()
 #  print(s.getPrettyStatus())
 #  print(s.getPrettyJsonStatus())
 #  s.showPersistentProblems();
-  print(('\n'.join(s.getTagValues('run'))))
+  print(('\n'.join(sorted(s.getTagValues('run')))))
 

@@ -58,7 +58,7 @@ def processWorkflow(workflow,args):
       print(status.getSummaryStats('phase')),
     return
 
-  if args.problemStats or args.problemNodes:
+  if args.problemStats:
     print('\nProblem summary for '+workflow+':')
     print(status.summarizeProblems(pernode=True))
     return
@@ -73,11 +73,11 @@ def processWorkflow(workflow,args):
     return
 
   # print contents of logs from jobs problems:
-  if args.problemLogs is not False or args.problemLogsTail is not False:
-    if args.problemLogsTail > 0:
-      status.tailPersistentProblemLogs(args.problemLogs,args.problemLogsTail)
-    else:
-      print('\n'.join(status.getPersistentProblemLogs(args.problemLogs)))
+  if args.problemLogsTail is not False:
+    status.tailPersistentProblemLogs(args.problemLogsTail)
+    return
+  elif args.problemLogs:
+    print('\n'.join(status.getPersistentProblemLogs()))
     return
 
   # print inputs of jobs with problems:
@@ -165,15 +165,14 @@ if __name__ == '__main__':
   cli.add_argument('--abandon',      help='abandon jobs corresponding to a problem type (repeatable)',  metavar='PROBLEM', action='append',default=[])
   cli.add_argument('--problems',     help='show details of jobs whose most recent attempt was problematic', metavar='PROBLEM',nargs='?',const='ANY',default=False)
   cli.add_argument('--problemStats', help='show summary of all problems during the workflow', default=False,action='store_true')
-  cli.add_argument('--problemNodes', help='same as --problemStats but per node', default=False,action='store_true')
   cli.add_argument('--problemInputs',help='generate list of input files for jobs with problems', metavar='PROBLEM',nargs='?',const='ANY',default=False)
-  cli.add_argument('--problemLogs',  help='directory to print names of log files with problems', metavar='PATH',nargs='?',const=None,default=False)
-  cli.add_argument('--problemLogsTail', help='number of lines to tail from the problem logs', metavar='#',type=int,nargs='?',const=10,default=False)
+  cli.add_argument('--problemLogs',  help='print names of log files with problems', default=False, action='store_true')
+  cli.add_argument('--problemLogsTail', help='print number of lines from end of problem logs', metavar='#',type=int,nargs='?',const=10,default=False)
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--deleteComplete', help='delete all completed workflows', default=False, action='store_true')
-  cli.add_argument('--read',        help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
+  cli.add_argument('--read',         help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
 #  cli.add_argument('--logDir',      help='local log directory'+df, metavar='PATH',type=str,default=None)
 #  cli.add_argument('--save',        help='save to logs', action='store_true',default=False)
 #  cli.add_argument('--jobLogs',    help='move job logs when complete', action='store_true',default=False)
@@ -192,15 +191,9 @@ if __name__ == '__main__':
     if len(args.matchAll)>0 or len(args.matchAny)>0:
       cli.error('--workflow not supported in conjuction with either --matchAll or --matchAny')
 
-  if args.problemLogs is not False and args.problemLogs is not None:
-    if not os.path.isdir(args.problemLogs):
-      cli.error('optional argument to --problemLogs must be a directory')
-
   # generate the list of workflows to process:
   workflows=[]
-  if args.read is not None:
-    workflows.append(''.join(args.read.split('.')[0:-1]))
-  else:
+  if args.read is None:
     for wf in SwifStatus.getWorkflowNames():
       if len(args.workflow)==0:
         if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
@@ -209,6 +202,8 @@ if __name__ == '__main__':
         for x in args.workflow:
           if re.match(x,wf) is not None:
             workflows.append(wf)
+  else:
+    workflows.append(''.join(args.read.split('.')[0:-1]))
 
   # require user input before deleting workflows:
   if args.delete and len(workflows)>0:
