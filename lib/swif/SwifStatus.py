@@ -371,16 +371,8 @@ class SwifStatus():
 
   @staticmethod
   def isJobProblematic(job,problem='ANY'):
-    last_attempt = SwifStatus.getLastAttempt(job)
-    if last_attempt is not None:
-      p = SwifStatus.get(last_attempt,'job_attempt_problem')
-      if problem == 'ANY':
-        if p is not None:
-          return True
-        s = SwifStatus.get(last_attempt,'job_attempt_status')
-        if s is None or (s!='done' and s!=u'done'):
-          return True
-      elif problem == p:
+    if job.get('job_attempt_status') == 'problem':
+      if problem=='ANY' or job.get('job_attempt_problem')==problem:
         return True
     return False
 
