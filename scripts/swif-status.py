@@ -105,7 +105,7 @@ def processWorkflow(workflow,args):
         sunz_inputs=[]
         if user_error_type in status.getCurrentProblems():
           sunz_inputs = status.getPersistentProblemInputs(user_error_type)
-      res = status.retryProblems(args.retry)
+      res = [ x for x in status.retryProblems(args.retry) ]
       if len(res)>0 and not args.quiet:
         print(status.getPrettyStatus())
         print('\n'+'\n'.join(res))
