@@ -60,7 +60,7 @@ SWIF_PROBLEMS_ALWAYS_RETRY=[
 ]
 
 def getWorkflowNames():
-  for x in json.loads(subprocess.check_output([SWIF,'list','-display','json']).decode('UTF-8')):
+  for x in json.loads(subprocess.check_output([SWIF,'list','-archived','-display','json']).decode('UTF-8')):
     if x.get('workflow_name') is not None:
       yield x.get('workflow_name')
 
