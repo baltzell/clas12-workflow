@@ -515,10 +515,11 @@ class SwifStatus():
     return ret
 
   def retryProblems(self,problem_request=[]):
-    problems=self.getCurrentProblems()
-    for x in self.modifyJobReqs(problems):
-      yield x
-    for problem in problems:
+    #problems=[x for x in self.getCurrentProblems()]
+    #print(json.dumps([x for x in problems],**_JSONFORMAT))
+    #for x in self.modifyJobReqs(problems):
+    #  yield x
+    for problem in self.getCurrentProblems():
       if problem not in problem_request:
         if problem not in SWIF_PROBLEMS_ALWAYS_RETRY:
           continue
