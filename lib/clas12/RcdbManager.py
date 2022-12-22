@@ -20,16 +20,13 @@ class RcdbManager():
     # try to import RCDB python module:
     try:
       self.rcdb=__import__('rcdb')
+      self.db=self.rcdb.RCDBProvider(self.uri)
     except:
-      _LOGGER.warning('Failed to load RCDB python module from $PYTHONPATH.')
+      _LOGGER.error('Failed to load RCDB python module from $PYTHONPATH.')
       self.rcdb=None
+      sys.exit()
 
   def load(self,run):
-
-    # exit if we couldn't find RCDB python module:
-    if self.rcdb is None:
-      _LOGGER.error('Failed to load RCBD python module from $PYTHONPATH.')
-      sys.exit()
 
     # exit if run isn't an integer:
     try:
@@ -45,10 +42,9 @@ class RcdbManager():
     # connect to database:
     _LOGGER.debug('Opening connection to '+self.uri+' for run '+str(run))
     try:
-      db=self.rcdb.RCDBProvider(self.uri)
       # load all the condition types:
       if self.types is None:
-        self.types=db.get_condition_types()
+        self.types=self.db.get_condition_types()
         while True:
           pruned=False
           for ii in range(len(self.types)):
@@ -68,7 +64,7 @@ class RcdbManager():
     for t in self.types:
       self.data[int(run)][t.name]=''
       try:
-        self.data[int(run)][t.name]=db.get_condition(int(run),t.name).value
+        self.data[int(run)][t.name]=self.db.get_condition(int(run),t.name).value
         found=True
       except:
         pass
@@ -78,16 +74,8 @@ class RcdbManager():
       _LOGGER.error('Failed to retrieve any constants for run '+str(run))
 
     # close connection:
-    db.disconnect()
+    self.db.disconnect()
     _LOGGER.debug('Closed connection to '+self.uri)
-
-  def __str__(self):
-    # prune the null entries:
-    data=copy.deepcopy(self.data)
-    for run in list(data.keys()):
-      if data[run] is None:
-        data.pop(run)
-    return json.dumps(data,default=str,indent=2,separators=(',',': '))
 
   def get(self,run,key):
     self.load(run)
@@ -104,15 +92,29 @@ class RcdbManager():
   def getRunStartTime(self,run):
     return self.get(run,'run_start_time')
 
-  def _csvHeader(self):
+  def csvHeader(self):
     return 'run,'+','.join([t.name for t in self.types])
 
+  def csvRun(self,run):
+    if self.data.get(run) is not None:
+      return str(run)+','+','.join([str(self.data[run][t.name]) for t in self.types])
+    return ''
+
   def csv(self):
-    csv=[self._csvHeader()]
+    csv=[self.csvHeader()]
     for r in sorted(self.data.keys()):
       if self.data[r] is not None:
-        csv.append(str(r)+','+','.join([str(self.data[r][t.name]) for t in self.types]))
+        csv.append(self.csvRun(r))
     return '\n'.join(csv)
+
+  def __str__(self):
+    # prune the null entries:
+    data=copy.deepcopy(self.data)
+    for run in list(data.keys()):
+      if data[run] is None:
+        data.pop(run)
+    return json.dumps(data,default=str,indent=2,separators=(',',': '))
+
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[%(name)-15s] %(message)s')

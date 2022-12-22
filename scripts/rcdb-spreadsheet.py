@@ -18,11 +18,20 @@ if args.rmax < args.rmin:
   cli.error('rmax cannot be less than rmin')
 
 rm=RcdbManager()
-for run in range(args.rmin,args.rmax+1):
-  rm.load(run)
+run=args.rmin-1
+first=False
+
+while True:
+
+  run = rm.db.get_next_run(run)
+
+  rm.load(run.number)
+  if not args.j:
+    if first:
+      print(rm.csvHeader())
+      first=False
+    print((rm.csvRun(run.number)))
 
 if args.j:
   print(rm)
-else:
-  print((rm.csv()))
 
