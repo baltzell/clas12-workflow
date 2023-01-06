@@ -256,6 +256,9 @@ class ChefConfig(collections.OrderedDict):
 
   def _verifyConfig(self):
 
+    if self['tag'] is None:
+      self.cli.error('"tag" must be specified.')
+
     if self['forties']:
       self['fileRegex'] = '.*clas[_A-Za-z]*_(\d+)\.evio\.(0004\d+)'
 
@@ -267,9 +270,6 @@ class ChefConfig(collections.OrderedDict):
 
     if self['runGroup'] is None:
       self.cli.error('"runGroup" must be defined.')
-
-    if self['tag'] is None:
-      self.cli.error('"tag" must be specified.')
 
     if self['runs'] is None or len(self['runs'])<1:
       self.cli.error('"runs" must be defined.')
