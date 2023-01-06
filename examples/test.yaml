@@ -1,0 +1,74 @@
+
+configuration:
+  global:
+      timestamp: 12/06/2021-09:00:00
+      variation: rga_spring2018
+  io-services:
+    writer:
+      compression: 2
+      schema_dir: /group/clas12/packages/clara/5.0.2_6.5.6.3/plugins/clas12/etc/bankdefs/hipo4/singles/calibration/
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Full_torus_r251_phi181_z251_08May2018.dat
+    DCHB:
+      dcGeometryVariation: rga_spring2018
+      dcWireDistortion: "true"
+      dcT2DFunc: "Polynomial"
+    DCTB:
+      dcGeometryVariation: rga_spring2018
+
+configuration:
+  global:
+    variation: rga_spring2018
+    dcGeometryVariation: rga_spring2018
+  io-services:
+    writer:
+      compression: 2
+      schema_dir: /group/clas12/packages/coatjava/8.4.0/etc/bankdefs/hipo4/singles/calib/
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
+      
+io-services:
+  reader:
+    class: org.jlab.io.clara.HipoToHipoReader
+    name: HipoToHipoReader
+  writer:
+    class: org.jlab.io.clara.HipoToHipoWriter
+    name: HipoToHipoWriter
+
+services:
+  - class: org.jlab.clas.swimtools.MagFieldsEngine
+    name: MAGFIELDS
+  - class: org.jlab.service.dc.DCHBClustering
+    name: DCCR
+  - class: org.jlab.service.dc.DCHBPostClusterConv
+    name: DCHB
+  - class: org.jlab.service.ftof.FTOFHBEngine
+    name: FTOFHB
+  - class: org.jlab.service.ec.ECEngine
+    name: EC
+  - class: org.jlab.rec.cvt.services.CVTEngine
+    name: CVTFP
+  - class: org.jlab.service.ctof.CTOFEngine
+    name: CTOF
+  - class: org.jlab.service.htcc.HTCCReconstructionService
+    name: HTCC
+  - class: org.jlab.service.eb.EBHBEngine
+    name: EBHB
+  - class: org.jlab.service.dc.DCTBEngine
+    name: DCTB
+  - class: org.jlab.service.fmt.FMTEngine
+    name: FMT
+  - class: org.jlab.rec.cvt.services.CVTSecondPassEngine
+    name: CVTSP
+  - class: org.jlab.service.ftof.FTOFTBEngine
+    name: FTOFTB
+  - class: org.jlab.service.eb.EBTBEngine
+    name: EBTB
+
+mime-types:
+  - binary/data-hipo
+
