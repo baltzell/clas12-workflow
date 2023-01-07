@@ -279,3 +279,21 @@ def getRunList(data):
   # return sorted and unique list:
   return sorted(list(set(runs)))
 
+# emulate os.path.commonprefix for python prior to 3.5:
+def commonprefix(filelist):
+  prefix = None
+  for f in filelist:
+    if not f.startswith('/'):
+      raise ValueError('Non-absolute path:  '+f)
+    f = f.strip('/').split('/')[:-1]
+    if prefix is None:
+      prefix = f
+      continue
+    for i,(x,y) in enumerate(list(zip(prefix,f))):
+      if x != y:
+        prefix = prefix[:i]
+        break
+  if prefix is not None:
+    prefix = '/'+'/'.join(prefix)
+  return prefix
+

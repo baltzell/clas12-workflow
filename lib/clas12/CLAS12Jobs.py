@@ -4,11 +4,14 @@ import ClaraYaml
 import ChefUtil
 import SwifJob
 from RunFileUtil import RunFile
+from RunFileUtil import commonprefix
 from CLAS12Job import CLAS12Job
 
 _LOGGER=logging.getLogger(__name__)
 
 _DEBUG=False
+
+_INPUTSTAGING=False
 
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
@@ -160,6 +163,8 @@ class ReconJob(CLAS12Job):
       cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh && '
     cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
+    if self.cfg['nevents']>0:
+      cmd += ' -n %d'%(self.cfg['nevents'])
     if _DEBUG:
       cmd += ' -n 5000'
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
@@ -198,13 +203,13 @@ class TrainJob(CLAS12Job):
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     TrainJob.HOURS_INC = 0.5
-    TrainJob.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename)
+    TrainJob.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename,_INPUTSTAGING)
   def addInputData(self,filenames):
     for x in filenames:
       if not x.endswith('.hipo'):
         _LOGGER.critical('Non-HIPO file detected for a train job: '+x)
         sys.exit(99)
-      CLAS12Job.addInputData(self,x)
+      CLAS12Job.addInputData(self,x,_INPUTSTAGING)
     if self.cfg['workDir'] is None:
       outDir=self.cfg['outDir']
     else:
@@ -221,6 +226,10 @@ class TrainJob(CLAS12Job):
   def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
+    if not _INPUTSTAGING:
+      prefix = commonprefix(self.inputData)+'/'
+      cmd = 'set p=%s && %s'%(prefix,cmd)
+      cmd += ' %s'%(' '.join(['$p/%s'%(x[len(prefix):]) for x in self.inputData]))
     cmd += ' && ls -lhtr'
     CLAS12Job.setCmd(self,cmd)
 

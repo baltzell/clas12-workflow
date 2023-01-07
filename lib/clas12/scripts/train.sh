@@ -23,12 +23,22 @@ while getopts "p:l:t:n:y:" OPTION; do
         t)  threads=$OPTARG ;;
         n)  nevents="-e $OPTARG" ;;
         y)  yaml=$OPTARG ;;
+        j)  jobname=$OPTARG ;;
         ?)  exit 1 ;;
     esac
 done
 
 shift $((OPTIND-1))
-[[ $# -ne 0 ]] && jobname=$1
+
+# setup filelist:
+if [ $# -gt 0 ]
+then
+    ln -s $@ .
+fi
+find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
+
+echo 'cat filelist.txt:'
+cat filelist.txt
 
 # if it's an exclusive job:
 [[ $threads -eq 0 ]] && threads=`grep -c ^processor /proc/cpuinfo`
@@ -64,8 +74,6 @@ mkdir -p $CLARA_USER_DATA/log
 mkdir -p $CLARA_USER_DATA/config
 mkdir -p $CLARA_USER_DATA/data/output
 
-# setup filelist:
-find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
 ls -lt
 
 # check inputs:

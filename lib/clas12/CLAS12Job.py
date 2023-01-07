@@ -42,6 +42,7 @@ class CLAS12Job(SwifJob):
     if isinstance(filename,list):
       for x in filename: self.addInputData(x,auger)
     else:
+      filename = os.path.normpath(filename)
       basename=filename.split('/').pop()
       self.inputData.append(filename)
       if auger: self.addInput(basename,filename)

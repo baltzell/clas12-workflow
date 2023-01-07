@@ -7,5 +7,7 @@ clas12-workflow.py \
 --outDir /volatile/clas12/users/baltzell/wok-test \
 --reconYaml ./examples/test.yaml \
 --trainYaml calib \
---coatjava 8.4.0  
+--coatjava 8.4.0 \
+--forties \
+--nevents 5000
 

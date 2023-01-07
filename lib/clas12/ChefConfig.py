@@ -194,6 +194,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format for matching run and file numbers, default="%s"'%CFG['fileRegex'], type=str, default=None)
     cli.add_argument('--forties', help='set --fileRegex for files in the 40s', default=False, action='store_true')
     cli.add_argument('--graalvm', help='use GraalVM instead of JVM', default=False, action='store_true')
+    cli.add_argument('--nevents', metavar='#', help='number of events to reconstruct', default=0, type=int)
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
@@ -255,6 +256,9 @@ class ChefConfig(collections.OrderedDict):
         self[key]=val
 
   def _verifyConfig(self):
+
+    if self['nevents'] > 0:
+      _LOGGER.warning('Only processing %d events per file'%self['nevents'])
 
     if self['tag'] is None:
       self.cli.error('"tag" must be specified.')
