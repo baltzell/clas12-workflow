@@ -1,4 +1,4 @@
-import os,logging
+import os,sys,logging
 
 from SwifJob import SwifJob
 from SwifWorkflow import SwifWorkflow
@@ -21,12 +21,36 @@ class CLAS12Workflow(SwifWorkflow):
       if len(r)>1:
         self.name+='x%d'%(len(r))
     self.logDir=None
+    if not self.check():
+      sys.exit(7)
     self._mkdirs()
 
   def _mkdirs(self):
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
       ChefUtil.mkdir(self.logDir,'slurm log')
+
+  def check(self):
+    ret,tape,disk,multiwarn = True,False,False,False
+    for xx in self.getGroups():
+      dirname = None
+      for yy in xx:
+        if dirname is None:
+          dirname = os.path.dirname(yy)
+        else:
+          if dirname != os.path.dirname(yy):
+            if not multiwarn:
+              _LOGGER.critical('A single run containing inputs from multiple directories is not allowed.')
+              multiwarn = True
+            ret = False
+        if yy.startswith('/mss'):
+          tape = True
+        else:
+          disk = True
+    if tape and disk:
+      ret = False
+      _LOGGER.critical('Mixing inputs from both tape and disk in the same workflow is not allowed.')
+    return ret
 
   def addJob(self,job):
     if isinstance(job,list):

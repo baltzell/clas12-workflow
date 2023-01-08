@@ -8,7 +8,6 @@ logger=logging.getLogger(__name__)
 print('')
 cc=ChefConfig(sys.argv[1:])
 workflow=cc.getWorkflow()
-
 workflow.generate()
 
 logger.info('Created workflow with %d jobs based on %d runs with %d total input files and %d phases'%\

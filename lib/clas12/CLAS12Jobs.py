@@ -11,8 +11,6 @@ _LOGGER=logging.getLogger(__name__)
 
 _DEBUG=False
 
-_INPUTSTAGING=False
-
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
     SwifJob.JputJob.__init__(self,workflow)
@@ -201,15 +199,19 @@ class TrainJob(CLAS12Job):
     # TODO: choose time based on #events:
     self.setTime('24h')
     self.nfiles = 0
+    self._stageInputs = False
   def setRequestIncrements(self,filename):
     TrainJob.HOURS_INC = 0.5
-    TrainJob.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename,_INPUTSTAGING)
+    TrainJob.BYTES_INC = ChefUtil.getTrainDiskBytes(self.cfg['reconYaml'],filename,self._stageInputs)
   def addInputData(self,filenames):
     for x in filenames:
+      if x.startswith('/mss'):
+        # /mss must have come from staging, so let it be:
+        self._stageInputs = True
       if not x.endswith('.hipo'):
         _LOGGER.critical('Non-HIPO file detected for a train job: '+x)
         sys.exit(99)
-      CLAS12Job.addInputData(self,x,_INPUTSTAGING)
+      CLAS12Job.addInputData(self,x,self._stageInputs)
     if self.cfg['workDir'] is None:
       outDir=self.cfg['outDir']
     else:
@@ -226,7 +228,7 @@ class TrainJob(CLAS12Job):
   def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
-    if not _INPUTSTAGING:
+    if not self._stageInputs:
       prefix = commonprefix(self.inputData)+'/'
       cmd = 'set p=%s && %s'%(prefix,cmd)
       cmd += ' %s'%(' '.join(['$p/%s'%(x[len(prefix):]) for x in self.inputData]))
