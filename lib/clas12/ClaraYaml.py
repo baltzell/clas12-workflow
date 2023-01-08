@@ -192,6 +192,17 @@ class ClaraYaml:
     logging.getLogger(__name__).critical('Could not find CCDB variation '+variation+' as specified in YAML: '+self.filename)
     return False
 
+  def get(self,key):
+    ret = {}
+    if 'global' in self.yaml['configuration']:
+      if key in self.yaml['configuration']['global']:
+        ret['global'] = self.yaml['configuration']['global']['key']
+    if 'services' in self.yaml['configuration']:
+      for name,val in self.yaml['configuration']['services'].items():
+        if key in val:
+          ret[name] = val['key']
+    return ret
+
   def checkTimestamp(self,timestamp):
     # check the basic format is valid:
     m = re.match('\d\d/\d\d/\d\d\d\d$',timestamp)
