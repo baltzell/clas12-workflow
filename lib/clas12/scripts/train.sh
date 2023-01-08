@@ -16,6 +16,7 @@ nevents=
 logdir=.
 threads=12
 yaml=clara.yaml
+jobname=train
 while getopts "p:l:t:n:y:" OPTION; do
     case $OPTION in
         l)  logdir=$OPTARG ;;
@@ -27,17 +28,10 @@ while getopts "p:l:t:n:y:" OPTION; do
 done
 
 shift $((OPTIND-1))
-if [[ $# -ne 1 ]]; then
-    echo "usage: train.sh [ OPTIONS ] jobname"
-    exit 1
-fi
-jobname=$1
+[[ $# -eq 1 ]] && jobname=$1
 
 # if it's an exclusive job:
-if [ $threads -eq 0 ]
-then
-  threads=`grep -c ^processor /proc/cpuinfo`
-fi
+[[ $threads -eq 0 ]] && threads=`grep -c ^processor /proc/cpuinfo`
 
 # get libraries:
 CLASSPATH="${CLARA_HOME}/lib/*"
@@ -57,11 +51,18 @@ export CLASSPATH
 trainids=`sed 's/^\s*//' $yaml | grep '^id:' | awk '{print$2}' | sort -n | uniq`
 echo "train.sh: INFO: Train IDs:  "$trainids
 
-# check existence, size, and hipo-utils -test:
+# check existence and size:
+hipocheck_e() {
+    ( [ -e $1 ] && [ $(stat -L -c%s $1) -gt 100 ] ) || ( echo "train.sh: ERROR: Missing/Bogus File: $1" 2>&1 && false )
+}
+# check hipo-utils -test:
+hipocheck_i() {
+    ( hipo-utils -test $1 ) || ( echo "train.sh: ERROR: Corrupt File: $1" 2>&1 && false )
+}
+# check both:
 hipocheck() {
-    ( [ -e $1 ] && [ $(stat -L -c%s $1) -gt 100 ] && hipo-utils -test $1 ) \
-        || \
-    ( echo "train.sh: ERROR: Corrupt File: $1" 2>&1 && false )
+    hipo_check_e $1
+    hipo_check_i $1
 }
 
 # run-clara uses some of these to store info during job:
@@ -98,14 +99,23 @@ $CLARA_HOME/lib/clara/run-clara \
 claraexit=$?
 ls -lt
 
-# check and rename outputs:
+# first check all the output files exist:
+for xx in `cat filelist.txt`
+do
+    for nn in $trainids
+    do
+        hipocheck_e ./skim_${xx}_${nn}.hipo || ( rm -f *.hipo && false ) || exit 102
+    done
+done
+
+# then check that they're not broken and rename them:
 for xx in `cat filelist.txt`
 do
     for nn in $trainids
     do
         yy=./skim_${xx}_${nn}.hipo
         zz=./skim${nn}_${xx}
-        hipocheck $yy || ( rm -f *.hipo && false ) || exit 102
+        hipocheck_i $yy || ( rm -f *.hipo && false ) || exit 102
         mv -f $yy $zz
     done
 done
