@@ -115,7 +115,7 @@ class DecodingJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
-  THRD_MEM_REQ={0:0, 16:12, 20:16, 24:20, 32:28, 36:32, 40:36, 48:44}
+  THRD_MEM_REQ={0:0, 16:16, 20:16, 24:20, 32:28, 36:32, 40:36, 48:44}
   THRD_MEM_LIM={0:0, 16:10, 20:14, 24:18, 32:26, 36:30, 40:34, 48:42}
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
@@ -126,7 +126,7 @@ class ReconJob(CLAS12Job):
       self.addEnv('COATJAVA',cfg['clara']+'/plugins/clas12')
     # only limit the memory for non-exclusive jobs:
     if ReconJob.THRD_MEM_LIM[cfg['threads']] > 0:
-      self.addEnv('JAVA_OPTS','-Xmx%dg -Xms8g'%ReconJob.THRD_MEM_LIM[cfg['threads']])
+      self.addEnv('JAVA_OPTS','-Xmx%dg -Xms%dg'%(ReconJob.THRD_MEM_LIM[cfg['threads']],ReconJob.THRD_MEM_LIM[cfg['threads']]))
     self.setRam(str(ReconJob.THRD_MEM_REQ[cfg['threads']])+'GB')
     self.setCores(self.cfg['threads'])
     self.addTag('mode','recon')
@@ -154,14 +154,14 @@ class ReconJob(CLAS12Job):
     # and now update the resource requests when every file is added:
     self.nfiles += 1
     self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
-  def setCmd(self,hack):
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
+  def setCmd(self):
+    cmd = ''
+    if self.cfg['denoise']:
+      cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh && '
+    cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
       cmd += ' -n 5000'
-    if self.cfg['claraLogDir'] is not None:
-      cmd += ' -l '+self.cfg['claraLogDir']+' '
-    cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
@@ -189,7 +189,7 @@ class TrainJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('CLARA_HOME',cfg['clara'])
-    self.addEnv('JAVA_OPTS','-Xmx8g -Xms6g')
+    self.addEnv('JAVA_OPTS','-Xmx8g -Xms8g')
     self.setRam('10GB')
     self.setCores(12)
     self.addTag('mode','ana')
@@ -218,12 +218,9 @@ class TrainJob(CLAS12Job):
       self.setRequestIncrements(filenames[0])
     self.nfiles += len(filenames)
     self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
-  def setCmd(self,hack):
+  def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
-    if self.cfg['claraLogDir'] is not None:
-      cmd += ' -l '+self.cfg['claraLogDir']+' '
-    cmd += ' '+self.getJobName().replace('--00001','-%.5d'%hack)
     cmd += ' && ls -lhtr'
     CLAS12Job.setCmd(self,cmd)
 
@@ -257,7 +254,7 @@ class TrainMrgJob(CLAS12Job):
 class TrainCleanupJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
-    self.setRam('100MB')
+    self.setRam('200MB')
     self.setTime('2h')
     self.addTag('mode','anaclean')
   def setCmd(self):

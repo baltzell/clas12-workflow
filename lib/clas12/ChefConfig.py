@@ -1,4 +1,4 @@
-import os,re,sys,glob,json,copy,logging,getpass,argparse,traceback,collections
+import os,re,sys,stat,glob,json,copy,logging,getpass,argparse,traceback,collections
 import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
@@ -17,6 +17,10 @@ CHOICES={
 'node'    : ['general','centos77','farm19','farm18','farm16','farm14','farm13','amd','xeon'],
 'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
 }
+
+STOCK_TRAIN_YAMLS={}
+for x in sorted(glob.glob(_TOPDIR+'/yamls/train_*.yaml')):
+  STOCK_TRAIN_YAMLS[os.path.basename(x)[6:][:-5]] = x
 
 CFG=json.load(open(_TOPDIR+'/lib/clas12/defaults.json','r'))
 
@@ -103,19 +107,16 @@ class ChefConfig(collections.OrderedDict):
     for x in ['reconYaml','trainYaml']:
       if self[x] is None:
         continue
-      elif self[x].startswith('/') or self[x].startswith('.'):
+      elif x is 'trainYaml' and self[x] in STOCK_TRAIN_YAMLS:
+        _LOGGER.info('Using stock train yaml: '+self[x])
+        self[x] = STOCK_TRAIN_YAMLS[self[x]]
+      else:
         if not os.path.isfile(self[x]):
           _LOGGER.critical('Nonexistent user yaml: '+self[x])
           sys.exit(1)
         self[x] = os.path.abspath(self[x])
-      else:
-        yamlprefix = '%s/yamls/%s_'%(_TOPDIR,x.replace('Yaml',''))
-        if os.path.isfile(yamlprefix+self[x]+'.yaml'):
-          self[x] = yamlprefix+self[x]+'.yaml'
-          _LOGGER.info('Using stock yaml: '+self[x])
-        else:
-          _LOGGER.critical('Nonexistent stock yaml: '+self[x])
-          sys.exit(1)
+        # set it to read-only:
+        os.chmod(self[x], stat.S_IRUSR|stat.S_IRGRP|stat.S_IROTH)
       if x=='reconYaml':
         good=False
         with open(self[x],'r') as f:
@@ -148,12 +149,6 @@ class ChefConfig(collections.OrderedDict):
 
   def getCli(self):
 
-    stockReconYamls,stockTrainYamls=[],[]
-    for x in glob.glob(_TOPDIR+'/yamls/recon_*.yaml'):
-      stockReconYamls.append(os.path.basename(x)[6:][:-5])
-    for x in glob.glob(_TOPDIR+'/yamls/train_*.yaml'):
-      stockTrainYamls.append(os.path.basename(x)[6:][:-5])
-
     cli=argparse.ArgumentParser(description='Generate a CLAS12 SWIF workflow.',
         epilog='(*) = required option for all models, from command-line or config file')
 
@@ -175,9 +170,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--clara',metavar='PATH',help='clara install location (unnecessary if coatjava is specified as a VERSION)', type=str,default=None)
 
     cli.add_argument('--threads', metavar='#',help='number of Clara threads', type=int, default=None, choices=CHOICES['threads'])
-    cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file (stock options = %s)'%('/'.join(stockReconYamls)), type=str,default=None)
-    cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (stock options = %s)'%('/'.join(stockTrainYamls)), type=str,default=None)
-#    cli.add_argument('--claraLogDir',metavar='PATH',help='location for clara log files', type=str,default=None)
+    cli.add_argument('--reconYaml',metavar='PATH',help='absolute path to recon yaml file', type=str,default=None)
+    cli.add_argument('--trainYaml',metavar='PATH',help='absolute path to train yaml file (or a stock option: %s)'%('/'.join(STOCK_TRAIN_YAMLS.keys())), type=str,default=None)
 
     cli.add_argument('--phaseSize', metavar='#',help='number of files (or runs if less than 100) per phase, while negative is unphased', type=int, default=None)
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
@@ -186,6 +180,7 @@ class ChefConfig(collections.OrderedDict):
 #    if getpass.getuser().find('clas12-')<0:
     cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
+    cli.add_argument('--denoise', help='enable DC denoising', default=False, action='store_true')
     cli.add_argument('--nopostproc', help='disable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
     cli.add_argument('--helflip',  help='flip offline helicity (ONLY for data decoded prior to 6.5.11)', action='store_true', default=None)
@@ -198,6 +193,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--fileRegex',metavar='REGEX',help='input filename format for matching run and file numbers, default="%s"'%CFG['fileRegex'], type=str, default=None)
     cli.add_argument('--forties', help='set --fileRegex for files in the 40s', default=False, action='store_true')
+    cli.add_argument('--graalvm', help='use GraalVM instead of JVM', default=False, action='store_true')
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
@@ -260,6 +256,9 @@ class ChefConfig(collections.OrderedDict):
 
   def _verifyConfig(self):
 
+    if self['tag'] is None:
+      self.cli.error('"tag" must be specified.')
+
     if self['forties']:
       self['fileRegex'] = '.*clas[_A-Za-z]*_(\d+)\.evio\.(0004\d+)'
 
@@ -272,14 +271,17 @@ class ChefConfig(collections.OrderedDict):
     if self['runGroup'] is None:
       self.cli.error('"runGroup" must be defined.')
 
-    if self['tag'] is None:
-      self.cli.error('"tag" must be specified.')
-
     if self['runs'] is None or len(self['runs'])<1:
       self.cli.error('"runs" must be defined.')
 
     if len(self['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
+    else:
+      for x in self['inputs']:
+        if x.startswith('/cache'):
+          _LOGGER.warning('Some of your --inputs start with /cache, which is almost never a good idea.')
+          _LOGGER.warning('Are you sure you REALLY want to do that, rather than /mss?')
+          break
 
     # print ignoring decoding-specific parameters:
     if self['model'].find('dec')<0:

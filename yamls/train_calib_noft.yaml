@@ -30,15 +30,6 @@ services:
 #################################################### CND
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: CND
-#################################################### FT
-  - class: org.jlab.jnp.grapes.services.GenericWagon
-    name: FTp
-  - class: org.jlab.jnp.grapes.services.GenericWagon
-    name: FTm
-  - class: org.jlab.jnp.grapes.services.GenericWagon
-    name: FTn
-  - class: org.jlab.jnp.grapes.services.GenericWagon
-    name: FTt
 #################################################### BAND
   - class: org.jlab.jnp.grapes.services.GenericWagon
     name: BAND
@@ -65,7 +56,7 @@ configuration:
   io-services:
     writer:
       compression: 2
-      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-2-RASTER::*,RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments,REC::*-3-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-4-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-5-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks,CVTRec::Trajectory-6-RUN::config,REC::Particle,REC::Event,CVTRec::Tracks,CVTRec::Trajectory,CND::*-7-RUN::config,REC::Event,REC::Particle,FT::particles,FTCAL::*,FTHODO::*-8-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler-9-RUN::config,REC::Event,REC::Calorimeter,REC::Scintillator,REC::Particle,ECAL::*-10-RUN::config,REC::Particle,REC::Track,TimeBasedTrkg::TBTracks,TimeBasedTrkg:Trajectory,FMT*
+      filter: 1-RUN::config,RUN::rf,RF::.*,REC::Event,REC::Particle,REC::Scintillator-2-RASTER::*,RUN::config,TimeBasedTrkg::TBHits,TimeBasedTrkg::TBSegments,REC::*-3-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,FTOF::*,TimeBasedTrkg::TBTracks-4-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,REC::Cherenkov,HTCC::.*-5-RUN::rf,RUN::config,REC::Event,REC::Particle,REC::Track,REC::Scintillator,CTOF::*,CVTRec::Tracks,CVTRec::Trajectory-6-RUN::config,REC::Particle,REC::Event,CVTRec::Tracks,CVTRec::Trajectory,CND::*-8-RUN::config,REC::Event,REC::Particle,REC::Calorimeter,REC::Scintillator,REC::Track,BAND::*,RUN::scaler-9-RUN::config,REC::Event,REC::Calorimeter,REC::Scintillator,REC::Particle,ECAL::*-10-RUN::config,REC::Particle,REC::Track,TimeBasedTrkg::TBTracks,TimeBasedTrkg:Trajectory,FMT*
   services:
 #################################################### RF
     RF:
@@ -103,22 +94,6 @@ configuration:
       forward: 11:X+:X-:Xn
       central: 1-:X+:X-:Xn
 #################################################### FT
-    FTp:
-      id: 7
-      forward: 11:X+:X-:Xn
-      tagger: 1+:X+:X-:Xn
-    FTm:
-      id: 7
-      forward: 11:X+:X-:Xn
-      tagger: 1-:X+:X-:Xn
-    FTn:
-      id: 7
-      forward: 11:X+:X-:Xn
-      tagger: 1n:X+:X-:Xn
-    FTt:
-      id: 7
-      tagger: 2n:X+:X-:Xn      
-#################################################### BAND
     BAND:
       id: 8
       forward: 11:X+:X-:Xn

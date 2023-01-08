@@ -21,10 +21,31 @@ then
 fi
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
 
+# more aggressive memory releasing:
+#JAVA_OPTS="$JAVA_OPTS -XX:MinHeapFreeRatio=5"
+#JAVA_OPTS="$JAVA_OPTS -XX:MaxHeapFreeRatio=10"
+#JAVA_OPTS="$JAVA_OPTS -XX:GCTimeRatio=4"
+#JAVA_OPTS="$JAVA_OPTS -XX:AdaptiveSizePolicyWeight=90"
+
+# supposed to be on by default in OpenJDK 11:
+#JAVA_OPTS="$JAVA_OPTS -XX:+UseContainerSupport"
+# fraction of supposed to default to 25%:
+#JAVA_OPTS="$JAVA_OPTS -XX:MaxRAMPercentage=75"
+
+#JAVA_OPTS="$JAVA_OPTS XX:+UseCGroupMemoryLimitForHeap"
+
+#JAVA_OPTS="$JAVA_OPTS -XX:NativeMemoryTracking=summary"
+#JAVA_OPTS="$JAVA_OPTS -XX:+PrintNMTStatistics"
+
+#JAVA_OPTS="$JAVA_OPTS -XX:ThreadStackSize"
+
+export JAVA_OPTS
+
 outprefix=rec_
 logdir=.
 threads=16
 yaml=clara.yaml
+jobname=recon
 while getopts "p:l:t:n:y:" OPTION; do
     case $OPTION in
         p)  outprefix=$OPTARG ;;
@@ -37,17 +58,10 @@ while getopts "p:l:t:n:y:" OPTION; do
 done
 
 shift $((OPTIND-1))
-if [[ $# -ne 1 ]]; then
-    echo "usage: clara.sh [ OPTIONS ] jobname"
-    exit 1
-fi
-jobname=$1
+[[ $# -ne 0 ]] && jobname=$1
 
 # if it's an exclusive job:
-if [ $threads -eq 0 ]
-then
-  threads=`grep -c ^processor /proc/cpuinfo`
-fi
+[[ $threads -eq 0 ]] && threads=`grep -c ^processor /proc/cpuinfo`
 
 # check existence, size, and hipo-utils -test:
 hipocheck() {
@@ -72,7 +86,12 @@ do
     hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
 done
 
+echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
+cat $yaml
+echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
+
 # run clara:
+date +'CLARA START: %F %H:%M:%S'
 $CLARA_HOME/lib/clara/run-clara \
         -i . \
         -o . \
@@ -84,6 +103,7 @@ $CLARA_HOME/lib/clara/run-clara \
         $yaml \
         ./filelist.txt
 claraexit=$?
+date +'CLARA STOP: %F %H:%M:%S'
 ls -lt
 
 # check outputs:

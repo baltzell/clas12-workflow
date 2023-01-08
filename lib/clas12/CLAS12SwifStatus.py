@@ -21,8 +21,8 @@ def getHeader(workflowName):
 
 class CLAS12SwifStatus(SwifStatus):
 
-  def __init__(self,name,args):
-    SwifStatus.__init__(self,name)
+  def __init__(self,name,args,source=None):
+    SwifStatus.__init__(self,name,source)
     self.args=args
     self.logFilename    =None
     self.statusFilename =None

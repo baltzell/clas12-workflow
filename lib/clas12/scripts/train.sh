@@ -16,6 +16,7 @@ nevents=
 logdir=.
 threads=12
 yaml=clara.yaml
+jobname=train
 while getopts "p:l:t:n:y:" OPTION; do
     case $OPTION in
         l)  logdir=$OPTARG ;;
@@ -27,17 +28,10 @@ while getopts "p:l:t:n:y:" OPTION; do
 done
 
 shift $((OPTIND-1))
-if [[ $# -ne 1 ]]; then
-    echo "usage: train.sh [ OPTIONS ] jobname"
-    exit 1
-fi
-jobname=$1
+[[ $# -ne 0 ]] && jobname=$1
 
 # if it's an exclusive job:
-if [ $threads -eq 0 ]
-then
-  threads=`grep -c ^processor /proc/cpuinfo`
-fi
+[[ $threads -eq 0 ]] && threads=`grep -c ^processor /proc/cpuinfo`
 
 # get libraries:
 CLASSPATH="${CLARA_HOME}/lib/*"
@@ -80,7 +74,12 @@ do
     hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
 done
 
+echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
+cat $yaml
+echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
+
 # run clara:
+date +'CLARA START: %F %H:%M:%S'
 $CLARA_HOME/lib/clara/run-clara \
         -i . \
         -o . \
@@ -92,6 +91,7 @@ $CLARA_HOME/lib/clara/run-clara \
         $yaml \
         ./filelist.txt
 claraexit=$?
+date +'CLARA STOP: %F %H:%M:%S'
 ls -lt
 
 # check and rename outputs:

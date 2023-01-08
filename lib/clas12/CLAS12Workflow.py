@@ -27,10 +27,6 @@ class CLAS12Workflow(SwifWorkflow):
     if self.cfg['logDir'] is not None:
       self.logDir = '%s/%s'%(self.cfg['logDir'],self.name)
       ChefUtil.mkdir(self.logDir,'slurm log')
-    if self.cfg['claraLogDir'] is not None:
-      logDir = '%s/%s'%(self.cfg['claraLogDir'],self.name)
-      self.cfg['claraLogDir'] = logDir
-      ChefUtil.mkdir(logDir,'clara log')
 
   def addJob(self,job):
     if isinstance(job,list):
@@ -57,7 +53,7 @@ class CLAS12Workflow(SwifWorkflow):
         if len(ants)>0:
           job.antecedents.extend([x.getJobName() for x in ants])
         for x in inps: job.addInputData(x)
-        job.setCmd(len(self.jobs))
+        job.setCmd()
         jobs.append(job)
         inps,ants=[],[]
     self.addJob(jobs)
@@ -84,7 +80,7 @@ class CLAS12Workflow(SwifWorkflow):
             job.antecedents.append(x.getJobName())
         else:
           job.addInputData(inps)
-        job.setCmd(len(self.jobs))
+        job.setCmd()
         jobs.append(job)
         self.addJob(job)
         inps=[]
