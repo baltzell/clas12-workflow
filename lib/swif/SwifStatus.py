@@ -421,7 +421,10 @@ class SwifStatus():
       print('##########################################################')
       print('  '+x)
       print('##########################################################')
-      print('\n'.join(FileUtil.tail(x,nlines)))
+      if not os.path.exists(x):
+        print('!!!!!!! Log file does not exist:  '+x)
+      else:
+        print('\n'.join(FileUtil.tail(x,nlines)))
 
   def getCurrentProblems(self):
     for status in self.getStatus():
