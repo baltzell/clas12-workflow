@@ -3,7 +3,7 @@
 # quick hack to get denoising validation in the workflow
 #
 
-d=/home/gavalian/Software/hipo/extensions/dc
+d=/group/clas12/packages/hipo/1.9/extensions/dc
 
 # requires this subdir in $PWD:
 ln -sf $d/network
