@@ -71,7 +71,7 @@ ls -lt
 # check inputs:
 for xx in `cat filelist.txt`
 do
-    hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
+    hipocheck $xx || ( rm -f *.hipo && false ) || exit 103
 done
 
 echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
@@ -101,7 +101,7 @@ do
     do
         yy=./skim_${xx}_${nn}.hipo
         zz=./skim${nn}_${xx}
-        hipocheck $yy || ( rm -f *.hipo && false ) || exit 102
+        hipocheck $yy || ( rm -f *.hipo && false ) || exit 104
         mv -f $yy $zz
     done
 done

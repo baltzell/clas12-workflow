@@ -33,7 +33,7 @@ then
     else
         echo ERROR RUNNING rebuild-scalers
         rm -f tmp.hipo $output
-        exit 1
+        exit 105
     fi
 fi
 
@@ -51,7 +51,7 @@ then
     else
         echo ERROR RUNNING postprocess
         rm -f tmp.hipo $output
-        exit 2
+        exit 106
     fi
 fi
 

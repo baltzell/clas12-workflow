@@ -16,7 +16,7 @@ for x in `find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;'`
 do
   date +'DENOISE START: %F %H:%M:%S'
   $d/denoise2.exe -i $x -o dn_${x} -l 0.01 -t 16 
-  [ $? -ne 0 ] && echo 'DENOISE ERROR' && exit 123
+  [ $? -ne 0 ] && echo 'DENOISE ERROR' && exit 100
   date +'DENOISE STOP: %F %H:%M:%S'
   mv -f dn_${x} $x # replace the input file
 done
