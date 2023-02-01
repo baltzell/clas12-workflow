@@ -78,7 +78,7 @@ class ChefConfig(collections.OrderedDict):
     for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','nopostproc','helflip','recharge','ccdbsqlite']:
       if self.get(k) != None and cfg.get(k) != None:
         if k=='clara' or k=='coatjava':
-          if os.path.normath(self[k]) != os.path.normath(cfg[k]):
+          if os.path.normpath(self[k]) != os.path.normpath(cfg[k]):
             ret.append(k)
         elif self[k] != cfg[k]:
           ret.append(k)
