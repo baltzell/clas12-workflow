@@ -76,8 +76,12 @@ class ChefConfig(collections.OrderedDict):
   def diff(self,cfg):
     ret = []
     for k in ['clara','coatjava','reconYaml','trainYaml','mergeSize','nopostproc','helflip','recharge','ccdbsqlite']:
-      if self.get(k) != None and cfg.get(k) != None and self[k] != cfg[k]:
-        ret.append(k)
+      if self.get(k) != None and cfg.get(k) != None:
+        if k=='clara' or k=='coatjava':
+          if os.path.normath(self[k]) != os.path.normath(cfg[k]):
+            ret.append(k)
+        elif self[k] != cfg[k]:
+          ret.append(k)
     return ret
 
   def __eq__(self,cfg):
