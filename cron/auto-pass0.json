@@ -1,0 +1,14 @@
+{
+  "runGroup": "rgc",
+  "model": "decrec",
+  "project": "hallb-pro",
+  "reconYaml": "/home/clas12-6/auto-pass0/pass0.7.yaml",
+  "clara": "/group/clas12/packages/clara/5.0.2_8.5.0",
+  "trainYaml": "rf",
+  "outDir": "/volatile/clas12/rg-c/production/pass0.7",
+  "reconSize": 1,
+  "threads": 16,
+  "runs": "17645-",
+  "ccdbsqlite": null,
+  "submit": false
+}
