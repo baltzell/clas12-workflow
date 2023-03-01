@@ -37,6 +37,10 @@ tag=$1
 workdir=$2
 inputdir=$3
 
+mkdir -p $workdir/logs
+mkdir -p $workdir/subs
+cd $workdir/subs
+
 config=$workdir/config.json
 blacklist=$workdir/blacklist.txt
 
