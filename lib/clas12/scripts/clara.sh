@@ -77,7 +77,7 @@ mkdir -p $CLARA_USER_DATA/config
 mkdir -p $CLARA_USER_DATA/data/output
 
 # setup filelist:
-find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' > filelist.txt
+find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' | sort > filelist.txt
 ls -lt
 
 # check inputs:
