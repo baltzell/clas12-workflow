@@ -46,13 +46,15 @@ logdir=.
 threads=16
 yaml=clara.yaml
 jobname=recon
-while getopts "p:l:t:n:y:" OPTION; do
+nocheck=0
+while getopts "p:l:t:n:y:c" OPTION; do
     case $OPTION in
         p)  outprefix=$OPTARG ;;
         l)  logdir=$OPTARG ;;
         t)  threads=$OPTARG ;;
         n)  nevents="-e $OPTARG" ;;
         y)  yaml=$OPTARG ;;
+        c)  nocheck=1 ;;
         ?)  exit 1 ;;
     esac
 done
@@ -81,10 +83,13 @@ find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;' | sort > filelist.tx
 ls -lt
 
 # check inputs:
-for xx in `cat filelist.txt`
-do
-    hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
-done
+if [ $nocheck -eq 0 ]
+then
+    for xx in `cat filelist.txt`
+    do
+        hipocheck $xx || ( rm -f *.hipo && false ) || exit 101
+    done
+fi
 
 echo YAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAMLYAML
 cat $yaml
@@ -107,10 +112,13 @@ date +'CLARA STOP: %F %H:%M:%S'
 ls -lt
 
 # check outputs:
-for xx in `cat filelist.txt`
-do
-    hipocheck $outprefix$xx || ( rm -f *.hipo && false ) || exit 102
-done
+if [ $nocheck -eq 0 ]
+then
+    for xx in `cat filelist.txt`
+    do
+        hipocheck $outprefix$xx || ( rm -f *.hipo && false ) || exit 102
+    done
+fi
 
 # if all else is well, use exit code from run-clara:
 exit $claraexit
