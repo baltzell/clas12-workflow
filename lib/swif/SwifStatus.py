@@ -526,9 +526,39 @@ class SwifStatus():
       if problem not in problem_request:
         if problem not in SWIF_PROBLEMS_ALWAYS_RETRY:
           continue
-      retryCmd=[SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
-      yield ' '.join(retryCmd)
-      yield subprocess.check_output(retryCmd)
+      cmd = [SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
+      yield ' '.join(cmd)
+      yield subprocess.check_output(cmd)
+
+  def resumeJobs(self, problems=['SITE_REAP_FAIL','SWIF_INPUT_FAIL','SWIF_OUTPUT_FAIL','SWIF_MISSING_OUTPUT']):
+    for problem in problems:
+      for job in self.getPersistemtProblems(problem):
+        cmd = ['swif2','resume-jobs',self.name,'-problem',problem]
+        yield ' '.join(cmd)
+        yield subprocess.check_output(cmd)
+        break
+
+  def refreshInputs(self, problem=['SLURM_FAILED']):
+    for job in self.getPersistentProblems(problem):
+      args = []
+      if 'inputs' in job and 'job_id' in job:
+        for x in job['inputs']:
+          ignore=False
+          for suff in ['.sh','.yaml','.json','.sqlite']:
+            if x['local'].endswith(suff):
+              ignore=True
+              break
+          if not ignore:
+            if x['remote'].startswith('file:jlab:'):
+              args.extend(['-refresh-input',x['remote'][10:]])
+            else:
+              print('WHAT IS THIS:  '+x['local'])
+      if len(args) > 0:
+        cmd=[SWIF,'retry-jobs','-workflow',self.name]
+        cmd.extend(args)
+        cmd.append(job.get('job_id'))
+        yield ' '.join(cmd)
+        yield subprocess.check_output(cmd)
 
   def abandonProblems(self,types):
     for problem in self.getCurrentProblems():

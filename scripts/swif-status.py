@@ -26,6 +26,12 @@ def processWorkflow(workflow,args):
 #    if status.isComplete() and status.isPreviousComplete():
 #      status.moveJobLogs()
 
+  if args.refresh:
+    status.refreshInputs()
+  if args.resume:
+    status.resumeJobs()
+    return
+
   if args.exitStats:
     status.listExitCodes()
     return
@@ -150,6 +156,8 @@ if __name__ == '__main__':
   cli.add_argument('--list',         help='list workflows',    action='store_true',default=False)
   cli.add_argument('--workflow',     help='regex of workflow names, else all workflows (repeatable)', metavar='NAME', action='append',default=[])
   cli.add_argument('--retry',        help='retry problem jobs',metavar='PROBLEM', nargs='?',action='append',default=[])
+  cli.add_argument('--refresh',      help='refresh inputs for problem jobs', action='store_true', default=False)
+  cli.add_argument('--resume',       help='resume problem jobs', action='store_true', default=False)
   cli.add_argument('--details',      help='show all job details', action='store_true', default=False)
   cli.add_argument('--quiet',        help='do not print retries (for cron jobs)', action='store_true',default=False)
   cli.add_argument('--delete',       help='delete workflow(s)', action='store_true',default=False)
