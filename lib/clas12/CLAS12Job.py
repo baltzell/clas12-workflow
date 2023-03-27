@@ -1,6 +1,6 @@
 import logging,os,re,json,sys
 
-import ChefUtil,ChefConfig
+import ChefUtil
 from RunFileUtil import RunFile
 from SwifJob import SwifJob
 
@@ -64,7 +64,8 @@ class CLAS12Job(SwifJob):
     if os.path.isfile(cfgfile):
       # check for conflict with pre-existing config file:
       with open(cfgfile,'r') as f:
-        diff = self.cfg.diff(ChefConfig.ChefConfig(json.load(f)))
+        from ChefConfig import ChefConfig
+        diff = self.cfg.diff(ChefConfig(json.load(f)))
         if len(diff) != 0:
           _LOGGER.critical('Configuration conflicts with '+cfgfile)
           _LOGGER.critical('Conflicts on:  '+','.join(diff))

@@ -3,8 +3,8 @@ import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
 import CLAS12Workflows
-import CLAS12Jobs
 import ClaraYaml
+from CLAS12Jobs import ReconJob
 
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__))+'/../../')
@@ -15,7 +15,7 @@ CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
 'node'    : ['general','centos77','farm19','farm18','farm16','farm14','farm13','amd','xeon'],
-'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
+'threads' : list(ReconJob.THRD_MEM_REQ.keys()),
 }
 
 STOCK_TRAIN_YAMLS={}
