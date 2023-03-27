@@ -243,7 +243,7 @@ class ChefConfig(collections.OrderedDict):
         sys.exit(1)
       if key in int_keys:
         try:
-          val=int(val)
+          int(val)
         except:
           _LOGGER.critical('Config file\'s "'+key+'" must be an integer: '+val)
           sys.exit(1)
@@ -252,9 +252,13 @@ class ChefConfig(collections.OrderedDict):
   def _loadCliArgs(self):
     for key,val in list(vars(self.args).items()):
       if key in self:
+        # FIXME:  None is a special default case, ignore it:
         if val is None:
           continue
         if type(val) is list and len(val)==0:
+          continue
+        # FIXME: booleans with default=False and store_true are a special default case, ignore it:
+        if type(val) is bool and val is False and key in self:
           continue
         self[key]=val
 
