@@ -476,6 +476,9 @@ class ChefConfig(collections.OrderedDict):
       if self['helflip']:
         _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
+    if not self['denoise']:
+      _LOGGER.warning('denoising is disabled, is that what you really want?')
+
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
   cc=ChefConfig(sys.argv[1:])
