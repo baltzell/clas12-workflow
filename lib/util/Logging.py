@@ -11,7 +11,7 @@ class ColoredFormatter(logging.Formatter):
         if record.levelname in self.colors:
             l = record.levelname
             record.levelname = '%-20s'%( (self.color_seq % self.colors[l]) + l + self.reset_seq)
-            record.msg =  self.color_seq % (self.colors['CRITICAL']) + record.msg + self.reset_seq
+            record.msg =  self.color_seq % (self.colors[l]) + record.msg + self.reset_seq
         else:
             l = self.length - len(self.reset_seq) - len(self.color_seq)
             record.levelname = ('%%-%ds'%l) % record.levelname
