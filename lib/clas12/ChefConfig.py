@@ -477,7 +477,7 @@ class ChefConfig(collections.OrderedDict):
         _LOGGER.warning('--helflip should only be used on data decoded prior to 6.5.11')
 
     if not self['denoise']:
-      _LOGGER.warning('denoising is disabled, is that what you really want?')
+      _LOGGER.warning('Denoising is disabled, is that what you really want?')
 
 if __name__ == '__main__':
   pass
