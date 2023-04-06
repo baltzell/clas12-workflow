@@ -4,6 +4,7 @@ import ccdb
 import JarUtil
 
 _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
+_LOGGER = logging.getLogger(__name__)
 
 #
 # Checks recon YAMLs for whether:
@@ -68,16 +69,16 @@ class ClaraYaml:
     return False
 
   def checkIntegrity(self):
-    logging.getLogger(__name__).info('Checking YAML file:  '+self.filename)
+    _LOGGER.info('Checking YAML file:  '+self.filename)
     if not self.checkGroups():
       return False
     if not self.checkAscii(self.filename):
       return False
     if 'services' not in self.yaml:
-      logging.getLogger(__name__).critical('\'services\' not in YAML: '+self.filename)
+      _LOGGER.critical('\'services\' not in YAML: '+self.filename)
       return False
     if 'configuration' not in self.yaml:
-      logging.getLogger(__name__).critical('\'configuration\' not in YAML: '+self.filename)
+      _LOGGER.critical('\'configuration\' not in YAML: '+self.filename)
       return False
     for service in self.yaml['services']:
       if not self.checkService(service):
@@ -90,7 +91,7 @@ class ClaraYaml:
       return False
     for i in self.getTrainIndices():
       if i<1 or i>32:
-        logging.getLogger(__name__).critical('Train id not in valid 1-32 range:  '+str(i))
+        _LOGGER.critical('Train id not in valid 1-32 range:  '+str(i))
         return False
     return True
 
@@ -130,17 +131,17 @@ class ClaraYaml:
           try:
             key = int(key)
           except:
-            logging.getLogger(__name__).error('Non-integer wagon id in custom-names in train YAML: '+key)
+            _LOGGER.error('Non-integer wagon id in custom-names in train YAML: '+key)
             sys.exit(42)
           if key not in ret:
-            logging.getLogger(__name__).error('Invalid wagon id in custom-names in train YAML:  '+str(key))
+            _LOGGER.error('Invalid wagon id in custom-names in train YAML:  '+str(key))
             sys.exit(42)
           ret[key] = val.strip()
     # must be all-or-none:
     if None in list(ret.values()):
       for x,y in list(ret.items()):
         if y is not None:
-          logging.getLogger(__name__).error('Missing custom-name in train yaml:  '+str(ret))
+          _LOGGER.error('Missing custom-name in train yaml:  '+str(ret))
           sys.exit(42)
       for x,y in list(ret.items()):
         ret[x]='skim%d'%int(x)
@@ -150,33 +151,33 @@ class ClaraYaml:
     groups={'io-services':['reader','writer'],'services':[],'configuration':['global','io-services','custom-names','services'],'mime-types':[]}
     for group in self.yaml:
       if group not in groups:
-        logging.getLogger(__name__).error('Unknown YAML section:  '+group)
+        _LOGGER.error('Unknown YAML section:  '+group)
         return False
       if len(groups[group]) > 0:
         for x in self.yaml[group]:
           if x not in groups[group]:
-            logging.getLogger(__name__).error('Unknown YAML section:  '+group+':'+x)
+            _LOGGER.error('Unknown YAML section:  '+group+':'+x)
             return False
     return True
 
   def checkService(self,service):
     if 'class' not in service:
       if 'name' in service:
-        logging.getLogger(__name__).critical('\'class\' missing for '+service['name']+' in YAML: '+self.filename)
+        _LOGGER.critical('\'class\' missing for '+service['name']+' in YAML: '+self.filename)
       else:
-        logging.getLogger(__name__).critical('\'class\' missing for unnamed service in YAML: '+self.filename)
+        _LOGGER.critical('\'class\' missing for unnamed service in YAML: '+self.filename)
       return False
     if 'name' not in service:
       if 'class' in service:
-        logging.getLogger(__name__).critical('\'name\' missing for '+service['class']+' in YAML: '+self.filename)
+        _LOGGER.critical('\'name\' missing for '+service['class']+' in YAML: '+self.filename)
       else:
-        logging.getLogger(__name__).critical('\'name\' missing for unclassed service in YAML: '+self.filename)
+        _LOGGER.critical('\'name\' missing for unclassed service in YAML: '+self.filename)
       return False
     if service['name'].find(' ')>0:
-      logging.getLogger(__name__).critical('Space found in \''+service['name']+'\' in YAML: '+self.filename)
+      _LOGGER.critical('Space found in \''+service['name']+'\' in YAML: '+self.filename)
       return False
     if not self.findClass(service['class']):
-      logging.getLogger(__name__).critical('Could not find class '+service['class']+' specified in YAML: '+self.filename)
+      _LOGGER.critical('Could not find class '+service['class']+' specified in YAML: '+self.filename)
       return False
     self.names.append(service['name'])
     return True
@@ -189,7 +190,7 @@ class ClaraYaml:
       if variation == v.name.strip():
         return True
     self.ccdb.disconnect()
-    logging.getLogger(__name__).critical('Could not find CCDB variation '+variation+' as specified in YAML: '+self.filename)
+    _LOGGER.critical('Could not find CCDB variation '+variation+' as specified in YAML: '+self.filename)
     return False
 
   def get(self,key):
@@ -209,8 +210,8 @@ class ClaraYaml:
     if m is None:
       m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',timestamp)
     if m is None:
-      logging.getLogger(__name__).critical('Invalid timestamp format '+timestamp+' in YAML: '+self.filename)
-      logging.getLogger(__name__).critical('Expected either MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
+      _LOGGER.critical('Invalid timestamp format '+timestamp+' in YAML: '+self.filename)
+      _LOGGER.critical('Expected either MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
       return False
     # check it's really a possible timestamp:
     try:
@@ -219,13 +220,13 @@ class ClaraYaml:
       else:
         t = datetime.datetime.strptime(timestamp,'%m/%d/%Y-%H:%M:%S')
     except ValueError:
-      logging.getLogger(__name__).critical('Impossible timestamp %s in YAML: %s'%(timestamp,self.filename))
-      logging.getLogger(__name__).critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
+      _LOGGER.critical('Impossible timestamp %s in YAML: %s'%(timestamp,self.filename))
+      _LOGGER.critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
       return False
     # warn of possible day/month swap:
     if t.day < 13:
-      logging.getLogger(__name__).warning('Possible day/month swap in timestamp %s in YAML: %s'%(timestamp,self.filename))
-      logging.getLogger(__name__).warning('Expected format is MM/DD/YYYY')
+      _LOGGER.warning('Possible day/month swap in timestamp %s in YAML: %s'%(timestamp,self.filename))
+      _LOGGER.warning('Expected format is MM/DD/YYYY')
     return True
 
   def checkConfiguration(self,cfg):
@@ -244,26 +245,26 @@ class ClaraYaml:
         if not self.checkVariation(variation):
           return False
     if 'services' not in cfg:
-      logging.getLogger(__name__).warning('Configuration section does not contain a services subsetion in YAML: '+self.filename)
+      _LOGGER.warning('Configuration section does not contain a services subsetion in YAML: '+self.filename)
       return True
     for name,val in cfg['services'].items():
       if name not in self.names:
-        logging.getLogger(__name__).critical('Could not find '+name+' in service list in YAML: '+self.filename)
+        _LOGGER.critical('Could not find '+name+' in service list in YAML: '+self.filename)
         return False
       if 'variation' in val:
         if not self.checkVariation(val['variation']):
           return False
-      elif variation is None and self.check_ccdb:
-        logging.getLogger(__name__).warning('No CCDB variation specified for '+name+' in YAML: '+self.filename)
+      elif variation is None and self.check_ccdb and name != 'SWAPS':
+        _LOGGER.warning('No CCDB variation specified for '+name+' in YAML: '+self.filename)
       if 'timestamp' in val:
         if not self.checkTimestamp(val['timestamp']):
           return False
       elif timestamp is None and self.check_ccdb:
-        logging.getLogger(__name__).warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)
+        _LOGGER.warning('No CCDB timestamp specified for '+name+' in YAML: '+self.filename)
     if timestamp is None and self.check_ccdb:
       for service in services:
         if service['name'] not in cfg['services'].keys():
-          logging.getLogger(__name__).warning('No CCDB timestamp specified for '+service['name']+' in YAML: '+self.filename)
+          _LOGGER.warning('No CCDB timestamp specified for '+service['name']+' in YAML: '+self.filename)
     return True
 
   def checkAscii(self,filename):
@@ -274,20 +275,21 @@ class ClaraYaml:
         try:
           line.encode('ascii')
         except:
-          logging.getLogger(__name__).critical('Non-ASCII characters (line %d: %s )found in YAML: %s'%(lineno,line.strip(),self.filename))
+          _LOGGER.critical('Non-ASCII characters (line %d: %s )found in YAML: %s'%(lineno,line.strip(),self.filename))
           return False
     return True
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
+  logger = logging.getLogger(__name__)
   cli = argparse.ArgumentParser('Check integrity of a CLARA YAML file.')
   cli.add_argument('--clara',help='path to clara installation',metavar='PATH',type=str,default='/group/clas12/packages/clara/5.0.2_7.1.0')
   cli.add_argument('--ccdbsqlite',help='CCDB sqlite file to use',metavar='FILE',type=str,default=None)
   cli.add_argument('yaml',help='YAML file to check',type=str)
   args = cli.parse_args(sys.argv[1:])
   if checkIntegrity(args.yaml,args.clara,args.ccdbsqlite):
-    logging.getLogger(__name__).info('YAML checks passed.')
+    logger.info('YAML checks passed.')
   else:
-    logging.getLogger(__name__).critical('YAML checks failed.')
+    logger.critical('YAML checks failed.')
     sys.exit(1)
 
