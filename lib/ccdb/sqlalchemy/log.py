@@ -25,8 +25,8 @@ import sys
 # log statements don't occur in the absence of explicit
 # logging being enabled for 'sqlalchemy'.
 rootlogger = logging.getLogger('sqlalchemy')
-if rootlogger.level == logging.NOTSET:
-    rootlogger.setLevel(logging.WARN)
+#if rootlogger.level == logging.NOTSET:
+rootlogger.setLevel(logging.WARN)
 
 
 def _add_default_handler(logger):
@@ -40,7 +40,7 @@ _logged_classes = set()
 
 
 def class_logger(cls):
-    logger = logging.getLogger(cls.__module__ + "." + cls.__name__)
+    logger = logging.getLogger('sqlalchemy')#logging.getLogger(cls.__module__ + "." + cls.__name__)
     cls._should_log_debug = lambda self: logger.isEnabledFor(logging.DEBUG)
     cls._should_log_info = lambda self: logger.isEnabledFor(logging.INFO)
     cls.logger = logger
@@ -52,9 +52,11 @@ class Identified(object):
     logging_name = None
 
     def _should_log_debug(self):
+        return False
         return self.logger.isEnabledFor(logging.DEBUG)
 
     def _should_log_info(self):
+        return False
         return self.logger.isEnabledFor(logging.INFO)
 
 

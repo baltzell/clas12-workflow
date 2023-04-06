@@ -1,11 +1,13 @@
 #!/usr/bin/env python2
 import sys,os,logging
+from Logging import ColoredLogger
 from ChefConfig import ChefConfig
 
-logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
-logger=logging.getLogger(__name__)
+#logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
+#logger=logging.getLogger()
 
-print('')
+logger = logging.getLogger(__name__)
+
 cc=ChefConfig(sys.argv[1:])
 workflow=cc.getWorkflow()
 

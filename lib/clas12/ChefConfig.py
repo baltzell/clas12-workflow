@@ -480,7 +480,8 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.warning('denoising is disabled, is that what you really want?')
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
-  cc=ChefConfig(sys.argv[1:])
-  print((str(cc)))
+  pass
+  #logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
+  #cc=ChefConfig(sys.argv[1:])
+  #print((str(cc)))
 

@@ -26,12 +26,7 @@ class ColoredLogger(logging.Logger):
         self.addHandler(console)
         return
 
+# these seems to be necessary to avoid duplicate logs:
 if len(logging._handlers)==0:
   logging.setLoggerClass(ColoredLogger)
-
-
-#logger=logging.getLogger(__name__)
-#logger.info('info123')
-#logger.warning('warning123')
-#logger.critical('critical123456')
 
