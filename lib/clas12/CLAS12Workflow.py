@@ -13,7 +13,6 @@ class CLAS12Workflow(SwifWorkflow):
     SwifWorkflow.__init__(self,name)
     self.cfg=cfg
     self.addRuns(self.cfg['runs'])
-    _LOGGER.info('Finding files from '+str(self.cfg['inputs']))
     self.findFiles(self.cfg['inputs'])
     r=self.getRunList()
     if len(r)>0:
