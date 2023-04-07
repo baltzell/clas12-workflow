@@ -338,7 +338,7 @@ class ChefConfig(collections.OrderedDict):
           self.cli.error('One of "outDir" or "decDir" must be defined for decoding workflows.')
         else:
           self['decDir']=self['outDir']+'/decoded'
-          _LOGGER.warning('Using --outDir/decoded for decoding outputs ('+self['outDir']+')')
+          _LOGGER.warning('Using --outDir for decoding outputs ('+self['outDir']+')')
 
     # for train workflows, assign trainDir to outDir if it doesn't exist:
     if self['model'].find('ana')>=0:
