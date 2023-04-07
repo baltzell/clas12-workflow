@@ -210,8 +210,8 @@ class ClaraYaml:
     if m is None:
       m = re.match('\d\d/\d\d/\d\d\d\d-\d\d:\d\d:\d\d$',timestamp)
     if m is None:
-      _LOGGER.critical('Invalid timestamp format '+timestamp+' in YAML: '+self.filename)
-      _LOGGER.critical('Expected either MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
+      _LOGGER.critical('Invalid timestamp in YAML: '+timestamp)
+      _LOGGER.critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
       return False
     # check it's really a possible timestamp:
     try:
@@ -220,13 +220,13 @@ class ClaraYaml:
       else:
         t = datetime.datetime.strptime(timestamp,'%m/%d/%Y-%H:%M:%S')
     except ValueError:
-      _LOGGER.critical('Impossible timestamp %s in YAML: %s'%(timestamp,self.filename))
+      _LOGGER.critical('Invalid timestamp in YAML: '+timestamp)
       _LOGGER.critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
       return False
     # warn of possible day/month swap:
     if t.day < 13:
-      _LOGGER.warning('Possible day/month swap in timestamp %s in YAML: %s'%(timestamp,self.filename))
-      _LOGGER.warning('Expected format is MM/DD/YYYY')
+      _LOGGER.warning('Possible day/month swap in timestamp in YAML:  '+timestamp)
+      _LOGGER.critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
     return True
 
   def checkConfiguration(self,cfg):
