@@ -3,7 +3,7 @@ import logging
 class ColoredFormatter(logging.Formatter):
     def __init__(self, msg):
         self.length = 20
-        self.colors = {'WARNING':34,'CRITICAL':31,'ERROR':31}
+        self.colors = {'WARNING':35,'CRITICAL':31,'ERROR':31}
         self.reset_seq = '\033[0m'
         self.color_seq = '\033[1;%dm'
         logging.Formatter.__init__(self, msg)
