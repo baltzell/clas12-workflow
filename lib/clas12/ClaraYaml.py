@@ -226,7 +226,7 @@ class ClaraYaml:
     # warn of possible day/month swap:
     if t.day < 13:
       _LOGGER.warning('Possible day/month swap in timestamp in YAML:  '+timestamp)
-      _LOGGER.critical('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
+      _LOGGER.warning('Expected format is MM/DD/YYYY or MM/DD/YYYY-HH:MM:SS')
     return True
 
   def checkConfiguration(self,cfg):
