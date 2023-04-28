@@ -143,7 +143,7 @@ def processWorkflow(workflow,args):
 ##      subprocess.check_output(['rsync','-avz',args.logDir+'/',args.webhost+':'+args.webdir])
 
   if len(args.clas12mon)>0:
-    if Matcher.matchAny(CLAS12SwifStatus.getHeader(workflow)['tag'],args.clas12mon):
+    if Matcher.matchAny(status.name.split('-').pop(2),args.clas12mon):
       status.saveDatabase()
 
 

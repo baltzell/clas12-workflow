@@ -6,19 +6,6 @@ from SwifStatus import SwifStatus
 
 # FIXME: move logging up to SwifStatus
 
-# Assume workflow name is prefixed with 'runGroup-task-tag-'.
-# Note, we used to instead store these in Swif job tags, which was
-# cleaner but created unecessary overhead on Swif due to needing
-# to read full workflow status to just to extract a couple job tags.
-# Revisit if Swif later provides for global workflow tags.
-def getHeader(workflowName):
-  parts=workflowName.split('-')
-  header={}
-  header['run_group']=parts[0]
-  header['task']=fullModel(parts[1])
-  header['tag']=parts[2]
-  return header
-
 class CLAS12SwifStatus(SwifStatus):
 
   def __init__(self,name,args,source=None):
@@ -79,33 +66,31 @@ class CLAS12SwifStatus(SwifStatus):
       detailsFile.write(self.getPrettyJsonDetails())
       detailsFile.close()
 
+  def getStatusForDatabase(self):
+    s = self.getPrunedStatus().pop(0)
+    s['pending'] = s['dispatched_pending']
+    s['preparing'] = s['dispatched_preparing']
+    s['running'] = s['dispatched_running']
+    s['reaping'] = s['dispatched_reaping']
+    del s['abandoned']
+    del s['workflow_site']
+    del s['max_concurrent']
+    del s['workflow_user']
+    del s['workflow_id']
+    del s['dispatched_other']
+    del s['undispatched']
+    del s['summary_ts']
+    del s['dispatched_preparing']
+    del s['dispatched_reaping']
+    del s['dispatched_running']
+    del s['dispatched_pending']
+    return s
+
   def saveDatabase(self,full=False):
-    if self.dbauth is None:
-      print('Missing clas12mon credentials.')
-      return
-    elif self.name.count('-')<2:
-      print('Invalid workflow name for clas12mon:  '+self.name)
-      return
-    else:
-      data=getHeader(self.name)
-      if data['run_group'] not in CHOICES['runGroup']:
-        print('Invalid workflow name for clas12mon:  '+self.name)
-        return
-      # this is expensive (slow), as it requires requesting
-      # full workflow status from Swif:
-      if full and not self.tagsMerged:
-        self.mergeTags()
-      status=self.getPrunedStatus()
-      # ignore suspended workflows:
-      if len(status)>0 and 'suspended' in status[0]:
-        if status[0]['suspended']==1:
-          return
-      #status[0]['succeeded']=200
-      # convert to json string, and strip off leading/trailing
-      # square brackets for clas12mon:
-      data['entry'] = json.dumps(status).lstrip('[').rstrip().rstrip(']')
-      headers={'Authorization':self.dbauth}
-      return requests.post(self.dburl,data=data,headers=headers)
+    data = {'run_group':self.name.split('-').pop(0)}
+    data['entry'] = json.dumps(self.getStatusForDatabase())
+    r = requests.post(self.dburl,data=data,headers={'Authorization':self.dbauth})
+    r.raise_for_status()
 
   def moveJobLogs(self):
     workDir = self.getTagValue('workDir')
