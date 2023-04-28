@@ -268,18 +268,9 @@ class SwifStatus():
     return None
 
   def isComplete(self):
-    for status in self.getStatus():
-      tot = status.get('jobs')
-      suc = status.get('succeeded')
-      aba = status.get('abandoned')
-      if tot is not None and tot>0:
-        try:
-          if aba is None:
-            return tot == suc
-          else:
-            return tot == suc+aba
-        except TypeError:
-          return False
+    # why does it return a list???
+    for s in self.getStatus():
+      return s.get('jobs') == s.get('succeeded')+s.get('abandonded',0)
 
   def findMissingOutputs(self,tape=False):
     if 'jobs' in self.getDetails():

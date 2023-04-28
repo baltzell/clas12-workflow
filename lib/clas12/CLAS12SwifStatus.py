@@ -66,6 +66,16 @@ class CLAS12SwifStatus(SwifStatus):
       detailsFile.write(self.getPrettyJsonDetails())
       detailsFile.close()
 
+  def isCompleteInDatabase(self):
+    r = requests.get(self.dburl)
+    r.raise_for_status()
+    j = json.loads(r.text)
+    for i in range(len(j)-1,-1,-1):
+      e = j[i]['entry']
+      if e['workflow_name'] == self.name:
+        return e['succeeded']+e.get('abandoned',0) == e['jobs']
+    return False
+
   def getStatusForDatabase(self):
     s = self.getPrunedStatus().pop(0)
     s['pending'] = s['dispatched_pending']
@@ -88,9 +98,11 @@ class CLAS12SwifStatus(SwifStatus):
 
   def saveDatabase(self,full=False):
     data = {'run_group':self.name.split('-').pop(0)}
-    data['entry'] = json.dumps(self.getStatusForDatabase())
-    r = requests.post(self.dburl,data=data,headers={'Authorization':self.dbauth})
-    r.raise_for_status()
+    status = self.getStatusForDatabase()
+    if data.get('workflow_suspended',0) == 0:
+      data['entry'] = json.dumps(status)
+      r = requests.post(self.dburl,data=data,headers={'Authorization':self.dbauth})
+      r.raise_for_status()
 
   def moveJobLogs(self):
     workDir = self.getTagValue('workDir')
