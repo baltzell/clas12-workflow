@@ -157,7 +157,7 @@ class ReconJob(CLAS12Job):
   def setCmd(self):
     cmd = ''
     if self.cfg['denoise']:
-      cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh && '
+      cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh %.1f && '%self.cfg['denoise']
     cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:

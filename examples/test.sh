@@ -7,5 +7,6 @@ clas12-workflow.py \
 --outDir /volatile/clas12/users/baltzell/wok-test \
 --reconYaml ./examples/test.yaml \
 --trainYaml calib \
---coatjava 8.4.0  
+--coatjava 9.0.0 \
+--denoise
 
