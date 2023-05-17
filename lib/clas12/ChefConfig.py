@@ -74,10 +74,11 @@ class ChefConfig(collections.OrderedDict):
         sys.exit(0)
       if self['model'].find('rec') >= 0:
         cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
-        if cjv < '9.0.0':
-          self['denoise'] = 1.9
-        else:
-          self['denoise'] = 2.0
+        if self['denoise']:
+          if cjv < '9.0.0':
+            self['denoise'] = 1.9
+          else:
+            self['denoise'] = 2.0
 
   def diff(self,cfg):
     ret = []
