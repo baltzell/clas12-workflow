@@ -79,6 +79,9 @@ class ChefConfig(collections.OrderedDict):
             self['denoise'] = 1.9
           else:
             self['denoise'] = 2.0
+      if self['helflip']:
+        _LOGGER.info('--helflip is currently not allowed')
+        sys.exit(1)
 
   def diff(self,cfg):
     ret = []
