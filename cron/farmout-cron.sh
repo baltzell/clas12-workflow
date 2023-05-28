@@ -8,11 +8,11 @@ while getopts "d:z:" opt
 do
     case "${opt}" in
         d)
-            echo find $DIRECTORY -type f -mtime +$OPTARG -delete 
-            echo find $DIRECTORY -type d -mtime +$OPTARG -empty -delete 
+            find $DIRECTORY -type f -mtime +$OPTARG -delete 
+            find $DIRECTORY -type d -mtime +$OPTARG -empty -delete 
             ;;
         z)
-            echo find $DIRECTORY -type f -mtime +$OPTARG -not -name '*.gz' -exec gzip -f {} \;
+            find $DIRECTORY -type f -mtime +$OPTARG -not -name '*.gz' -exec gzip -f {} \;
             ;;
         *)
             echo -e "\nUsage = $USAGE\n"
