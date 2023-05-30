@@ -275,7 +275,7 @@ class SwifStatus():
   def isSuspended(self):
     # why does it return a list???
     for s in self.getStatus():
-      return s.get('workflow_suspended',0) == 1:
+      if s.get('workflow_suspended',0) == 1:
         return True
     return False
 
