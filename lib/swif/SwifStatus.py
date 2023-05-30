@@ -272,6 +272,13 @@ class SwifStatus():
     for s in self.getStatus():
       return s.get('jobs') == s.get('succeeded')+s.get('abandonded',0)
 
+  def isSuspended(self):
+    # why does it return a list???
+    for s in self.getStatus():
+      return s.get('workflow_suspended',0) == 1:
+        return True
+    return False
+
   def findMissingOutputs(self,tape=False):
     if 'jobs' in self.getDetails():
       for job in self.getDetails()['jobs']:

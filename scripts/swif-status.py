@@ -144,8 +144,9 @@ def processWorkflow(workflow,args):
 
   if len(args.clas12mon)>0:
     if Matcher.matchAny(status.name.split('-').pop(2),args.clas12mon):
-      if not status.isComplete() or not status.isCompleteInDatabase():
-        status.saveDatabase()
+      if not status.isSuspended():
+        if not status.isComplete() or not status.isCompleteInDatabase():
+          status.saveDatabase()
 
 
 if __name__ == '__main__':
