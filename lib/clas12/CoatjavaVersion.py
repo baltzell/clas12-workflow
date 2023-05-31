@@ -88,6 +88,8 @@ def getCoatjavaVersions():
     for clara in glob.glob(CLAS12_PACKAGES_DIR+'/clara/'+clara+'_*'):
       if clara.find('nightly')>=0:
         continue
+      if clara.count('_') > 1:
+        continue
       clara=os.path.normpath(clara)
       if os.path.isdir(clara):
         try:
