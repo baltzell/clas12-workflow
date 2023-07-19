@@ -3,10 +3,7 @@
 if ( -e /group/clas12/packages/setup.csh ) then
     source /group/clas12/packages/setup.csh
     module purge
-    module load rcdb/1.0
-    module load ccdb/1.06.02
-    module load root/6.14.04
-    module load coatjava
+    module load clas12
 else
     echo CANNOT SET ENVIRONMENT from /group/clas12/packages
 endif
