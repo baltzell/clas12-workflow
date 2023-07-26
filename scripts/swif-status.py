@@ -226,7 +226,7 @@ if __name__ == '__main__':
   else:
     for workflow in workflows:
       processWorkflow(workflow,args)
-    if args.stats:
+    if len(workflows)>1 and args.stats:
       print('\n'+separator('TOTAL'))
       print(tally)
 
