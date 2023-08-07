@@ -1,7 +1,7 @@
 # clas12-workflow
 
 ## Overview
-Wrapper tools for [JLab's Swif](https://scicomp.jlab.org/docs/swif) with full implementation of CLAS12 offline workflows.
+Wrapper tools for [JLab's Swif](https://scicomp.jlab.org/docs/swif2) with full implementation of CLAS12 offline workflows.
 
 ## Details
 `clas12-workflow.py` is the user interface for workflow generation, and its `-h` option will print the help information below.
@@ -113,7 +113,7 @@ See the [examples](./examples) directory for example command-lines and config fi
 * push status to clas12mon for timelines
 * save the current status and full job details, and publish to a web directory
 
-See [cron/swif.cron](./cron/swif.cron) for an example cron job.
+See [cron/crontab](./cron/crontab) for an example cron job.
 
 ## Features
 * intended to be extendable to non-CLAS12 workflows, see `lib/swif/` and `lib/util/`
@@ -128,7 +128,7 @@ See [cron/swif.cron](./cron/swif.cron) for an example cron job.
   * automatically retries jobs due to system failures and adjusts job resource reqs if necessary
   * utilize Swif's job tags (e.g. output directory, run/file numbers, coatjava version)
   * periodically write workflow status to clas12mon, for timeline plots and easy global status
-    * https://clas12mon.jlab.org/rga/status/decoding/
+    * <https://clas12mon.jlab.org/>
   * issues a "jcache put" at the end of each phase to force outputs to tape
 * includes CLARA log file analysis and slurm job status tools
 * initial use was decoding of CLAS12 Spring RGA data, where the requirements included:
