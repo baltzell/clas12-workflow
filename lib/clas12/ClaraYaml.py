@@ -11,6 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 #
 # every service has a configuration section
 # every service has a CCDB timestamp/variation
+# service names adhere to CLARA's ZeroMQ requirements (unique prefix)
 # timestamps have correct format
 # all classes exist in jars
 # all variations exist in CCDB
@@ -80,9 +81,16 @@ class ClaraYaml:
     if 'configuration' not in self.yaml:
       _LOGGER.critical('\'configuration\' not in YAML: '+self.filename)
       return False
-    for service in self.yaml['services']:
+    services = self.yaml['services']
+    for service in services:
       if not self.checkService(service):
         return False
+    for i,s in enumerate(services):
+      for j in range(i+1,len(services)):
+        # https://github.com/JeffersonLab/clara-java/issues/13
+        if s['name'].startswith(services[j]['name']) or services[j]['name'].startswith(s['name']):
+          _LOGGER.critical('CLARA service names cannot be a prefix of another:  %s %s'%(s['name'],services[j]['name']))
+          return False
     for x in ['reader','writer']:
       if x in self.yaml['io-services']:
         if not self.checkService(self.yaml['io-services'][x]):
@@ -249,7 +257,7 @@ class ClaraYaml:
       return True
     for name,val in cfg['services'].items():
       if name not in self.names:
-        _LOGGER.critical('Could not find '+name+' in service list in YAML: '+self.filename)
+        _LOGGER.critical('Could not find '+name+' in YAML service list: '+self.filename)
         return False
       if 'variation' in val:
         if not self.checkVariation(val['variation']):
@@ -283,7 +291,7 @@ if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
   logger = logging.getLogger(__name__)
   cli = argparse.ArgumentParser('Check integrity of a CLARA YAML file.')
-  cli.add_argument('--clara',help='path to clara installation',metavar='PATH',type=str,default='/group/clas12/packages/clara/5.0.2_7.1.0')
+  cli.add_argument('--clara',help='path to clara installation',metavar='PATH',type=str,default='/group/clas12/packages/clara/5.0.2_10.0.2')
   cli.add_argument('--ccdbsqlite',help='CCDB sqlite file to use',metavar='FILE',type=str,default=None)
   cli.add_argument('yaml',help='YAML file to check',type=str)
   args = cli.parse_args(sys.argv[1:])
