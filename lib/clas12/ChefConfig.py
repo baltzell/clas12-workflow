@@ -132,7 +132,7 @@ class ChefConfig(collections.OrderedDict):
         # set it to read-only:
         try:
           os.chmod(self[x], stat.S_IRUSR|stat.S_IRGRP|stat.S_IROTH)
-        except PermissionError as e:
+        except OSError as e:
           _LOGGER.warning('You do not own your YAML, someone else can change it later(!): '+self[x])
           pass
       if x=='reconYaml':
