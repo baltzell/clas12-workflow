@@ -115,7 +115,7 @@ class SwifJob:
 
   def checkLegalPath(self,path):
     for x in SwifJob.__INVALIDPATHCHARS:
-      if path.find(x) >= 0:
+      if path.find('match:') != 0 and path.find(x) >= 0:
         logging.getLogger(__name__).critical('Invalid character "'+x+'" in path: '+path)
         sys.exit(1)
 

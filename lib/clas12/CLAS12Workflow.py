@@ -58,6 +58,25 @@ class CLAS12Workflow(SwifWorkflow):
     self.addJob(jobs)
     return jobs
 
+  def histo(self,phase,inputs):
+    inps,ants,jobs=[],[],[]
+    for ii,inp in enumerate(inputs):
+      if isinstance(inp,SwifJob):
+        ants.append(inp)
+        inps.extend(inp.outputData)
+      else:
+        inps.append(inp)
+    job = CLAS12Jobs.HistoJob(self.name,self.cfg)
+    job.setPhase(phase)
+    if len(ants)>0:
+      job.antecedents.extend([x.getJobName() for x in ants])
+    for x in inps:
+      job.addInputData(x)
+    job.setCmd()
+    jobs.append(job)
+    self.addJob(jobs)
+    return jobs
+
   #
   # train: run trains
   # - one job per trainSize files
