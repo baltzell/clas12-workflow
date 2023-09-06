@@ -493,6 +493,9 @@ class ChefConfig(collections.OrderedDict):
     if not self['denoise'] and self['model'].find('rec')>=0:
       _LOGGER.warning('Denoising is disabled, is that what you really want?')
 
+    if self['model'].find('his')>=0:
+      self['graalvm'] = True
+
 if __name__ == '__main__':
   pass
   #logging.basicConfig(level=logging.INFO,format='%(levelname)-9s[ %(name)-15s ] %(message)s')
