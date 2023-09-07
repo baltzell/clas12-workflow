@@ -238,10 +238,10 @@ class HistoJob(CLAS12Job):
     cmd =  ' ln -s %s .'%(' '.join(self.inputData))
     cmd += ' && %s/bin/run-monitoring.sh --swifjob --focus-detectors && ls -l ./outfiles'%HistoJob.TDIR
     CLAS12Job.setCmd(self,cmd)
-  def addInputData(self,filenames,auger=False):
-    CLAS12Job.addInputData(self, filenames, auger=auger)
     outDir = '%s/hist/detectors/%s/'%(self.cfg['outDir'],self.getTag('run'))
     self.addOutputWildcard('./outfiles/*.hipo',outDir)
+  def addInputData(self,filenames,auger=False):
+    CLAS12Job.addInputData(self, filenames, auger=auger)
 
 class TrainMrgJob(CLAS12Job):
   def __init__(self,workflow,cfg):

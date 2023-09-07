@@ -80,7 +80,8 @@ class CLAS12Job(SwifJob):
     ChefUtil.mkdir(directory,tag)
     self.doReadme(directory)
     self.addTag('outDir',directory)
-    self.addOutput('match:'+glob,directory)
+    self.outputData.append(directory)
+    self.addOutput(glob,directory)
 
   def addOutputData(self,basename,directory,tag=None,auger=True):
     ChefUtil.mkdir(directory,tag)
