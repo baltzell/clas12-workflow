@@ -233,7 +233,7 @@ class HistoJob(CLAS12Job):
     self.setDisk('1GB')
     self.addTag('mode','his')
     self.addEnv('COATJAVA',cfg['coatjava'])
-    self.addEnv('PATH','${COATJAVA}/bin:${PATH}')
+    self.addEnv('PATH','/group/clas12/packages/groovy/4.0.3/bin:${COATJAVA}/bin:${PATH}')
   def setCmd(self):
     cmd =  ' ln -s %s .'%(' '.join(self.inputData))
     cmd += ' && %s/bin/run-monitoring.sh --swifjob --focus-detectors && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,self.getTag('run'))
