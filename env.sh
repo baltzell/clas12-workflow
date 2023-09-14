@@ -1,12 +1,14 @@
 
 # load dependencies:
-if [ -e /group/clas12/packages/setup.sh ]
+shell_ext=$(ps -p $$ -ocomm= | sed 's;^bash$;sh;')
+setup=/group/clas12/packages/setup.$shell_ext
+if [ -e $setup ]
 then
-    source /group/clas12/packages/setup.sh
+    source $setup
     module purge
     module load clas12
 else
-    echo WARNING:  Cannot find RCDB installation.
+    echo "WARNING:  Cannot find CLAS12 modules setup file $setup"
 fi
 
 # put clas12-workflow/lib in $PYTHONPATH
