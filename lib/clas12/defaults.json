@@ -25,6 +25,7 @@
   "recharge": false,
   "helflip": false,
   "noheldel": false,
+  "timelinePhysics": false,
   "schema": "",
   "ccdbsqlite": null,
   "logDir": null,

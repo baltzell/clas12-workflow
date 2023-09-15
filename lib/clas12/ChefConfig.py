@@ -204,6 +204,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--helflip',  help='flip offline helicity (ONLY for data decoded prior to 6.5.11)', action='store_true', default=None)
     cli.add_argument('--noheldel', help='disable delayed-helicity correction', action='store_true', default=None)
 
+    cli.add_argument('--timelinePhysics', help='for \'his\' model, produce physics timelines instead of detector timelines', default=False, action='store_true')
+
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
