@@ -10,6 +10,7 @@ import threading
 import signal
 import json
 import time
+import os
 
 root = Tk()
 
@@ -28,7 +29,6 @@ class Wokflow():
             self.guivals[k] = StringVar()
             self.guivals[k].set('Loading...')
     def load_status(self):
-#        print('Loading Wokflow '+self.name+' ...')
         self.json = json.loads(subprocess.check_output(['swif2','status','-display','json','-workflow',self.name]).decode('UTF-8')).pop()
         self.update_status()
     def update_status(self):
@@ -48,6 +48,8 @@ class Wokflow():
         print(' '.join(cmd))
         print(subprocess.check_output(cmd).decode('utf-8').strip())
         self.load_status()
+        #with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        #    executor.submit(self.load_status())
     def load_details(self):
         cmd = ['swif2','status','-jobs','-display','json','-workflow',self.name]
         print(' '.join(cmd))
@@ -79,16 +81,21 @@ class Wokflow():
             with open(path) as f:
                 for x in f.readlines():
                     yield(x.strip())
+    def format_log_file(path):
+        lines = list(Wokflow.get_file_lines(path))
+        if len(lines)>0:
+            lines.insert(0,'>'*30)
+            lines.insert(0,'>>>>> '+path)
+            lines.insert(0,'>'*30)
+            lines.extend(['\n','\n'])
+        return lines
     def show_problem_logs(self):
         self.logs_tab = Wokflow.recreate_tab(self.logs_tab, 'Problem Logs:  '+self.name)
         lines = []
         for job in self.get_problem_jobs():
-            if job.get('site_job_stderr') is not None:
-                lines.append('>>>>> '+job.get('site_job_stderr'))
-                lines.extend(get_file_lines(job.get('site_job_stderr')))
-            if job.get('site_job_stdout') is not None:
-                lines.append('>>>>> '+job.get('site_job_stdout'))
-                lines.extend(get_file_lines(job.get('site_job_stdout')))
+            for x in ['site_job_stderr','site_job_stdout']:
+                if job.get(x) is not None:
+                    lines.extend(Wokflow.format_log_file(job.get(x)))
         self.logs_tab.insert(1.0,'\n'.join(lines))
 
 workflows = {}
@@ -116,16 +123,8 @@ tab_control = ttk.Notebook(root)
 tab_summary = ttk.Frame(tab_control)
 tab_control.add(tab_summary, text='Summary')
 tab_control.pack(expand=1, fill='both')
-
-def hide():
-    global tab_loading
-    tab_loading = ttk.Frame(tab_control)
-    tab_control.add(tab_loading, text='Loading ...')
-    tab_control.select(tab_loading)
-
-def show():
-    global tab_loading
-    tab_control.forget(tab_loading)
+status_message = StringVar()
+status_message.set('Loading...')
 
 row = 0
 column = 0
@@ -170,50 +169,29 @@ def init():
         add_label(tab_summary, w.guivals['problems'])
         add_label(tab_summary, w.guivals['problem_types'])
         add_label(tab_summary, w.guivals['update_ts'])
-        #ttk.Button(tab_summary, text='Details', command=w.load_details).grid(column=column+1, row=row, padx=3, pady=1)
         options_button = ttk.Menubutton(tab_summary, text='Options')
-        options_button.grid(column=column+2, row=row, padx=3, pady=1)
+        options_button.grid(column=column+1, row=row, padx=3, pady=1)
         options_button.menu = Menu(options_button, tearoff=False)
         options_button.menu.add_command(label='Full Details', command=w.show_full_details)
         options_button['menu'] = options_button.menu
         w.options_button = options_button
         row += 1
+    ttk.Label(tab_summary, textvariable=status_message).grid(column=0, row=row, padx=0, pady=0, columnspan=column+2)
+
 
 t0 = time.time()
 
-
-#hide()
 init()
-#show()
 
 t1 = time.time()
 
-#asdf = ttk.Frame(tab_summary, padding='10 10 20 20')
-#l = ttk.Label(asdf, text='Loading ...')
-##.grid(column=0, row=row, padx=100, pady=50)
-#asdf.tkraise()
-
-#def cat():
-#    root.bind('<<event0>>',init())
-
-#root.withdraw()
-#root.after(1000,cat)
-#root.after(2000,root.deiconify)
-
-#root.bind('<<event0>>',init())
-#root.event_generate('<<event0>>', when='tail', state=123)
-
 t2 = time.time()
-
-#for w in workflows.values():
-#    root.bind('<<event1>>',w.update_status(), add='+')
 
 def dog():
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         for w in workflows.values():
             executor.submit(w.load_status())
 
-#dog()
 root.after(4000,dog)
 
 t3 = time.time()
@@ -221,9 +199,4 @@ t3 = time.time()
 #print(t1-t0,t2-t1,t3-t2)
 
 root.mainloop()
-
-#feet = StringVar()
-#feet_entry = ttk.Entry(main_frame, width=7, textvariable=feet)
-#feet_entry.grid(column=2, row=1, sticky=(W, E))
-#feet_entry.focus()
 
