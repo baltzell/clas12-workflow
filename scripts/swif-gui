@@ -13,94 +13,152 @@ import time
 import os
 
 root = Tk()
+status_message = StringVar()
+status_message.set('Loading...')
+executor = None
+
+def create_tab(name,forget=None):
+    if forget is not None:
+        tab_control.forget(forget)
+    tab = scrolledtext.ScrolledText(tab_control, undo=True)
+    tab.pack(fill='both',expand=True)
+    tab_control.add(tab, text=name)
+    tab_control.pack(expand=1, fill='both')
+    return tab
+
+def run(cmd):
+    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
+
+def get_file_lines(path):
+    with open(path) as f:
+        for x in f.readlines():
+            yield(x.strip())
+
+def format_log_file(path):
+    lines = []
+    if os.path.isfile(path):
+        lines = list(get_file_lines(path))
+        lines.insert(0,'>'*30)
+        lines.insert(0,'>>>>> '+path)
+        lines.insert(0,'>'*30)
+        lines.extend(['\n','\n'])
+    return lines
+
 
 class Wokflow():
-    def __init__(self,name,data):
+    def __init__(self, name):
         self.name = name
-        self.json = None
+        self.header = None
         self.details = None
-        self.full_details_tab = None
-        self.problem_details_tab = None
-        self.logs_tab = None
-        self.guikeys = ['jobs','complete','dispatched_running','dispatched_preparing','dispatched_pending','dispatched_reaping','dispatched_other','undispatched','update_ts','problems','problem_types']
+        self.tabs = {}
         self.guivals = {}
-        self.problem_types = set()
-        for k in self.guikeys:
+        for k in ['jobs','complete','dispatched_running','dispatched_preparing','dispatched_pending','dispatched_reaping','dispatched_other','undispatched','update_ts','problems','problem_types']:
             self.guivals[k] = StringVar()
-            self.guivals[k].set('Loading...')
-    def load_status(self):
-        self.json = json.loads(subprocess.check_output(['swif2','status','-display','json','-workflow',self.name]).decode('UTF-8')).pop()
-        self.update_status()
-    def update_status(self):
+            self.guivals[k].set('-')
+        self.header_cmd = ['swif2','status','-display','json','-workflow',self.name]
+        self.details_cmd = ['swif2','status','-jobs','-display','json','-workflow',self.name]
+        self.known_problem_types = set()
+    def reset(self):
+        self.header = None
+        self.details = None
+        for v in self.guivals.values():
+            v.set('-')
+        for v in self.tabs.values():
+            tab_control.forget(v)
+        self.tabs = {}
+    def update(self):
+        self.reset()
+        self.initialize()
+    def initialize(self):
+        status_message.set('Running '+' '.join(self.header_cmd)+' ...')
+        executor.submit(self._import_header).add_done_callback(self._update_header)
+    def _import_header(self):
+        self.header = json.loads(subprocess.check_output(self.header_cmd).decode('UTF-8')).pop()
+        status_message.set('Idle')
+    def _import_details(self):
+        self.details = json.loads(subprocess.check_output(self.details_cmd).decode('utf-8')).get('jobs')
+        status_message.set('Idle')
+    def _update_header(self, parent_task=None):
         for k,v in self.guivals.items():
-            v.set(str(self.json.get(k)))
-        self.guivals['update_ts'].set(datetime.datetime.utcfromtimestamp(int(self.json['update_ts'])/1000).strftime('%Y/%m/%d %H:%M:%S'))
-        self.guivals['problem_types'].set('\n'.join(str(self.json.get('problem_types')).split(',')))
-        if self.json.get('problem_types') is not None:
-            self.options_button.menu.add_command(label='Problem Details', command=self.show_problem_details)
-            self.options_button.menu.add_command(label='Problem Logs', command=self.show_problem_logs)
-            for x in self.json.get('problem_types').split(','):
-                if x not in self.problem_types:
-                    self.options_button.menu.add_command(label='Retry '+x, command=functools.partial(self.retry,x))
-                    self.problem_types.add(x)
-    def retry(self,problem):
-        cmd = ['swif2','retry-jobs','-workflow',self.name,'-problems',problem]
-        print(' '.join(cmd))
-        print(subprocess.check_output(cmd).decode('utf-8').strip())
-        self.load_status()
-        #with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        #    executor.submit(self.load_status())
-    def load_details(self):
-        cmd = ['swif2','status','-jobs','-display','json','-workflow',self.name]
-        print(' '.join(cmd))
-        self.details = json.loads(subprocess.check_output(cmd).decode('UTF-8')).get('jobs')
-    def get_problem_jobs(self):
-        self.load_details()
+            v.set(str(self.header.get(k)))
+        self.guivals['update_ts'].set(datetime.datetime.utcfromtimestamp(int(self.header['update_ts'])/1000).strftime('%m/%d %H:%M:%S'))
+        self.guivals['problem_types'].set('\n'.join(str(self.header.get('problem_types')).split(',')))
+        complete = self.header.get('succeeded') / self.header.get('jobs')
+        self.guivals['complete'].set('%.2f%%'%(complete*100))
+        self._regenerate_menu()
+    def _delete_menu_entry(self, label):
+        try:
+            self.menu_button.menu.delete(self.menu_button.menu.index(label))
+        except TclError:
+            pass
+    def generate_menu(column, row):
+        button = ttk.Menubutton(tab_summary, text='Options')
+        button.grid(column=column, row=row, padx=3, pady=1)
+        button.menu = Menu(button, tearoff=False)
+        button['menu'] = button.menu
+        return button
+    def add_menu(self, column, row):
+        self.menu_column = column
+        self.menu_row = row
+        self.menu_button = Wokflow.generate_menu(column, row)
+        self.menu_button.menu.add_command(label='Full Details', command=self.show_full_details)
+    def _regenerate_menu(self, parent_task=None):
+        for x in ['Problem Details','Problem Logs']:
+            self._delete_menu_entry(x)
+        for x in self.known_problem_types:
+            self._delete_menu_entry('Retry '+x)
+        problems = self.header.get('problem_types')
+        if problems is not None and problems != 'None':
+            self.menu_button.menu.add_command(label='Problem Details', command=self.show_problem_details)
+            self.menu_button.menu.add_command(label='Problem Logs', command=self.show_problem_logs)
+            for x in problems.split(','):
+                self.known_problem_types.add(x)
+                if len(x) > 0 and x != 'None':
+                    self.menu_button.menu.add_command(label='Retry '+x, command=functools.partial(self.retry,x))
+    def _show_full_details(self, parent_task=None):
+        self.tabs['full'] = create_tab(name='Full: '+self.name, forget=self.tabs.get('full'))
+        self.tabs['full'].insert(1.0,json.dumps(self.details,indent=2,separators=(',',': ')))
+    def _show_problem_details(self, parent_task=None):
+        self.tabs['problems'] = create_tab(name='Problems: '+self.name, forget=self.tabs.get('problems'))
+        self.tabs['problems'].insert(1.0,json.dumps(list(self._get_problem_jobs()),indent=2,separators=(',',': ')))
+    def _show_problem_logs(self, parent_task=None):
+        self.tabs['logs'] = create_tab(name='Logs: '+self.name, forget=self.tabs.get('logs'))
+        lines = []
+        for job in self._get_problem_jobs():
+            for x in ['site_job_stderr','site_job_stdout']:
+                if job.get(x) is not None:
+                    lines.extend(format_log_file(job.get(x)))
+        self.tabs['logs'].insert(1.0, '\n'.join(lines))
+    def _get_problem_jobs(self, parent_task=None):
         for job in self.details:
             if job.get('job_attempt_status') == 'problem':
                 yield job
-    def create_tab(name):
-        tab = scrolledtext.ScrolledText(tab_control, undo=True)
-        tab.pack(fill='both',expand=True)
-        tab_control.add(tab, text=name)
-        tab_control.pack(expand=1, fill='both')
-        return tab
-    def recreate_tab(oldtab,name):
-        if oldtab is not None:
-            tab_control.forget(oldtab)
-        return Wokflow.create_tab(name)
-    def show_problem_details(self):
-        self.problem_details_tab = Wokflow.recreate_tab(self.problem_details_tab, 'Problems: '+self.name)
-        self.problem_details_tab.insert(1.0,json.dumps(list(self.get_problem_jobs()),indent=2,separators=(',',': ')))
     def show_full_details(self):
-        self.load_details()
-        self.full_details_tab = Wokflow.recreate_tab(self.full_details_tab, 'Full: '+self.name)
-        self.full_details_tab.insert(1.0,json.dumps(self.details,indent=2,separators=(',',': ')))
-    def get_file_lines(path):
-        if os.path.isfile(path):
-            with open(path) as f:
-                for x in f.readlines():
-                    yield(x.strip())
-    def format_log_file(path):
-        lines = list(Wokflow.get_file_lines(path))
-        if len(lines)>0:
-            lines.insert(0,'>'*30)
-            lines.insert(0,'>>>>> '+path)
-            lines.insert(0,'>'*30)
-            lines.extend(['\n','\n'])
-        return lines
+        if self.details is None:
+            status_message.set('Running '+' '.join(self.details_cmd)+' ...')
+            executor.submit(self._import_details).add_done_callback(self._show_full_details)
+        else:
+            self._show_full_details()
+    def show_problem_details(self):
+        if self.details is None:
+            status_message.set('Running '+' '.join(self.details_cmd)+' ...')
+            executor.submit(self._import_details).add_done_callback(self._show_problem_details)
+        else:
+            self._show_problem_details()
     def show_problem_logs(self):
-        self.logs_tab = Wokflow.recreate_tab(self.logs_tab, 'Problem Logs:  '+self.name)
-        lines = []
-        for job in self.get_problem_jobs():
-            for x in ['site_job_stderr','site_job_stdout']:
-                if job.get(x) is not None:
-                    lines.extend(Wokflow.format_log_file(job.get(x)))
-        self.logs_tab.insert(1.0,'\n'.join(lines))
+        if self.details is None:
+            status_message.set('Running '+' '.join(self.details_cmd)+' ...')
+            executor.submit(self._import_details).add_done_callback(self._show_problem_logs)
+        else:
+            self._show_problem_logs()
+    def retry(self, problem):
+        cmd = ['swif2','retry-jobs','-workflow',self.name,'-problems',problem]
+        executor.submit(run, cmd).add_done_callback(self.update)
+
 
 workflows = {}
 for w in json.loads(subprocess.check_output(['swif2','list','-display','json']).decode('UTF-8')):
-    workflows[w['workflow_name']] = Wokflow(w['workflow_name'],w)
+    workflows[w['workflow_name']] = Wokflow(w['workflow_name'])
 
 def handler(event):
     root.destroy()
@@ -108,8 +166,10 @@ def handler(event):
 def check():
     root.after(500, check)
 
-height = 400 if len(workflows.keys())<5 else len(workflows.keys())*int(270/7)+60
-root.geometry('%dx%d'%(1100,height))
+height = 350
+if len(workflows.keys()) > 4:
+    height = min(800, len(workflows.keys())*int(270/7)+60)
+root.geometry('%dx%d'%(1030,height))
 root.title('SWIF GUI')
 signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
 root.bind_all('<Control-c>',handler)
@@ -123,8 +183,6 @@ tab_control = ttk.Notebook(root)
 tab_summary = ttk.Frame(tab_control)
 tab_control.add(tab_summary, text='Summary')
 tab_control.pack(expand=1, fill='both')
-status_message = StringVar()
-status_message.set('Loading...')
 
 row = 0
 column = 0
@@ -134,10 +192,13 @@ def add_header(label):
     ttk.Label(tab_summary, text=label).grid(column=column, row=row, padx=5, pady=5)
     column += 1
 
-def add_label(parent,textvariable):
+def add_label(parent, textvar=None, text=None):
     global column,row
+    if textvar is not None:
+        ttk.Label(parent, textvariable=textvar).grid(column=column, row=row, padx=0, pady=0)
+    elif text is not None:
+        ttk.Label(parent, text=text).grid(column=column, row=row, padx=0, pady=0)
     column += 1
-    ttk.Label(parent, textvariable=textvariable).grid(column=column, row=row, padx=0, pady=0)
 
 add_header('Name')
 add_header('Complete')
@@ -152,51 +213,37 @@ add_header('Problems')
 add_header('Problem Types')
 add_header('Update')
 
-def init():
-    global row,column,workflows
+row += 1
+for name,w in workflows.items():
+    column = 0
+    add_label(tab_summary, text=name)
+    add_label(tab_summary, textvar=w.guivals['complete'])
+    add_label(tab_summary, textvar=w.guivals['jobs'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_running'])
+    add_label(tab_summary, textvar=w.guivals['undispatched'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_preparing'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_pending'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_reaping'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_other'])
+    add_label(tab_summary, textvar=w.guivals['problems'])
+    add_label(tab_summary, textvar=w.guivals['problem_types'])
+    add_label(tab_summary, textvar=w.guivals['update_ts'])
+    w.add_menu(column, row)
     row += 1
-    for name,w in workflows.items():
-        column = 0
-        ttk.Label(tab_summary, text=name).grid(column=0, row=row, padx=0, pady=0)
-        add_label(tab_summary, w.guivals['complete'])
-        add_label(tab_summary, w.guivals['jobs'])
-        add_label(tab_summary, w.guivals['dispatched_running'])
-        add_label(tab_summary, w.guivals['undispatched'])
-        add_label(tab_summary, w.guivals['dispatched_preparing'])
-        add_label(tab_summary, w.guivals['dispatched_pending'])
-        add_label(tab_summary, w.guivals['dispatched_reaping'])
-        add_label(tab_summary, w.guivals['dispatched_other'])
-        add_label(tab_summary, w.guivals['problems'])
-        add_label(tab_summary, w.guivals['problem_types'])
-        add_label(tab_summary, w.guivals['update_ts'])
-        options_button = ttk.Menubutton(tab_summary, text='Options')
-        options_button.grid(column=column+1, row=row, padx=3, pady=1)
-        options_button.menu = Menu(options_button, tearoff=False)
-        options_button.menu.add_command(label='Full Details', command=w.show_full_details)
-        options_button['menu'] = options_button.menu
-        w.options_button = options_button
-        row += 1
-    ttk.Label(tab_summary, textvariable=status_message).grid(column=0, row=row, padx=0, pady=0, columnspan=column+2)
 
+def update():
+    for w in workflows.values():
+        w.update()
 
-t0 = time.time()
+def initialize(delay=0):
+    time.sleep(delay)
+    for w in workflows.values():
+        w.initialize()
 
-init()
+ttk.Label(tab_summary, textvariable=status_message).grid(column=0, row=row, padx=0, pady=0, columnspan=column)
+ttk.Button(tab_summary, text='Reload', command=update).grid(column=column, row=row, padx=0, pady=0)
 
-t1 = time.time()
-
-t2 = time.time()
-
-def dog():
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        for w in workflows.values():
-            executor.submit(w.load_status())
-
-root.after(4000,dog)
-
-t3 = time.time()
-
-#print(t1-t0,t2-t1,t3-t2)
-
-root.mainloop()
+with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    executor.submit(initialize,5)
+    root.mainloop()
 
