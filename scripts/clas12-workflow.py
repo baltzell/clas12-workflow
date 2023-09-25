@@ -20,7 +20,7 @@ if os.path.exists(workflow.name+'.json'):
   logger.critical('File already exists:  '+workflow.name+'.json')
   sys.exit(1)
 
-logger.info('Writing workflow to ./'+workflow.name+'.json')
+logger.info('Writing workflow to %s/%s.json'%(os.path.realpath('.'),workflow.name))
 with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
 
