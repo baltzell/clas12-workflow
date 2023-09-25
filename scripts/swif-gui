@@ -41,12 +41,12 @@ class Wokflow():
             tab_control.forget(v)
         self.tabs = {}
 
-    def reload(self):
+    def reload(self, parent_task=None):
         self.menu_button['state'] = 'disabled'
         self._reset()
         self.load()
 
-    def load(self):
+    def load(self, parent_task=None):
         self.menu_button['state'] = 'disabled'
         status_message.set('Running '+' '.join(self.header_cmd)+' ...')
         executor.submit(self._import_header).add_done_callback(self._update_header)
@@ -54,7 +54,7 @@ class Wokflow():
     def retry(self, problem):
         self.menu_button['state'] = 'disabled'
         cmd = ['swif2','retry-jobs','-workflow',self.name,'-problems',problem]
-        executor.submit(run_command, cmd).add_done_callback(self.reload)
+        executor.submit(run_command, cmd).add_done_callback(self.load)
 
     def show_full_details(self):
         self.menu_button['state'] = 'disabled'
@@ -150,11 +150,13 @@ class Wokflow():
                 yield job
 
 def load(delay=0):
+    status_message.set('Loading ...')
     time.sleep(delay)
     for w in workflows.values():
         w.load()
 
 def reload():
+    status_message.set('Reloading ...')
     for w in workflows.values():
         w.reload()
 
