@@ -176,15 +176,19 @@ class Wokflow():
         text.see(i-1)
 
 def load(delay=0):
+    disable()
     status_message.set('Loading ...')
     time.sleep(delay)
     for w in workflows.values():
         w.load()
+    enable()
 
 def reload():
+    disable()
     status_message.set('Reloading ...')
     for w in workflows.values():
         w.reload()
+    enable()
 
 def delete_tabs():
     for w in workflows.values():
@@ -268,6 +272,18 @@ def check(event=None):
 def handler(event):
     root.destroy()
 
+def disable():
+    remove_button['state'] = 'disabled'
+    reload_button['state'] = 'disabled'
+    for w in workflows.values():
+        w.menu_button['state'] = 'disabled'
+
+def enable():
+    remove_button['state'] = 'normal'
+    reload_button['state'] = 'normal'
+    for w in workflows.values():
+        w.menu_button['state'] = 'normal'
+
 signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
 
 root.title('swif gui')
@@ -287,8 +303,10 @@ tab_summary = ttk.Frame(tab_control)
 tab_control.add(tab_summary, text='Summary')
 tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
 status_bar = ttk.Label(main_frame, borderwidth=2, textvariable=status_message, anchor="w").grid(row=1, column=0, columnspan=10, padx=10, pady=2, sticky=(N,W,E,S))
-ttk.Button(main_frame, text='Remove Tabs', command=delete_tabs).grid(row=1, column=1, pady=3)
-ttk.Button(main_frame, text='Reload Workflows', command=reload).grid(row=1, column=2, pady=3)
+remove_button = ttk.Button(main_frame, text='Remove Tabs', command=delete_tabs)
+remove_button.grid(row=1, column=1, pady=3)
+reload_button = ttk.Button(main_frame, text='Reload Workflows', command=reload)
+reload_button.grid(row=1, column=2, pady=3)
 
 row = 0
 column = 0
@@ -317,6 +335,7 @@ for name,w in workflows.items():
     add_workflow(w, name)
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-    executor.submit(load,5)
+    disable()
+    executor.submit(load,3)
     root.mainloop()
 
