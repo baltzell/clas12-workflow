@@ -54,6 +54,8 @@ def getReconFileBytes(schema,decodedfile):
   if   schema=='dst':   s *= 0.5
   elif schema=='calib': s *= 1.3
   elif schema=='mon':   s *= 1.6
+  elif schema=='full':  s *= 1.6
+  elif schema=='trig':  s *= 1.3
   else:
     _LOGGER.warning('Schema unknown from schema_dir in YAML, because it doe not end in one of dst/calib/mon.  Disk request may be bad.')
     s *= 4.0

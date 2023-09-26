@@ -115,6 +115,7 @@ class ClaraYaml:
             s = c['schema_dir'].strip().strip('/').split('/').pop().strip('"')
             if s == 'monitoring': s = 'mon'
             if s == 'calibration' : s = 'calib'
+            if s == 'trigger' : s = 'trig'
             ret = s
     return ret
 

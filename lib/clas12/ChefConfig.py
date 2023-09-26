@@ -464,7 +464,7 @@ class ChefConfig(collections.OrderedDict):
 
     # reduce #files in train jobs if huge schema:
     if self['trainSize'] == CFG['trainSize']:
-      if self['schema']=='mon' or self['schema']=='calib':
+      if self['schema']=='full' or self['schema']=='mon' or self['schema']=='calib' or self['schema']=='trig':
         self['trainSize']=10
 
     # parse run list:
