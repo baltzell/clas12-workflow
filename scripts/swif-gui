@@ -85,6 +85,7 @@ class Wokflow():
         self.menu_row = row
         self.menu_button = create_menu(column, row)
         self.menu_button.menu.add_command(label='Full Details', command=self.show_full_details)
+        self.menu_button['state'] = 'disabled'
 
     def _import_header(self):
         self.header = json.loads(subprocess.check_output(self.header_cmd).decode('UTF-8')).pop()
@@ -125,29 +126,54 @@ class Wokflow():
         self.menu_button['state'] = 'normal'
 
     def _show_full_details(self, parent_task=None):
-        self.tabs['full'] = create_tab(name='Full: '+self.name, forget=self.tabs.get('full'))
-        self.tabs['full'].insert(1.0,json.dumps(self.details,indent=2,separators=(',',': ')))
+        self.tabs['full'] = create_tab(name='Full: '+self.name, forget=self.tabs.get('full'), text=json.dumps(self.details,indent=2,separators=(',',': ')))
+        self.tabs['full'].search_entry.bind('<Return>', self._search_full_details)
         self.menu_button['state'] = 'normal'
 
     def _show_problem_details(self, parent_task=None):
-        self.tabs['problems'] = create_tab(name='Problems: '+self.name, forget=self.tabs.get('problems'))
-        self.tabs['problems'].insert(1.0,json.dumps(list(self._get_problem_jobs()),indent=2,separators=(',',': ')))
+        self.tabs['problems'] = create_tab(name='Problems: '+self.name, forget=self.tabs.get('problems'), text=json.dumps(list(self._get_problem_jobs()),indent=2,separators=(',',': ')))
+        self.tabs['full'].search_entry.bind('<Return>', self._search_problem_details)
         self.menu_button['state'] = 'normal'
 
     def _show_problem_logs(self, parent_task=None):
-        self.tabs['logs'] = create_tab(name='Logs: '+self.name, forget=self.tabs.get('logs'))
         lines = []
         for job in self._get_problem_jobs():
             for x in ['site_job_stderr','site_job_stdout']:
                 if job.get(x) is not None:
                     lines.extend(format_log_file(job.get(x)))
-        self.tabs['logs'].insert(1.0, '\n'.join(lines))
+        self.tabs['logs'] = create_tab(name='Logs: '+self.name, forget=self.tabs.get('logs'), text='\n'.join(lines))
+        self.tabs['full'].search_entry.bind('<Return>', self._search_problem_logs)
         self.menu_button['state'] = 'normal'
 
     def _get_problem_jobs(self, parent_task=None):
         for job in self.details:
             if job.get('job_attempt_status') == 'problem':
                 yield job
+
+    def _search_problem_logs(self, event=None):
+        self.search(self.tabs['logs'].text, self.tabs['logs'].search_entry.get())
+
+    def _search_full_details(self, event=None):
+        self.search(self.tabs['full'].text, self.tabs['full'].search_entry.get())
+
+    def _search_problem_details(self, event=None):
+        self.search(self.tabs['problems'].text, self.tabs['problems'].search_entry.get())
+
+    def search(self, text, pattern):
+        if pattern in text.tags:
+            start = text.tags[pattern][-1] + 1.0
+        else:
+            start = 1.0
+        try:
+            i = float(text.search(pattern, start))
+        except ValueError:
+            return
+        if pattern not in text.tags:
+            text.tags[pattern] = []
+        text.tags[pattern].append(i)
+        text.tag_add('%s%d'%(pattern,len(text.tags[pattern])), i, i+1)
+        text.tag_config('%s%d'%(pattern,len(text.tags[pattern])), background='yellow')
+        text.see(i-1)
 
 def load(delay=0):
     status_message.set('Loading ...')
@@ -164,14 +190,21 @@ def delete_tabs():
     for w in workflows.values():
         w.delete_tabs()
 
-def create_tab(name, forget=None):
+def create_tab(name, forget=None, text=None):
     if forget is not None:
         tab_control.forget(forget)
-    tab = scrolledtext.ScrolledText(tab_control, undo=True)
-    tab.pack(fill='both',expand=True)
-    tab_control.add(tab, text=name)
-    tab_control.grid(row=0, column=0)
-    return tab
+    frame = ttk.Frame(tab_control, padding='10 10 20 0')
+    tab_control.add(frame, text=name)
+    frame.search_text = StringVar()
+    frame.search_entry = Entry(frame, textvariable=frame.search_text)
+    frame.search_entry.pack(side='top', fill='x')
+    frame.text = scrolledtext.ScrolledText(frame, undo=True)
+    if text is not None:
+        frame.text.insert(1.0, text)
+        frame.text.configure(state='disabled')
+    frame.text.pack(side='bottom',fill='both',expand=True)
+    frame.text.tags = {}
+    return frame
 
 def create_menu(column, row, label='Options'):
     button = ttk.Menubutton(tab_summary, text=label)
@@ -211,18 +244,35 @@ def add_label(parent, textvar=None, text=None):
         ttk.Label(parent, text=text).grid(column=column, row=row, padx=0, pady=0)
     column += 1
 
+def add_workflow(w, name):
+    global column,row
+    column = 0
+    add_label(tab_summary, text=name)
+    add_label(tab_summary, textvar=w.guivals['complete'])
+    add_label(tab_summary, textvar=w.guivals['jobs'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_running'])
+    add_label(tab_summary, textvar=w.guivals['undispatched'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_preparing'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_pending'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_reaping'])
+    add_label(tab_summary, textvar=w.guivals['dispatched_other'])
+    add_label(tab_summary, textvar=w.guivals['problems'])
+    add_label(tab_summary, textvar=w.guivals['problem_types'])
+    add_label(tab_summary, textvar=w.guivals['update_ts'])
+    w.add_menu_button(column, row)
+    row += 1
+
+def check(event=None):
+    root.after(500, check)
 
 def handler(event):
     root.destroy()
-signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
 
-def check():
-    root.after(500, check)
+signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
 
 root.title('swif gui')
 root.minsize(1070,350)
 root.bind_all('<Control-c>',handler)
-root.bind('<Return>', check)
 root.after(500, check)
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
@@ -262,22 +312,9 @@ for w in json.loads(subprocess.check_output(['swif2','list','-archived','-displa
     workflows[w['workflow_name']] = Wokflow(w['workflow_name'])
 
 row += 1
+
 for name,w in workflows.items():
-    column = 0
-    add_label(tab_summary, text=name)
-    add_label(tab_summary, textvar=w.guivals['complete'])
-    add_label(tab_summary, textvar=w.guivals['jobs'])
-    add_label(tab_summary, textvar=w.guivals['dispatched_running'])
-    add_label(tab_summary, textvar=w.guivals['undispatched'])
-    add_label(tab_summary, textvar=w.guivals['dispatched_preparing'])
-    add_label(tab_summary, textvar=w.guivals['dispatched_pending'])
-    add_label(tab_summary, textvar=w.guivals['dispatched_reaping'])
-    add_label(tab_summary, textvar=w.guivals['dispatched_other'])
-    add_label(tab_summary, textvar=w.guivals['problems'])
-    add_label(tab_summary, textvar=w.guivals['problem_types'])
-    add_label(tab_summary, textvar=w.guivals['update_ts'])
-    w.add_menu_button(column, row)
-    row += 1
+    add_workflow(w, name)
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
     executor.submit(load,5)
