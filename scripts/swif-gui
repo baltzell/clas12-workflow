@@ -132,7 +132,7 @@ class Wokflow():
 
     def _show_problem_details(self, parent_task=None):
         self.tabs['problems'] = create_tab(name='Problems: '+self.name, forget=self.tabs.get('problems'), text=json.dumps(list(self._get_problem_jobs()),indent=2,separators=(',',': ')))
-        self.tabs['full'].search_entry.bind('<Return>', self._search_problem_details)
+        self.tabs['problems'].search_entry.bind('<Return>', self._search_problem_details)
         self.menu_button['state'] = 'normal'
 
     def _show_problem_logs(self, parent_task=None):
@@ -142,7 +142,7 @@ class Wokflow():
                 if job.get(x) is not None:
                     lines.extend(format_log_file(job.get(x)))
         self.tabs['logs'] = create_tab(name='Logs: '+self.name, forget=self.tabs.get('logs'), text='\n'.join(lines))
-        self.tabs['full'].search_entry.bind('<Return>', self._search_problem_logs)
+        self.tabs['logs'].search_entry.bind('<Return>', self._search_problem_logs)
         self.menu_button['state'] = 'normal'
 
     def _get_problem_jobs(self, parent_task=None):
