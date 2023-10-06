@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+from tkinter import *
+from tkinter import ttk
+import tkinter.scrolledtext as scrolledtext
+import concurrent.futures
+import collections
+import subprocess
+import functools
+import datetime
+import threading
+import signal
+import queue
+import json
+import time
+import os
+
+root = Tk()
+
+class TabFrame(ttk.Frame):
+
+    def __init__(self, name, notebook):
+        super().__init__(notebook, padding='10 10 20 0')
+        self.notebook = notebook
+        self.notebook.add(self, text=name)
+        self.notebook.hide(self)
+        self.search_text = StringVar()
+        self.search_entry = Entry(self, textvariable=self.search_text)
+        self.search_entry.pack(side='top', fill='x')
+        self.search_entry.bind('<Return>', self.search)
+        self.text = scrolledtext.ScrolledText(self, undo=True)
+        self.text.pack(side='bottom',fill='both',expand=True)
+        self.text.tags = {}
+
+    def update(self, text):
+        self.text.configure(state='normal')
+        self.text.delete(1.0)
+        self.text.insert(1.0, text)
+        self.text.configure(state='disabled')
+        self.notebook.select(self)
+
+    def search(self, event=None, pattern=None):
+        if pattern is None:
+            pattern = self.search_entry.get()
+        if pattern in self.text.tags:
+            start = self.text.tags[pattern][-1] + 1.0
+        else:
+            start = 1.0
+        try:
+            i = float(self.text.search(pattern, start))
+        except ValueError:
+            return
+        if pattern not in self.text.tags:
+            self.text.tags[pattern] = []
+        self.text.tags[pattern].append(i)
+        self.text.tag_add('%s%d'%(pattern,len(self.text.tags[pattern])), i, i+1)
+        self.text.tag_config('%s%d'%(pattern,len(self.text.tags[pattern])), background='yellow')
+        self.text.see(i-1)
+
+class Wokflow():
+
+    def __init__(self, name, row):
+        self.name = name
+        self.row = row
+        self.header = None
+        self.details = None
+        self.guivars = collections.OrderedDict()
+        for k in ['complete','jobs','dispatched_running','undispatched','dispatched_preparing','dispatched_pending','dispatched_reaping','dispatched_other','problems','problem_types','update_ts']:
+            self.guivars[k] = StringVar()
+            self.guivars[k].set('-')
+        self.header_cmd = ['swif2','status','-display','json','-workflow',self.name]
+        self.details_cmd = ['swif2','status','-jobs','-display','json','-workflow',self.name]
+        self.known_problem_types = set()
+        self.tabs = {}
+        self.tabs['full'] = TabFrame(name='Full: '+self.name, notebook=tab_control)
+        self.tabs['problems'] = TabFrame(name='Problems: '+self.name, notebook=tab_control)
+        self.tabs['logs'] = TabFrame(name='Logs: '+self.name, notebook=tab_control)
+        ttk.Label(tab_summary, text=self.name).grid(column=0, row=self.row, padx=0, pady=0)
+        for i,(k,v) in enumerate(self.guivars.items()):
+            ttk.Label(tab_summary, textvar=v).grid(column=i+1, row=self.row, padx=0, pady=0)
+        self.button = ttk.Menubutton(tab_summary, text='Options')
+        self.button.grid(column=len(self.guivars.items())+2, row=self.row, padx=3, pady=1)
+        self.button.menu = Menu(self.button, tearoff=False)
+        self.button['menu'] = self.button.menu
+        self.button.menu.add_command(label='Full Details', command=self.show_full_details)
+        self.button['state'] = 'disabled'
+
+    def _reset(self):
+        self.header = None
+        self.details = None
+        self.hide_tabs()
+        for v in self.guivars.values():
+            v.set('-')
+
+    def hide_tabs(self):
+        for v in self.tabs.values():
+            tab_control.hide(v)
+
+    def reload(self, parent_task=None):
+        self.button['state'] = 'disabled'
+        self._reset()
+        self.load()
+
+    def load(self, parent_task=None):
+        self.button['state'] = 'disabled'
+        status_message.set('Running '+' '.join(self.header_cmd)+' ...')
+        executor.submit(self._import_header).add_done_callback(self._update_header)
+
+    def retry(self, problem):
+        self.button['state'] = 'disabled'
+        cmd = ['swif2','retry-jobs','-workflow',self.name,'-problems',problem]
+        executor.submit(run_command, cmd).add_done_callback(self.load)
+
+    def show_full_details(self):
+        self.button['state'] = 'disabled'
+        if self.details is None:
+            status_message.set('Running '+' '.join(self.details_cmd)+' ...')
+            executor.submit(self._import_details).add_done_callback(self._show_full_details)
+        else:
+            self._show_full_details()
+
+    def show_problem_details(self):
+        self.button['state'] = 'disabled'
+        if self.details is None:
+            status_message.set('Running '+' '.join(self.details_cmd)+' ...')
+            executor.submit(self._import_details).add_done_callback(self._show_problem_details)
+        else:
+            self._show_problem_details()
+
+    def show_problem_logs(self):
+        self.button['state'] = 'disabled'
+        if self.details is None:
+            status_message.set('Running '+' '.join(self.details_cmd)+' ...')
+            executor.submit(self._import_details).add_done_callback(self._show_problem_logs)
+        else:
+            self._show_problem_logs()
+
+    def _import_header(self):
+        self.header = json.loads(subprocess.check_output(self.header_cmd).decode('UTF-8')).pop()
+        status_message.set('Idle')
+
+    def _import_details(self):
+        self.details = json.loads(subprocess.check_output(self.details_cmd).decode('utf-8')).get('jobs')
+        status_message.set('Idle')
+
+    def _delete_menu_entry(self, label):
+        try:
+            self.button.menu.delete(self.button.menu.index(label))
+        except TclError:
+            pass
+
+    def _regenerate_menu(self, parent_task=None):
+        for x in ['Problem Details','Problem Logs']:
+            self._delete_menu_entry(x)
+        for x in self.known_problem_types:
+            self._delete_menu_entry('Retry '+x)
+        problems = self.header.get('problem_types')
+        if problems is not None and problems != 'None':
+            self.button.menu.add_command(label='Problem Details', command=self.show_problem_details)
+            self.button.menu.add_command(label='Problem Logs', command=self.show_problem_logs)
+            for x in problems.split(','):
+                self.known_problem_types.add(x)
+                if len(x) > 0 and x != 'None':
+                    self.button.menu.add_command(label='Retry '+x, command=functools.partial(self.retry,x))
+
+    def _update_header(self, parent_task=None):
+        for k,v in self.guivars.items():
+            v.set(str(self.header.get(k)))
+        self.guivars['update_ts'].set(datetime.datetime.utcfromtimestamp(int(self.header['update_ts'])/1000).strftime('%m/%d %H:%M:%S'))
+        self.guivars['problem_types'].set('\n'.join(str(self.header.get('problem_types')).split(',')))
+        complete = self.header.get('succeeded') / self.header.get('jobs')
+        self.guivars['complete'].set('%.2f%%'%(complete*100))
+        self._regenerate_menu()
+        self.button['state'] = 'normal'
+
+    def _show_full_details(self, parent_task=None):
+        self.tabs['full'].update(json.dumps(self.details,indent=2,separators=(',',': ')))
+        self.button['state'] = 'normal'
+
+    def _show_problem_details(self, parent_task=None):
+        self.tabs['problems'].update(json.dumps(list(self._get_problem_jobs()),indent=2,separators=(',',': ')))
+        self.button['state'] = 'normal'
+
+    def format_log_file(path):
+        lines = []
+        if os.path.isfile(path):
+            with open(path) as f:
+                for x in f.readlines():
+                    lines.append(x.strip())
+            lines.insert(0,'>'*120)
+            lines.insert(0,'>>>>> '+path)
+            lines.insert(0,'>'*120)
+            lines.extend(['\n','\n'])
+        return lines
+
+    def _show_problem_logs(self, parent_task=None):
+        lines = []
+        for job in self._get_problem_jobs():
+            for x in ['site_job_stderr','site_job_stdout']:
+                if job.get(x) is not None:
+                    lines.extend(Wokflow.format_log_file(job.get(x)))
+        self.tabs['logs'].update('\n'.join(lines))
+        self.button['state'] = 'normal'
+
+    def _get_problem_jobs(self, parent_task=None):
+        for job in self.details:
+            if job.get('job_attempt_status') == 'problem':
+                yield job
+
+def load(delay=0):
+    #disable_buttons()
+    status_message.set('Loading ...')
+    time.sleep(delay)
+    for w in workflows.values():
+        w.load()
+    #enable_buttons()
+
+def reload():
+    #disable_buttons()
+    status_message.set('Reloading ...')
+    for w in workflows.values():
+        w.reload()
+    #enable_buttons()
+
+def hide_tabs():
+    for w in workflows.values():
+        w.hide_tabs()
+
+def disable_buttons():
+    remove_button['state'] = 'disabled'
+    reload_button['state'] = 'disabled'
+    for w in workflows.values():
+        w.button['state'] = 'disabled'
+    root.update()
+
+def enable_buttons():
+    remove_button['state'] = 'normal'
+    reload_button['state'] = 'normal'
+    for w in workflows.values():
+        w.button['state'] = 'normal'
+    root.update()
+
+def run_command(cmd):
+    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
+
+def check(event=None):
+    root.after(500, check)
+
+def handler(event):
+    root.destroy()
+
+signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
+
+root.title('swif gui')
+root.minsize(1070,350)
+root.bind_all('<Control-c>',handler)
+root.after(500, check)
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
+
+main_frame = ttk.Frame(root, padding='10 10 20 0')
+main_frame.columnconfigure(0, weight=10)
+main_frame.rowconfigure(0, weight=10)
+main_frame.grid(column=0, row=0, sticky=(N,W,E,S))
+
+tab_control = ttk.Notebook(main_frame)
+tab_summary = ttk.Frame(tab_control)
+tab_control.add(tab_summary, text='Summary')
+tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
+
+status_message = StringVar()
+status_message.set('Loading...')
+status_bar = ttk.Label(main_frame, borderwidth=2, textvariable=status_message, anchor="w")
+status_bar.grid(row=1, column=0, columnspan=10, padx=10, pady=2, sticky=(N,W,E,S))
+
+remove_button = ttk.Button(main_frame, text='Hide Tabs', command=hide_tabs)
+remove_button.grid(row=1, column=1, pady=3)
+reload_button = ttk.Button(main_frame, text='Reload Workflows', command=reload)
+reload_button.grid(row=1, column=2, pady=3)
+
+ttk.Label(tab_summary, text='Name').grid(column=0, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Complete').grid(column=1, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Jobs').grid(column=2, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Running').grid(column=3, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Undispatched').grid(column=4, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Preparing').grid(column=5, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Pending').grid(column=6, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Reaping').grid(column=7, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Other').grid(column=8, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Problems').grid(column=9, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Problem Types').grid(column=10, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Update').grid(column=11, row=0, padx=5, pady=5)
+
+workflows = {}
+print('Retrieving Workflows ....')
+for w in json.loads(subprocess.check_output(['swif2','list','-archived','-display','json']).decode('UTF-8')):
+    workflows[w['workflow_name']] = Wokflow(w['workflow_name'], len(workflows)+1)
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    #disable_buttons()
+    executor.submit(load,3)
+    root.mainloop()
+
