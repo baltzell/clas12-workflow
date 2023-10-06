@@ -225,7 +225,7 @@ class TrainJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class HistoJob(CLAS12Job):
-  TDIR='/group/clas12/packages/clas12-timeline/swifjob'
+  TDIR='/group/clas12/packages/clas12-timeline/dev'
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.setRam('1500MB')
