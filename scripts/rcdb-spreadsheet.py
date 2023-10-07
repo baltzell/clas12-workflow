@@ -25,7 +25,7 @@ while True:
 
   x = rm.db.get_next_run(run)
   if x is None:
-    run += 1
+    run.number += 1
     continue
   run = x
 
