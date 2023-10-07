@@ -20,11 +20,15 @@ if args.rmax < args.rmin:
 rm=RcdbManager()
 run=args.rmin-1
 first=False
+nulls=()
 
 while True:
 
   x = rm.db.get_next_run(run)
   if x is None:
+    nulls.append(run)
+    if len(nulls) > 100:
+      break
     run.number += 1
     continue
   run = x
