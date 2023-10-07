@@ -64,7 +64,7 @@ class Wokflow():
         self.header = None
         self.details = None
         self.guivars = collections.OrderedDict()
-        for k in ['complete','jobs','dispatched_running','undispatched','dispatched_preparing','dispatched_pending','dispatched_reaping','dispatched_other','problems','problem_types','update_ts']:
+        for k in ['complete','jobs','dispatched_running','undispatched','dispatched','dispatched_preparing','dispatched_pending','dispatched_reaping','dispatched_other','problems','problem_types','update_ts','create_ts']:
             self.guivars[k] = StringVar()
             self.guivars[k].set('-')
         self.header_cmd = ['swif2','status','-display','json','-workflow',self.name]
@@ -165,7 +165,8 @@ class Wokflow():
     def _update_header(self, parent_task=None):
         for k,v in self.guivars.items():
             v.set(str(self.header.get(k)))
-        self.guivars['update_ts'].set(datetime.datetime.utcfromtimestamp(int(self.header['update_ts'])/1000).strftime('%m/%d %H:%M:%S'))
+        self.guivars['update_ts'].set(datetime.datetime.fromtimestamp(int(self.header['update_ts'])/1000).strftime('%m/%d %H:%M:%S'))
+        self.guivars['create_ts'].set(datetime.datetime.fromtimestamp(int(self.header['create_ts'])/1000).strftime('%m/%d %H:%M:%S'))
         self.guivars['problem_types'].set('\n'.join(str(self.header.get('problem_types')).split(',')))
         complete = self.header.get('succeeded') / self.header.get('jobs')
         self.guivars['complete'].set('%.2f%%'%(complete*100))
@@ -282,13 +283,15 @@ ttk.Label(tab_summary, text='Complete').grid(column=1, row=0, padx=5, pady=5)
 ttk.Label(tab_summary, text='Jobs').grid(column=2, row=0, padx=5, pady=5)
 ttk.Label(tab_summary, text='Running').grid(column=3, row=0, padx=5, pady=5)
 ttk.Label(tab_summary, text='Undispatched').grid(column=4, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Preparing').grid(column=5, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Pending').grid(column=6, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Reaping').grid(column=7, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Other').grid(column=8, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Problems').grid(column=9, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Problem Types').grid(column=10, row=0, padx=5, pady=5)
-ttk.Label(tab_summary, text='Update').grid(column=11, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Dispatched').grid(column=5, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Preparing').grid(column=6, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Pending').grid(column=7, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Reaping').grid(column=8, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Other').grid(column=9, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Problems').grid(column=10, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Problem Types').grid(column=11, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Update').grid(column=12, row=0, padx=5, pady=5)
+ttk.Label(tab_summary, text='Create').grid(column=13, row=0, padx=5, pady=5)
 
 workflows = {}
 print('Retrieving Workflows ....')
