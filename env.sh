@@ -1,7 +1,9 @@
 
 # load dependencies:
-shell_ext=$(ps -p $$ -ocomm= | sed -e 's;^.*\.;;g' -e 's;^bash$;sh;')
-setup=/group/clas12/packages/setup.$shell_ext
+#shell_ext=$(ps -p $$ -ocomm= | sed -e 's;^.*\.;;g' -e 's;^bash$;sh;')
+#setup=/group/clas12/packages/setup.$shell_ext
+setup=/group/clas12/packages/setup.sh
+
 if [ -e $setup ]
 then
     source $setup
