@@ -23,7 +23,10 @@ first=False
 
 while True:
 
-  run = rm.db.get_next_run(run)
+  x = rm.db.get_next_run(run)
+  if run is None:
+    continue
+  run = x
 
   rm.load(run.number)
   if not args.j:
