@@ -24,7 +24,8 @@ first=False
 while True:
 
   x = rm.db.get_next_run(run)
-  if run is None:
+  if x is None:
+    run += 1
     continue
   run = x
 
