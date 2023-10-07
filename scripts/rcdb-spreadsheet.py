@@ -20,7 +20,7 @@ if args.rmax < args.rmin:
 rm=RcdbManager()
 run=args.rmin-1
 first=False
-nulls=()
+nulls=[]
 
 while True:
 
