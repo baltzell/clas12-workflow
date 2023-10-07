@@ -82,7 +82,7 @@ class MinimalDependency(CLAS12Workflow):
         xx = self.reconclara(self.phase,xx)
         jput_jobs.extend(xx)
 
-      if self.cfg['model'].find('his')>=0:
+      if self.cfg['model'].find('qtl')>=0:
         yy = self.histo(self.phase,xx)
 
       if self.cfg['model'].find('ana')>=0:

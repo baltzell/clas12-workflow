@@ -12,7 +12,7 @@ _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
 _VALIDREMOTES=['/mss','/volatile','/cache']
 
 CHOICES={
-'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','his'],
+'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
 'node'    : ['general','centos77','farm19','farm18','farm16','farm14','farm13','amd','xeon'],
 'threads' : list(ReconJob.THRD_MEM_REQ.keys()),
@@ -33,13 +33,13 @@ if getpass.getuser() in ['clas12','clas12-1','clas12-2','clas12-3','clas12-4','c
 
 def compactModel(model):
   x=model
-  for y in ['dec','mrg','rec','his','ana']:
+  for y in ['dec','mrg','rec','qtl','ana']:
     x=x.replace(y,y[0])
   return x
 
 def fullModel(model):
   x=''
-  for y in ['dec','mrg','rec','his','ana']:
+  for y in ['dec','mrg','rec','qtl','ana']:
     if y[0] in model:
       x+=y
   return x
@@ -493,7 +493,7 @@ class ChefConfig(collections.OrderedDict):
     if not self['denoise'] and self['model'].find('rec')>=0:
       _LOGGER.warning('Denoising is disabled, is that what you really want?')
 
-    if self['model'].find('his')>=0:
+    if self['model'].find('qtl')>=0:
       self['graalvm'] = True
 
 if __name__ == '__main__':
