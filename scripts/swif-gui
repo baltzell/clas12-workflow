@@ -69,6 +69,7 @@ class Wokflow():
             self.guivars[k].set('-')
         self.header_cmd = ['swif2','status','-display','json','-workflow',self.name]
         self.details_cmd = ['swif2','status','-jobs','-display','json','-workflow',self.name]
+        self.delete_cmd = ['swif2','cancel','-delete','-workflow',self.name]
         self.known_problem_types = set()
         self.tabs = {}
         self.tabs['full'] = TabFrame(name='Full: '+self.name, notebook=tab_control)
@@ -82,6 +83,7 @@ class Wokflow():
         self.button.menu = Menu(self.button, tearoff=False)
         self.button['menu'] = self.button.menu
         self.button.menu.add_command(label='Full Details', command=self.show_full_details)
+        self.button.menu.add_command(label='Delete Workflow', command=self.delete_workflow)
         self.button['state'] = 'disabled'
 
     def _reset(self):
@@ -147,6 +149,12 @@ class Wokflow():
             self.button.menu.delete(self.button.menu.index(label))
         except TclError:
             pass
+
+    def _cleanup(self):
+        workflows.pop(self.name)
+
+    def _delete_workflow(self):
+        executor.submit(run_command, self.delete_cmd).add_done_callback(self._cleanup)
 
     def _regenerate_menu(self, parent_task=None):
         for x in ['Problem Details','Problem Logs']:
