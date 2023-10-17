@@ -230,7 +230,7 @@ def initialize():
     ttk.Label(tab_summary, text='Reaping').grid(column=8, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Other').grid(column=9, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Problems').grid(column=10, row=0, padx=5, pady=5)
-    ttk.Label(tab_summary, text='Problem Types').grid(column=11, row=0, padx=5, pady=5)
+    ttk.Label(tab_summary, text='Types').grid(column=11, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Update').grid(column=12, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Create').grid(column=13, row=0, padx=5, pady=5)
     workflows = {}
