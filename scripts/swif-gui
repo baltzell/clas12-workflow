@@ -63,7 +63,7 @@ class Wokflow():
         self.header = None
         self.details = None
         self.guivars = collections.OrderedDict()
-        for k in ['complete','jobs','undispatched','dispatched','dispatched_preparing','dispatched_pending','dispatched_running','dispatched_reaping','dispatched_other','problems','problem_types','update_ts','create_ts']:
+        for k in ['complete','jobs','undispatched','dispatched','dispatched_preparing','dispatched_pending','dispatched_running','dispatched_reaping','dispatched_other','problems','problem_types','create_ts','update_ts']:
             self.guivars[k] = StringVar()
             self.guivars[k].set('-')
         self.header_cmd = ['swif2','status','-display','json','-workflow',self.name]
@@ -74,9 +74,9 @@ class Wokflow():
         self.tabs['full'] = TabFrame(name='Full: '+self.name, notebook=tab_control)
         self.tabs['problems'] = TabFrame(name='Problems: '+self.name, notebook=tab_control)
         self.tabs['logs'] = TabFrame(name='Logs: '+self.name, notebook=tab_control)
-        ttk.Label(tab_summary, text=self.name).grid(column=0, row=self.row, padx=0, pady=0)
+        ttk.Label(tab_summary, text=self.name, relief='groove', anchor='center').grid(column=0, row=self.row, padx=0, pady=0, sticky=[N,E,S,W])
         for i,(k,v) in enumerate(self.guivars.items()):
-            ttk.Label(tab_summary, textvar=v).grid(column=i+1, row=self.row, padx=0, pady=0)
+            ttk.Label(tab_summary, textvar=v, relief='groove', anchor='center').grid(column=i+1, row=self.row, padx=0, pady=0, sticky=[N,E,S,W])
         self.button = ttk.Menubutton(tab_summary, text='Options')
         self.button.grid(column=len(self.guivars.items())+2, row=self.row, padx=3, pady=1)
         self.button.menu = Menu(self.button, tearoff=False)
@@ -231,8 +231,8 @@ def initialize():
     ttk.Label(tab_summary, text='Other').grid(column=9, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Problems').grid(column=10, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Types').grid(column=11, row=0, padx=5, pady=5)
-    ttk.Label(tab_summary, text='Update').grid(column=12, row=0, padx=5, pady=5)
-    ttk.Label(tab_summary, text='Create').grid(column=13, row=0, padx=5, pady=5)
+    ttk.Label(tab_summary, text='Create').grid(column=12, row=0, padx=5, pady=5)
+    ttk.Label(tab_summary, text='Update').grid(column=13, row=0, padx=5, pady=5)
     workflows = {}
     for w in json.loads(subprocess.check_output(['swif2','list','-archived','-display','json']).decode('UTF-8')):
         workflows[w['workflow_name']] = Wokflow(w['workflow_name'], len(workflows)+1)
