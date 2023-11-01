@@ -94,8 +94,10 @@ class CLAS12Job(SwifJob):
     gb = int((diskbytes/1e9)+1)
     hr = int(hours+1)
     if hr > 72:
-      _LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
-      sys.exit(2)
+      hr = 72
+      _LOGGER.warning('Huge time requirement (%s hours)'%str(hr))
+      #_LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
+      #sys.exit(2)
     if gb > 120:
       _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
       sys.exit(2)

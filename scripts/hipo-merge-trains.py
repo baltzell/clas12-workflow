@@ -86,11 +86,6 @@ for trainIndex in sorted(trainIndices):
   cmd.extend(['-A','-i',inGlob,'-o',outStub])
   print((' '.join(cmd)))
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True)
-  #while True:
-  #  line=p.stdout.readline().rstrip()
-  #  if not line:
-  #    break
-  #  print(line)
   for line in iter(p.stdout.readline, ''):
     if len(line.strip())>0:
       print((line.rstrip()))
