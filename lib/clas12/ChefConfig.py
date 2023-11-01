@@ -7,7 +7,7 @@ import ClaraYaml
 from CLAS12Jobs import ReconJob
 
 _LOGGER=logging.getLogger(__name__)
-_TOPDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__))+'/../../')
+_TOPDIR = os.path.normpath(os.path.dirname(os.path.realpath(__file__))+'/../../')
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
 _VALIDREMOTES=['/mss','/volatile','/cache']
 
