@@ -36,5 +36,6 @@
   "mergePattern": "clas_%.6d.evio.%.5d-%.5d.hipo",
   "singlePattern": "clas_%.6d.evio.%.5d.hipo",
   "hattawy": false,
+  "groovy": "/group/clas12/packages/groovy/4.0.3",
   "ignored": {}
 }

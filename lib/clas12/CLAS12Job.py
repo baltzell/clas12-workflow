@@ -10,7 +10,7 @@ class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
-    self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a'})
+    self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a','his':'h'})
     self.addEnv('CLARA_HOME',cfg['clara'])
     if cfg['graalvm']:
       self.addEnv('JAVA_HOME','/group/clas12/packages/graalvm/22.2.0_java11')
@@ -75,6 +75,13 @@ class CLAS12Job(SwifJob):
       with open(cfgfile,'w') as f:
         f.write(self.cfg.getReadme())
         f.close()
+
+  def addOutputWildcard(self,glob,directory,tag=None,auger=True):
+    ChefUtil.mkdir(directory,tag)
+    self.doReadme(directory)
+    self.addTag('outDir',directory)
+    self.outputData.append(directory)
+    self.addOutput(glob,directory)
 
   def addOutputData(self,basename,directory,tag=None,auger=True):
     ChefUtil.mkdir(directory,tag)

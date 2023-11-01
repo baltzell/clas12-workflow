@@ -224,6 +224,25 @@ class TrainJob(CLAS12Job):
     cmd += ' && ls -lhtr'
     CLAS12Job.setCmd(self,cmd)
 
+class HistoJob(CLAS12Job):
+  TDIR='/group/clas12/packages/clas12-timeline/dev'
+  def __init__(self,workflow,cfg):
+    CLAS12Job.__init__(self,workflow,cfg)
+    self.setRam('1500MB')
+    self.setTime('2h')
+    self.setDisk('1GB')
+    self.addTag('mode','his')
+    self.addEnv('COATJAVA',cfg['coatjava'])
+    self.addEnv('PATH',cfg['groovy']+'/bin:${COATJAVA}/bin:${PATH}')
+  def setCmd(self):
+    cmd =  ' ln -s %s .'%(' '.join(self.inputData))
+    cmd += ' && %s/bin/run-monitoring.sh --swifjob --focus-detectors && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,self.getTag('run'))
+    CLAS12Job.setCmd(self,cmd)
+    outDir = self.cfg['outDir'] + '/hist/detectors/'
+    self.addOutputWildcard('./%s/*.hipo'%self.getTag('run'),outDir)
+  def addInputData(self,filenames,auger=False):
+    CLAS12Job.addInputData(self, filenames, auger=auger)
+
 class TrainMrgJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
