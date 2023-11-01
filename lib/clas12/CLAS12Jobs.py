@@ -225,6 +225,7 @@ class TrainJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class HistoJob(CLAS12Job):
+  TDIR='/group/clas12/packages/clas12-timeline/dev'
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.setRam('1500MB')
@@ -235,7 +236,7 @@ class HistoJob(CLAS12Job):
     self.addEnv('PATH',cfg['groovy']+'/bin:${COATJAVA}/bin:${PATH}')
   def setCmd(self):
     cmd =  ' ln -s %s .'%(' '.join(self.inputData))
-    cmd += ' && %s/bin/run-monitoring.sh --swifjob --focus-detectors && ls -l ./outfiles && mv outfiles %s'%(ChefConfig._TOPDIR,self.getTag('run'))
+    cmd += ' && %s/bin/run-monitoring.sh --swifjob --focus-detectors && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir'] + '/hist/detectors/'
     self.addOutputWildcard('./%s/*.hipo'%self.getTag('run'),outDir)
@@ -285,8 +286,6 @@ class TrainCleanupJob(CLAS12Job):
 
 
 if __name__ == '__main__':
-
-  print(ChefConfig._TOPDIR)
 
   job=ReconJob('wflow')
   job.setTrack('debug')
