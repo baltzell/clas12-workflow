@@ -216,6 +216,8 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
 
+    cli.add_argument('--physics', help='do physics instead of detector timelines', default=False, action='store_true')
+
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
     cli.add_argument('--defaults',help='print default config file and exit', action='store_true', default=False)
     cli.add_argument('--show',    help='print config file and exit', action='store_true', default=False)
@@ -389,6 +391,9 @@ class ChefConfig(collections.OrderedDict):
     # merging+phased workflows have additional constraints:
     if self['model'].find('mrg')>=0 and self['fileRegex']!=RunFileUtil.getFileRegex():
       self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
+
+    if self['model'].find('qtl')<0 and self['physics']:
+      _LOGGER.info('Ignoring --physics since not a qtl workflow')
 
     # no temporary files on /cache or mss
     if self['workDir'] is not None:
