@@ -17,29 +17,29 @@ args=cli.parse_args(sys.argv[1:])
 if args.rmax < args.rmin:
   cli.error('rmax cannot be less than rmin')
 
-rm=RcdbManager()
-run=args.rmin-1
-first=False
-nulls=[]
+rm = RcdbManager()
+run = rm.db.get_next_run(args.rmin-1)
+if run is None:
+  cli.error('no valid runs found')
+
+rows = []
 
 while True:
 
-  x = rm.db.get_next_run(run)
-  if x is None:
-    nulls.append(run)
-    if len(nulls) > 100:
-      break
-    run.number += 1
-    continue
-  run = x
+  if run.number >= args.rmax:
+    break
 
-  rm.load(run.number)
-  if not args.j:
-    if first:
-      print(rm.csvHeader())
-      first=False
-    print((rm.csvRun(run.number)))
+  x = rm.db.get_next_run(run)
+
+  if x is None:
+    run.number += 1
+
+  else:
+    run = x
+    rm.load(run.number)
 
 if args.j:
   print(rm)
+else:
+  print(rm.csv())
 
