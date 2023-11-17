@@ -392,7 +392,7 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('mrg')>=0 and self['fileRegex']!=RunFileUtil.getFileRegex():
       self.cli.error('Non-default "fileRegex" is not allowed in merging workflows.')
 
-    if self['model'].find('qtl')<0 and not self['physics']:
+    if self['model'].find('qtl')<0 and self['physics']:
       _LOGGER.info('Ignoring --physics since not a qtl workflow')
 
     # no temporary files on /cache or mss
