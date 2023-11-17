@@ -144,7 +144,7 @@ def processWorkflow(workflow,args):
 
   if len(args.clas12mon)>0:
     if Matcher.matchAny(status.name.split('-').pop(2),args.clas12mon):
-      if not status.isSuspended():
+      if args.suspended or not status.isSuspended():
         if not status.isComplete() or not status.isCompleteInDatabase():
           status.saveDatabase()
 
@@ -179,6 +179,7 @@ if __name__ == '__main__':
   cli.add_argument('--problemLogs',  help='print names of log files with problems', default=False, action='store_true')
   cli.add_argument('--problemLogsTail', help='print number of lines from end of problem logs', metavar='#',type=int,nargs='?',const=10,default=False)
   cli.add_argument('--clas12mon',    help='write workflows with matching tag to clas12mon (repeatable)',metavar='TAG',type=str,default=[],action='append')
+  cli.add_argument('--suspended',    help='include suspended workflows for clas12mon', action='store_true',default=False)
   cli.add_argument('--matchAll',     help='restrict to workflows containing all of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--deleteComplete', help='delete all completed workflows', default=False, action='store_true')
