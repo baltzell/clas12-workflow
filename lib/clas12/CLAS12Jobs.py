@@ -242,7 +242,7 @@ class HistoJob(CLAS12Job):
     else:
       subdir='detectors'
       opts='--focus-detectors'
-    cmd += ' && %s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(opts,HistoJob.TDIR,self.getTag('run'))
+    cmd += ' && %s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir'] + '/hist/%s/'%subdir
     self.addOutputWildcard('./%s/*'%self.getTag('run'),outDir)
