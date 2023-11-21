@@ -69,7 +69,7 @@ class CLAS12Job(SwifJob):
         if len(diff) != 0:
           _LOGGER.critical('Configuration conflicts with '+cfgfile)
           _LOGGER.critical('Conflicts on:  '+','.join(diff))
-          sys.exit()
+          sys.exit(1)
     elif os.access(cfgdir,os.W_OK):
       # write new config file:
       with open(cfgfile,'w') as f:
