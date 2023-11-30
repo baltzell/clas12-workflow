@@ -9,6 +9,7 @@ import subprocess
 import functools
 import datetime
 import threading
+import getpass
 import signal
 import queue
 import json
@@ -290,7 +291,7 @@ workflows = {}
 signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
 
 root = Tk()
-root.title('swif gui')
+root.title('swif gui (%s)'%getpass.getuser())
 root.minsize(1351,620)
 root.bind_all('<Control-c>',handler)
 root.after(500, check)
