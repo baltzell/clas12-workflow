@@ -184,8 +184,24 @@ class Wokflow():
         self._regenerate_menu()
         self.button['state'] = 'normal'
 
+    def _get_stats(self):
+        ret = {}
+        for job in self.details:
+            if 'tags' in job and 'mode' in job['tags']:
+                mode = job['tags']['mode']
+                if mode not in ret:
+                    ret[mode] = {'success':0,'total':0}
+                ret[mode]['total'] += 1
+                if 'job_status' in job and job['job_status'] == 'done':
+                    ret[mode]['success'] += 1
+        return ret
+
     def _show_full_details(self, parent_task=None):
-        self.tabs['full'].update(json.dumps(self.details,indent=2,separators=(',',': ')))
+        s = ''
+        for k,v in self._get_stats().items():
+            s += '\n%10s: %d/%d = %.3f%%'%(k,v['success'],v['total'],100*v['success']/v['total'])
+        s += '\n\n'+json.dumps(self.details,indent=2,separators=(',',': '))
+        self.tabs['full'].update(s)
         self.button['state'] = 'normal'
 
     def _show_problem_details(self, parent_task=None):
