@@ -20,7 +20,7 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    self.shell='/bin/tcsh'#os.getenv('SHELL')
+    self.shell='/bin/bash'
     self.tags=collections.OrderedDict()
     self.antecedents=[]
     self.conditions=[]
@@ -34,17 +34,6 @@ class SwifJob:
     self.outputData=[]
     self.copyInputs=True
 
-    # FIXME:  remove this stuff, it only came about because
-    # someone was switching shells in their login shell's setup
-    #
-    # cronjobs run as /bin/sh, in which case assume the login
-    # shell SWIF will actually try to run will be JLab's default:
-    if self.shell=='/bin/sh':
-      self.shell='/bin/tcsh'
-    if self.shell!='/bin/tcsh' and self.shell!='/bin/bash':
-      logging.critical('Unsupported shell:  '+self.shell)
-      sys.exit(1)
-
   def __str__(self):
     s = 'Phase %d : %s'%(self.phase,self.getJobName())
     for key,val in list(self.tags.items()):
@@ -57,6 +46,11 @@ class SwifJob:
 
   def setPartition(self,partition):
     self.partition=partition
+
+  def getFileCheck(file,minsize=128):
+    cmd='(ls -l %(f) && [ -e %(f) ] && [ $(stat -c%%s %(f)) -gt %(s) ])'
+    return cmd%{'f':file,'s':minsize}
+    #cmd+=' || rm -f %(f) && false)'
 
   def getCores(self):
     return self.cores
@@ -248,6 +242,7 @@ class SwifJob:
 
   def _createCommand(self):
     cmd='unalias -a ; '
+<<<<<<< HEAD
     if self.shell.endswith('tcsh'):
       cmd+='set echo; '
     else:
@@ -263,6 +258,11 @@ class SwifJob:
         cmd+=' && export %s="%s"'%(x['name'],x['value'])
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
+=======
+    for xx in self.env.keys():
+      cmd+='export '+xx+'="'+self.env[xx]+'" ; '
+    cmd+=self._getCopyInputsCmd()
+>>>>>>> bash
     d=[]
     for o in self.outputs:
       if not o['remote'].startswith('mss:'):

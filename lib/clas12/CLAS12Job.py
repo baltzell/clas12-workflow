@@ -32,6 +32,11 @@ class CLAS12Job(SwifJob):
     self.os=cfg['node']
     self.cfg=cfg
 
+  def getFileCheck(file,minsize=128):
+    cmd=SwifJob.getFileCheck(file,minsize)
+    cmd+=' && %s/bin/hipo-utils -test %s'%(self.cfg['coatjava'],file)
+    cmd+=' || rm -f %s && exit 109 '%(file)
+
   def setRun(self,run):
     self.addTag('run','%.6d'%int(run))
 
