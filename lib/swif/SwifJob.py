@@ -20,7 +20,6 @@ class SwifJob:
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
-    self.shell='/bin/tcsh'#os.getenv('SHELL')
     self.tags=collections.OrderedDict()
     self.antecedents=[]
     self.conditions=[]
@@ -34,17 +33,6 @@ class SwifJob:
     self.outputData=[]
     self.copyInputs=True
 
-    # FIXME:  remove this stuff, it only came about because
-    # someone was switching shells in their login shell's setup
-    #
-    # cronjobs run as /bin/sh, in which case assume the login
-    # shell SWIF will actually try to run will be JLab's default:
-    if self.shell=='/bin/sh':
-      self.shell='/bin/tcsh'
-    if self.shell!='/bin/tcsh' and self.shell!='/bin/bash':
-      logging.critical('Unsupported shell:  '+self.shell)
-      sys.exit(1)
-
   def __str__(self):
     s = 'Phase %d : %s'%(self.phase,self.getJobName())
     for key,val in list(self.tags.items()):
@@ -57,6 +45,9 @@ class SwifJob:
 
   def setPartition(self,partition):
     self.partition=partition
+
+  def getFileCheck(file,minsize):
+    return 'ls -l %(f) && [ $(stat -c%%s %(f)) -gt %(s) ] || rm -f %(f) && false'%{'f'=file,'s':minsize}
 
   def getCores(self):
     return self.cores
@@ -105,9 +96,6 @@ class SwifJob:
 
   def setCmd(self,cmd):
     self.cmd=cmd
-
-  def setShell(self,shell):
-    self.shell=shell
 
   def setLogDir(self,logDir):
     self.logDir=logDir
@@ -248,19 +236,13 @@ class SwifJob:
 
   def _createCommand(self):
     cmd='unalias -a ; '
-    if self.shell.endswith('tcsh'):
-      cmd+='set echo; '
-    else:
-      cmd+='set -v; '
+    cmd+='set -v; '
     cmd+='mkdir -p %s ; touch %s ;'%(self.logDir,self.logDir)
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'
     cmd+='expr $PWD : ^/scratch/slurm'
     for x in self.env:
-      if self.shell.endswith('csh'):
-        cmd+=' && setenv %s "%s"'%(x['name'],x['value'])
-      else:
-        cmd+=' && export %s="%s"'%(x['name'],x['value'])
+      cmd+=' && export %s="%s"'%(x['name'],x['value'])
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
     d=[]
@@ -283,7 +265,7 @@ class SwifJob:
     jsonData['phase']=self.phase
     jsonData['account']=self.account
     jsonData['partition']=self.partition
-    jsonData['shell']=self.shell
+    jsonData['shell']='/bin/bash'
     if self.cores > 0:
       jsonData['cpu_cores']=self.cores
       jsonData['ram_bytes']=self.getBytes(self.ram)
