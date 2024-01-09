@@ -170,21 +170,21 @@ class Wokflow():
         for x in ['Problem Details','Problem Logs']:
             self._delete_menu_entry(x)
         for x in self.known_problem_types:
-            for y in ['Retry: ','Add Memory: ']:
+            for y in ['Retry: ','Add Memory: ','Add Time: ']:
                 self._delete_menu_entry(y+x)
         problems = self.header.get('problem_types')
         if problems is not None and problems != 'None':
             self.button.menu.add_command(label='Problem Details', command=self.show_problem_details)
             self.button.menu.add_command(label='Problem Logs', command=self.show_problem_logs)
-            last = []
             for x in problems.split(','):
                 self.known_problem_types.add(x)
                 if len(x) > 0 and x != 'None':
                     self.button.menu.add_command(label='Retry: '+x, command=functools.partial(self.retry,x))
+            for x in problems.split(','):
                 if x == 'SLURM_OUT_OF_MEMORY':
-                    last.append(x)
-            for x in last:
-                self.button.menu.add_command(label='Add Memory: '+x, command=functools.partial(self.modify,x,['-ram','add','4gb']))
+                    self.button.menu.add_command(label='Add Memory: '+x, command=functools.partial(self.modify,x,['-ram','add','4gb']))
+                elif x == 'SLURM_TIMEOUT':
+                    self.button.menu.add_command(label='Add Time: '+x, command=functools.partial(self.modify,x,['-time','add','12h']))
 
     def _update_header(self, parent_task=None):
         for k,v in self.guivars.items():
