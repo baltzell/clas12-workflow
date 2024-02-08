@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
+
+# I do not understand tkinter imports ...
+import tkinter
 from tkinter import *
 from tkinter import ttk
 import tkinter.scrolledtext as scrolledtext
 import tkinter.messagebox as messagebox
-import concurrent.futures
-import collections
+
 import subprocess
-import functools
-import datetime
-import threading
-import getpass
-import signal
-import queue
 import json
-import time
-import os
 
 class TabFrame(ttk.Frame):
 
@@ -23,8 +17,8 @@ class TabFrame(ttk.Frame):
         self.notebook = notebook
         self.notebook.add(self, text=name)
         self.notebook.hide(self)
-        self.search_text = StringVar()
-        self.search_entry = Entry(self, textvariable=self.search_text)
+        self.search_text = tkinter.StringVar()
+        self.search_entry = tkinter.Entry(self, textvariable=self.search_text)
         self.search_entry.pack(side='top', fill='x')
         self.search_entry.bind('<Return>', self.search)
         self.text = scrolledtext.ScrolledText(self, undo=True)
@@ -59,6 +53,7 @@ class TabFrame(ttk.Frame):
 class Wokflow():
 
     def __init__(self, name, row):
+        import collections
         self.name = name
         self.row = row
         self.header = None
@@ -67,20 +62,20 @@ class Wokflow():
         for k in ['complete','jobs','undispatched','dispatched','dispatched_preparing','dispatched_pending','dispatched_running','dispatched_reaping','dispatched_other','problems','problem_types','create_ts','update_ts']:
             self.guivars[k] = StringVar()
             self.guivars[k].set('-')
-        self.header_cmd = ['swif2','status','-display','json','-workflow',self.name]
-        self.details_cmd = ['swif2','status','-jobs','-display','json','-workflow',self.name]
-        self.delete_cmd = ['swif2','cancel','-delete','-workflow',self.name]
+        self.header_cmd = swifcmd(['status','-display','json','-workflow',self.name])
+        self.details_cmd = swifcmd(['status','-jobs','-display','json','-workflow',self.name])
+        self.delete_cmd = swifcmd(['cancel','-delete','-workflow',self.name])
         self.known_problem_types = set()
         self.tabs = {}
         self.tabs['full'] = TabFrame(name='Full: '+self.name, notebook=tab_control)
         self.tabs['problems'] = TabFrame(name='Problems: '+self.name, notebook=tab_control)
         self.tabs['logs'] = TabFrame(name='Logs: '+self.name, notebook=tab_control)
-        ttk.Label(tab_summary, text=self.name, relief='groove', anchor='center').grid(column=0, row=self.row, padx=0, pady=0, sticky=[N,E,S,W])
+        ttk.Label(tab_summary, text=self.name, relief='groove', anchor='center').grid(column=0, row=self.row, padx=0, pady=0, sticky='nesw')
         for i,(k,v) in enumerate(self.guivars.items()):
-            ttk.Label(tab_summary, textvar=v, relief='groove', anchor='center').grid(column=i+1, row=self.row, padx=0, pady=0, sticky=[N,E,S,W])
+            ttk.Label(tab_summary, textvar=v, relief='groove', anchor='center').grid(column=i+1, row=self.row, padx=0, pady=0, sticky='nesw')
         self.button = ttk.Menubutton(tab_summary, text='Options')
         self.button.grid(column=len(self.guivars.items())+2, row=self.row, padx=3, pady=1)
-        self.button.menu = Menu(self.button, tearoff=False)
+        self.button.menu = tkinter.Menu(self.button, tearoff=False)
         self.button['menu'] = self.button.menu
         self.button.menu.add_command(label='Full Details', command=self.show_full_details)
         self.button.menu.add_command(label='Delete Workflow', command=self._delete_workflow)
@@ -113,12 +108,12 @@ class Wokflow():
 
     def retry(self, problem):
         self.button['state'] = 'disabled'
-        cmd = ['swif2','retry-jobs','-workflow',self.name,'-problems',problem]
+        cmd = swifcmd(['retry-jobs','-workflow',self.name,'-problems',problem])
         executor.submit(run_command, cmd).add_done_callback(self.load)
 
     def modify(self, problem, mods):
         self.button['state'] = 'disabled'
-        cmd = ['swif2','modify-jobs']
+        cmd = swifcmd(['modify-jobs'])
         cmd.extend(mods)
         cmd.extend(['-workflow',self.name,'-problems',problem])
         executor.submit(run_command, cmd).add_done_callback(self.load)
@@ -167,6 +162,7 @@ class Wokflow():
             executor.submit(run_command, self.delete_cmd)
 
     def _regenerate_menu(self, parent_task=None):
+        import functools
         for x in ['Problem Details','Problem Logs']:
             self._delete_menu_entry(x)
         for x in self.known_problem_types:
@@ -187,6 +183,7 @@ class Wokflow():
                     self.button.menu.add_command(label='Add Time: '+x, command=functools.partial(self.modify,x,['-time','add','12h']))
 
     def _update_header(self, parent_task=None):
+        import datetime
         for k,v in self.guivars.items():
             v.set(str(self.header.get(k)))
         self.guivars['update_ts'].set(datetime.datetime.fromtimestamp(int(self.header['update_ts'])/1000).strftime('%m/%d %H:%M:%S'))
@@ -222,6 +219,7 @@ class Wokflow():
         self.button['state'] = 'normal'
 
     def format_log_file(path):
+        import os
         lines = []
         if os.path.isfile(path):
             with open(path) as f:
@@ -248,7 +246,7 @@ class Wokflow():
                 yield job
 
 def initialize():
-    global workflows
+    global workflows,swif
     ttk.Label(tab_summary, text='Name').grid(column=0, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Complete').grid(column=1, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Jobs').grid(column=2, row=0, padx=5, pady=5)
@@ -264,7 +262,7 @@ def initialize():
     ttk.Label(tab_summary, text='Create').grid(column=12, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Update').grid(column=13, row=0, padx=5, pady=5)
     workflows = {}
-    for w in json.loads(subprocess.check_output(['swif2','list','-archived','-display','json']).decode('UTF-8')):
+    for w in json.loads(subprocess.check_output(swifcmd(['list','-archived','-display','json'])).decode('UTF-8')):
         workflows[w['workflow_name']] = Wokflow(w['workflow_name'], len(workflows)+1)
 
 def set_status(stat):
@@ -315,12 +313,38 @@ def check(event=None):
 def handler(event):
     root.destroy()
 
+def swifcmd(extend):
+    x = swif.copy()
+    x.extend(extend)
+    return x
+
+def checkssh(user):
+    cmd = ['ssh','-o','NumberOfPasswordPrompts 0','-q',user+'@ifarm','true']
+    p = subprocess.Popen(cmd)
+    p.wait()
+    return 0 == p.returncode
+
 workflows = {}
+
+import sys
+import signal
+import getpass
+import argparse
+
+cli = argparse.ArgumentParser()
+cli.add_argument('-u',help='username',default=getpass.getuser())
+args = cli.parse_args(sys.argv[1:])
+
+swif = ['swif2']
+if args.u != getpass.getuser():
+    if not checkssh(args.u):
+        cli.error('Failed using ssh key to access '+args.u)
+    swif = ['ssh','-q',args.u+'@ifarm','swif2']
 
 signal.signal(signal.SIGINT, lambda x,y : print('terminal ^C') or handler(None))
 
-root = Tk()
-root.title('swif gui (%s)'%getpass.getuser())
+root = tkinter.Tk()
+root.title('swif gui (%s)'%args.u)
 root.minsize(1351,620)
 root.bind_all('<Control-c>',handler)
 root.after(500, check)
@@ -330,17 +354,17 @@ root.rowconfigure(0, weight=1)
 main_frame = ttk.Frame(root, padding='10 10 20 0')
 main_frame.columnconfigure(0, weight=10)
 main_frame.rowconfigure(0, weight=10)
-main_frame.grid(column=0, row=0, sticky=(N,W,E,S))
+main_frame.grid(column=0, row=0, sticky='nesw')
 
 tab_control = ttk.Notebook(main_frame)
 tab_summary = ttk.Frame(tab_control)
 tab_control.add(tab_summary, text='Summary')
 tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
 
-status_message = StringVar()
+status_message = tkinter.StringVar()
 status_message.set('Loading...')
 status_bar = ttk.Label(main_frame, borderwidth=2, textvariable=status_message, anchor="w")
-status_bar.grid(row=1, column=0, columnspan=10, padx=10, pady=2, sticky=(N,W,E,S))
+status_bar.grid(row=1, column=0, columnspan=10, padx=10, pady=2, sticky='nesw')
 
 remove_button = ttk.Button(main_frame, text='Hide Tabs', command=hide_tabs)
 remove_button.grid(row=1, column=1, pady=3)
@@ -349,6 +373,7 @@ reload_button = ttk.Button(main_frame, text='Reload', command=reload)
 reload_button.grid(row=1, column=2, pady=3)
 reload_button['state'] = 'disabled'
 
+import concurrent.futures
 with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
     set_status('Retrieving Workflows ....')
     executor.submit(initialize).add_done_callback(load)
