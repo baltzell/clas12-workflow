@@ -262,7 +262,10 @@ def initialize():
     ttk.Label(tab_summary, text='Create').grid(column=12, row=0, padx=5, pady=5)
     ttk.Label(tab_summary, text='Update').grid(column=13, row=0, padx=5, pady=5)
     workflows = {}
-    for w in json.loads(subprocess.check_output(swifcmd(['list','-archived','-display','json'])).decode('UTF-8')):
+    cmd = swifcmd(['list','-display','json'])
+    if args.a:
+        cmd = swifcmd(['list','-archived','-display','json'])
+    for w in json.loads(subprocess.check_output(cmd).decode('UTF-8')):
         workflows[w['workflow_name']] = Wokflow(w['workflow_name'], len(workflows)+1)
 
 def set_status(stat):
@@ -333,6 +336,7 @@ import argparse
 
 cli = argparse.ArgumentParser()
 cli.add_argument('-u',help='username',default=getpass.getuser())
+cli.add_argument('-a',help='include archived workflows',default=False,action='store_true')
 args = cli.parse_args(sys.argv[1:])
 
 swif = ['swif2']
