@@ -276,6 +276,17 @@ class TrainMrgJob(CLAS12Job):
     cmd+=' && ls -ltR %s && ls -lt %s'%(inDir,outDir)
     CLAS12Job.setCmd(self,cmd)
 
+class DecodeCleanupJob(CLAS12Job):
+  def __init__(self,workflow,cfg):
+    CLAS12Job.__init__(self,workflow,cfg)
+    self.setRam('500MB')
+    self.setTime('2h')
+    self.addTag('mode','decclean')
+  def setCmd(self):
+    delDir = self.cfg['decDir']
+    cmd='rm -rf %s/decode/%.6d'%(delDir,int(self.getTag('run')))
+    CLAS12Job.setCmd(self,cmd)
+
 class TrainCleanupJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)

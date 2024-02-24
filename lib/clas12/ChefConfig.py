@@ -198,6 +198,7 @@ class ChefConfig(collections.OrderedDict):
 #    if getpass.getuser().find('clas12-')<0:
     cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
+    cli.add_argument('--decDelete', help='delete decoded files', default=False, action='store_true')
     cli.add_argument('--denoise', help='enable DC denoising', default=False, action='store_true')
     cli.add_argument('--nopostproc', help='disable post-processing of helicity and beam charge', action='store_true', default=None)
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)

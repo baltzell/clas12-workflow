@@ -13,6 +13,7 @@
   "workDir": null,
   "outDir": null,
   "decDir": null,
+  "decDelete": null,
   "trainDir": null,
   "phaseSize": -1,
   "mergeSize": 5,

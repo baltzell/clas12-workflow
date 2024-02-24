@@ -151,6 +151,29 @@ class CLAS12Workflow(SwifWorkflow):
     return jobs
 
   #
+  # decodeclean: remove decoded files
+  # - one job per run
+  #
+  def decodeclean(self,phase,jobs):
+    runs={}
+    for job in jobs:
+      if job.getTag('mode')=='dec' or job.getTag('mode')=='decmrg':
+        if job.getTag('run') not in runs:
+          runs[job.getTag('run')]=[]
+        runs[job.getTag('run')].append(job)
+    jobs=[]
+    for run in runs:
+      job=CLAS12Jobs.DecodeCleanupJob(self.name,self.cfg)
+      for j in runs[run]:
+        job.antecedents.append(j.getJobName())
+      job.addTag('run','%.6d'%int(run))
+      job.setCmd()
+      job.setPhase(phase)
+      jobs.append(job)
+      self.addJob(job)
+    return jobs
+
+  #
   # jput:  add jobs for writing from /cache to /mss
   #
   def jput(self,phase,jobs):
