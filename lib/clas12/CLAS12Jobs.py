@@ -284,7 +284,7 @@ class DecodeCleanupJob(CLAS12Job):
     self.addTag('mode','decclean')
   def setCmd(self):
     delDir = self.cfg['decDir']
-    cmd='rm -rf %s/decode/%.6d'%(delDir,int(self.getTag('run')))
+    cmd='rm -rf %s/%.6d'%(delDir,int(self.getTag('run')))
     CLAS12Job.setCmd(self,cmd)
 
 class TrainCleanupJob(CLAS12Job):

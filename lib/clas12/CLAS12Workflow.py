@@ -157,7 +157,7 @@ class CLAS12Workflow(SwifWorkflow):
   def decodeclean(self,phase,jobs):
     runs={}
     for job in jobs:
-      if job.getTag('mode')=='dec' or job.getTag('mode')=='decmrg':
+      if job.getTag('mode')=='dec' or job.getTag('mode')=='decmrg' or job.getTag('mode')=='rec':
         if job.getTag('run') not in runs:
           runs[job.getTag('run')]=[]
         runs[job.getTag('run')].append(job)

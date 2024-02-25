@@ -185,6 +185,7 @@ class RollingRuns(CLAS12Workflow):
       if len(decodeQ)+len(reconQ)+len(trainQ) == 0:
         break
 
+    decodeclean(0, self.jobs)
 
 
 #if __name__ == '__main__':
