@@ -184,6 +184,7 @@ if __name__ == '__main__':
   cli.add_argument('--matchAny',     help='restrict to workflows containing any of these substrings (repeatable)', metavar='string', type=str, default=[], action='append')
   cli.add_argument('--deleteComplete', help='delete all completed workflows', default=False, action='store_true')
   cli.add_argument('--read',         help='read workflow status from JSON file instead of querying SWIF', default=None,type=str)
+  cli.add_argument('--archived',     help='include acrhived workflows', default=False, action='store_true')
 #  cli.add_argument('--logDir',      help='local log directory'+df, metavar='PATH',type=str,default=None)
 #  cli.add_argument('--save',        help='save to logs', action='store_true',default=False)
 #  cli.add_argument('--jobLogs',    help='move job logs when complete', action='store_true',default=False)
@@ -205,7 +206,7 @@ if __name__ == '__main__':
   # generate the list of workflows to process:
   workflows=[]
   if args.read is None:
-    for wf in SwifStatus.getWorkflowNames():
+    for wf in SwifStatus.getWorkflowNames(args.archived):
       if len(args.workflow)==0:
         if Matcher.matchAll(wf,args.matchAll) and Matcher.matchAny(wf,args.matchAny):
           workflows.append(wf)
