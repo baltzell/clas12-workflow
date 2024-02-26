@@ -59,8 +59,12 @@ SWIF_PROBLEMS_ALWAYS_RETRY=[
 'SWIF_SYSTEM_ERROR'
 ]
 
-def getWorkflowNames():
-  for x in json.loads(subprocess.check_output([SWIF,'list','-archived','-display','json']).decode('UTF-8')):
+def getWorkflowNames(archived=False):
+  cmd = [SWIF,'list']
+  if archived:
+    cmd.append('-archived')
+  cmd.extend(['-display','json'])
+  for x in json.loads(subprocess.check_output(cmd).decode('UTF-8')):
     if x.get('workflow_name') is not None:
       yield x.get('workflow_name')
 
