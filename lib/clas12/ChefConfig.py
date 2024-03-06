@@ -311,24 +311,24 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('dec')<0:
       for x in 'mergeSize','decDir','torus','solenoid':
         if self[x] != CFG[x]:
-          _LOGGER.warning('Ignoring custom --%s option since not decoding.'%x)
+          _LOGGER.warning('Ignoring --%s option since not decoding.'%x)
 
     # print ignoring train-specific parameters:
     if self['model'].find('ana')<0:
       for x in 'trainSize','trainDir','trainYaml':
         if self[x] != CFG[x]:
-          _LOGGER.warning('Ignoring custom --%s option since not running trains.'%x)
+          _LOGGER.warning('Ignoring --%s option since not running trains.'%x)
 
     # print ignoring recon-specific parameters:
     if self['model'].find('rec')<0:
       for x in 'threads','reconYaml','nopostproc','helflip','recharge','noheldel':
         if self[x] != CFG[x]:
-          _LOGGER.warning('Ignoring custom --%s option since not running recon.'%x)
+          _LOGGER.warning('Ignoring --%s option since not running recon.'%x)
       self['reconYaml'] = CFG['reconYaml']
     elif self['nopostproc']:
       for x in 'helflip','recharge','noheldel':
         if self[x] != CFG[x]:
-          _LOGGER.warning('Ignoring custom --%s option since postprocessing is disabled.')
+          _LOGGER.warning('Ignoring --%s option since postprocessing is disabled.')
 
     # print ignoring work dir:
     if self['workDir'] is not None:
@@ -457,11 +457,11 @@ class ChefConfig(collections.OrderedDict):
         self.cli.error('"trainYaml" must be defined for model='+str(self['model']))
     if self['model'].find('rec')>=0 and self['reconYaml'] is None:
       self.cli.error('"reconYaml" must be defined for model='+str(self['model']))
-    if self['reconYaml'] is not None:
+    if self['reconYaml'] is not None and self['model'].find('rec')>=0:
       self['schema']=ClaraYaml.getSchemaName(self['reconYaml'])
       if not ClaraYaml.checkIntegrity(self['reconYaml'],self['clara'],self['ccdbsqlite']):
         self.cli.error('"reconYaml" has bugs')
-    if self['trainYaml'] is not None:
+    if self['trainYaml'] is not None and self['model'].find('ana')>=0:
       if not ClaraYaml.checkIntegrity(self['trainYaml'],self['clara']):
         self.cli.error('"trainYaml" has bugs')
 
