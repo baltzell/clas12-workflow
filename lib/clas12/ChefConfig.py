@@ -76,9 +76,8 @@ class ChefConfig(collections.OrderedDict):
         cjv=CoatjavaVersion.CoatjavaVersion(self['clara'])
         if self['denoise']:
           if cjv < '9.0.0':
-            self['denoise'] = 1.9
-          else:
-            self['denoise'] = 2.0
+            _LOGGER.critical('Denoising is not supported for COATJAVA < 9.0.0')
+            sys.exit(1)
       if self['helflip']:
         _LOGGER.info('--helflip is currently not allowed')
         sys.exit(1)
