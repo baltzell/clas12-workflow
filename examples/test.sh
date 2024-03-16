@@ -11,5 +11,6 @@ clas12-workflow.py \
 --reconYaml /home/baltzell/clas12-config/coatjava/10.0.5/rgk_data-cv-calib.yaml \
 --trainYaml calib \
 --coatjava 10.0.9 \
---denoise
+--denoise \
+--el9
 
