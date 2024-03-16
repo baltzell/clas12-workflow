@@ -5,10 +5,7 @@ SWIF='/site/bin/swif2'
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
-# keeping this just for sorting the darned dictionary for printing, until can
-# figure out how to make json.loads preserve sorting without manipulating structure,
-# key/value to 2-long tuples, apparently json.loads as of python 3.7 preserves order
-# by default, presumably without manipulating structure..
+# just for documentation, may be wrong/incomplete:
 SWIF_JSON_KEYS=[
 'workflow_name',
 'workflow_user',
@@ -64,7 +61,7 @@ def getWorkflowNames(archived=False):
   if archived:
     cmd.append('-archived')
   cmd.extend(['-display','json'])
-  for x in json.loads(subprocess.check_output(cmd).decode('UTF-8')):
+  for x in json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict):
     if x.get('workflow_name') is not None:
       yield x.get('workflow_name')
 
@@ -112,9 +109,7 @@ class SwifStatus():
     if self.__status is None:
       if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
-        # if we hook to OrderedDict here, the order is preserved, but key/values get converted to tuple.
-        # python3 apparently preserves ordering
-        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
+        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
       elif os.path.isfile(self.source):
         with open(self.source,'rb') as f:
           self.__status=json.loads(f.read().decode('UTF-8'))
@@ -133,14 +128,13 @@ class SwifStatus():
     if self.__details is None:
       if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
+        self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
         self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
       elif os.path.isfile(self.source):
         with open(self.source,'rb') as f:
-          self.__details=json.loads(f.read().decode('UTF-8'))
-        # with python3, that can become:
-        #json.load(open(self.source,encoding='UTF-8'))
+          self.__details=json.loads(f.read().decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
       elif isinstance(self.source,str):
-        self.__details=json.loads(self.source)
+        self.__details=json.loads(self.source,object_pairs_hook=collections.OrderedDict)
       elif isinstance(self.source,list) or isinstance(self.source,dict):
         self.__details=self.source
       else:
@@ -202,13 +196,7 @@ class SwifStatus():
     # but we recreate it here just to avoid running swif again ...
     row=[]
     for status in self.getStatus():
-      # wanted to do this via pair/hook and OrderedDict in json.loads just
-      # to preserve ordering from SWIF, but that converted stuff to tuples,
-      # so here we sort manually, grr ....
-      #
-      # FIXME:  sounds like this syntax changes in python3:
-      for k,v in sorted(status.items(), key=lambda (i,j): SWIF_JSON_KEYS.index(i)):
-      #for k,v in sorted(status.items(), key=lambda (i): SWIF_JSON_KEYS.index(i[0])):
+      for k,v in status.items():
         if k.endswith('_ts'):
           v = datetime.datetime.fromtimestamp(int(v)/1000).strftime('%Y/%m/%d %H:%M:%S')
         row.append('%-30s = %s'%(k,v))
