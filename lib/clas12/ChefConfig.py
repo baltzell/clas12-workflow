@@ -1,4 +1,5 @@
 import os,re,sys,stat,glob,json,copy,logging,getpass,argparse,traceback,collections
+import SwifJob
 import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
@@ -14,7 +15,7 @@ _VALIDREMOTES=['/mss','/volatile','/cache']
 CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
-'node'    : ['general','centos77','farm19','farm18','farm16','farm14','farm13','amd','xeon'],
+'node'    : SwifJob.CONSTRAINTS,
 'threads' : list(ReconJob.THRD_MEM_REQ.keys()),
 }
 
