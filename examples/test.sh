@@ -1,12 +1,16 @@
 clas12-workflow.py \
---model recana \
---runGroup rga \
+--model decrecana \
+--runGroup rgk \
 --tag test \
---runs 5196 \
---inputs /mss/clas12/rg-a/production/decoded/6b.2.0/005196/ \
+--forties \
+--runs 19891-19893 \
+--inputs /mss/clas12/rg-k/data/clas_019891 \
+--inputs /mss/clas12/rg-k/data/clas_019892 \
+--inputs /mss/clas12/rg-k/data/clas_019893 \
 --outDir /volatile/clas12/users/baltzell/wok-test \
---reconYaml ./examples/test.yaml \
+--reconYaml /home/baltzell/clas12-config/coatjava/10.0.5/rgk_data-cv-calib.yaml \
 --trainYaml calib \
---coatjava 9.0.0 \
---denoise
+--coatjava 10.0.9 \
+--denoise \
+--submit false
 
