@@ -29,7 +29,14 @@ class CLAS12Job(SwifJob):
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
     self.account=cfg['project']
-    self.os=cfg['node']
+    if cfg['el9']:
+      import random
+      if random.uniform(0,1) > 0.7:
+        self.os='el9'
+      else:
+        self.os='el7'
+    else:
+      self.os=cfg['node']
     self.cfg=cfg
 
   def setRun(self,run):
