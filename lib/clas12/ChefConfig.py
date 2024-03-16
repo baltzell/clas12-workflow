@@ -5,7 +5,9 @@ import CoatjavaVersion
 import RunFileUtil
 import CLAS12Workflows
 import ClaraYaml
-from CLAS12Jobs import ReconJob
+import CLAS12Jobs
+
+#CLAS12Jobs._DEBUG=True
 
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.normpath(os.path.dirname(os.path.realpath(__file__))+'/../../')
@@ -16,7 +18,7 @@ CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
 'node'    : SwifJob.CONSTRAINTS,
-'threads' : list(ReconJob.THRD_MEM_REQ.keys()),
+'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
 }
 
 STOCK_TRAIN_YAMLS={}
