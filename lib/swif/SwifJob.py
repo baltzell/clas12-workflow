@@ -16,7 +16,7 @@ class SwifJob:
     self.account='clas12'
     self.partition='production'
     self.cores=1
-    self.os='general|el9'
+    self.os='general'
     self.time='2h'
     self.disk='3GB'
     self.ram='1GB'
