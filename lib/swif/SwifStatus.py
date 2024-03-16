@@ -66,7 +66,7 @@ def getWorkflowNames(archived=False):
       yield x.get('workflow_name')
 
 def deleteWorkflow(name):
-  print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
+  print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]).decode('UTF-8'))
 
 class Stats(collections.OrderedDict):
   ZERO={'jobs':0,'succeeded':0}
@@ -328,7 +328,7 @@ class SwifStatus():
       cmd=[SWIF,'abandon-jobs','-workflow',self.name,'-names']
       cmd.extend(files)
       ret+=' '.join(cmd)
-      ret+='\n'+subprocess.check_output(cmd)
+      ret+='\n'+subprocess.check_output(cmd).decode('UTF-8')
     else:
       ret+='No files found for run numbers:  '+','.join(runs)
     return ret
@@ -518,14 +518,14 @@ class SwifStatus():
           continue
       cmd = [SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
       yield ' '.join(cmd)
-      yield subprocess.check_output(cmd)
+      yield subprocess.check_output(cmd).decode('UTF-8')
 
   def resumeJobs(self, problems=['SITE_REAP_FAIL','SWIF_INPUT_FAIL','SWIF_OUTPUT_FAIL','SWIF_MISSING_OUTPUT']):
     for problem in problems:
       for job in self.getPersistemtProblems(problem):
         cmd = ['swif2','resume-jobs',self.name,'-problem',problem]
         yield ' '.join(cmd)
-        yield subprocess.check_output(cmd)
+        yield subprocess.check_output(cmd).decode('UTF-8')
         break
 
   def refreshInputs(self, problem=['SLURM_FAILED']):
@@ -548,7 +548,7 @@ class SwifStatus():
         cmd.extend(args)
         cmd.append(job.get('job_id'))
         yield ' '.join(cmd)
-        yield subprocess.check_output(cmd)
+        yield subprocess.check_output(cmd).decode('UTF-8')
 
   def abandonProblems(self,types):
     for problem in self.getCurrentProblems():
@@ -556,7 +556,7 @@ class SwifStatus():
         continue
       retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
       yield retryCmd
-      yield subprocess.check_output(retryCmd)
+      yield subprocess.check_output(retryCmd).decode('UTF-8')
 
   def modifyJobReqs(self,problems):
     if 'AUGER-TIMEOUT' in problems:
@@ -565,14 +565,14 @@ class SwifStatus():
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
       yield ' '.join(modifyCmd)
-      yield subprocess.check_output(modifyCmd)
+      yield subprocess.check_output(modifyCmd).decode('UTF-8')
     if 'AUGER-OVER_RLIMIT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-ram','add','1gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
       yield ' '.join(modifyCmd)
-      yield subprocess.check_output(modifyCmd)
+      yield subprocess.check_output(modifyCmd).decode('UTF-8')
 
   def exists(self,path,tape=False):
     ret = os.path.exists(path)
