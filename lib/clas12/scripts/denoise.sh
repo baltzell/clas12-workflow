@@ -2,9 +2,10 @@
 
 if grep -q -i Alma /etc/redhat-release
 then
-    d=/scigroup/cvmfs/hallb/clas12/soft/almalinux9-gcc11/local/driftchambers/4.0.1
-    exe=$d/bin/denoise2.exe
-    network=$d/share/denoising/network
+    source /scigroup/cvmfs/hallb/clas12/soft/setup.sh
+    module load denoising/4.0.1
+    exe=$(which denoise2.exe)
+    network=$DENOISING_NETWORKS
 else
     g=/apps/gcc/10.2.0
     export PATH=${g}/bin:${PATH}
