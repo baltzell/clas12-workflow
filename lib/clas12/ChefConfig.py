@@ -4,7 +4,7 @@ import CoatjavaVersion
 import RunFileUtil
 import CLAS12Workflows
 import ClaraYaml
-from CLAS12Jobs import ReconJob
+import CLAS12Jobs
 
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.normpath(os.path.dirname(os.path.realpath(__file__))+'/../../')
@@ -15,7 +15,7 @@ CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
 'node'    : ['general','centos77','farm19','farm18','farm16','farm14','farm13','amd','xeon'],
-'threads' : list(ReconJob.THRD_MEM_REQ.keys()),
+'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
 }
 
 STOCK_TRAIN_YAMLS={}
@@ -81,6 +81,9 @@ class ChefConfig(collections.OrderedDict):
       if self['helflip']:
         _LOGGER.info('--helflip is currently not allowed')
         sys.exit(1)
+      if self['debug']:
+        CLAS12Jobs._DEBUG=True
+
 
   def diff(self,cfg):
     ret = []
@@ -214,7 +217,7 @@ class ChefConfig(collections.OrderedDict):
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
-
+    cli.add_argument('--debug', help='only process a few hundred events per file', default=False, action='store_true')
     cli.add_argument('--physics', help='do physics instead of detector timelines', default=False, action='store_true')
 
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)

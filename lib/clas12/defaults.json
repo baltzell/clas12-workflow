@@ -3,6 +3,7 @@
   "tag": null,
   "node": "general",
   "model": null,
+  "debug": false,
   "reconYaml": null,
   "nomerge": null,
   "project": "clas12",
