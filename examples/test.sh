@@ -1,4 +1,4 @@
-clas12-workflow.py \
+clas12-workflow \
 --model decrecana \
 --runGroup rgk \
 --tag test \

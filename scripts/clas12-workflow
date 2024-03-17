@@ -1,0 +1,5 @@
+#!/bin/bash
+
+d=$(dirname -- "${BASH_SOURCE[0]}")
+python3 $d/clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
+
