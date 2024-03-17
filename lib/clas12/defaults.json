@@ -4,6 +4,7 @@
   "node": "general",
   "el9": false,
   "model": null,
+  "debug": false,
   "reconYaml": null,
   "project": "clas12",
   "trainYaml": null,

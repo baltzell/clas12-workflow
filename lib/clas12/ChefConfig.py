@@ -7,8 +7,6 @@ import CLAS12Workflows
 import ClaraYaml
 import CLAS12Jobs
 
-#CLAS12Jobs._DEBUG=True
-
 _LOGGER=logging.getLogger(__name__)
 _TOPDIR = os.path.normpath(os.path.dirname(os.path.realpath(__file__))+'/../../')
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
@@ -84,6 +82,9 @@ class ChefConfig(collections.OrderedDict):
       if self['helflip']:
         _LOGGER.info('--helflip is currently not allowed')
         sys.exit(1)
+      if self['debug']:
+        CLAS12Jobs._DEBUG=True
+
 
   def diff(self,cfg):
     ret = []
@@ -218,7 +219,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
     cli.add_argument('--el9', help='include el9 nodes', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
-
+    cli.add_argument('--debug', help='only process a few hundred events per file', default=False, action='store_true')
     cli.add_argument('--physics', help='do physics instead of detector timelines', default=False, action='store_true')
 
     cli.add_argument('--config',metavar='PATH',help='load config file (overriden by command line arguments)', type=str,default=None)
