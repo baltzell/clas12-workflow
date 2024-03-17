@@ -4,9 +4,9 @@ d=$(dirname -- "${BASH_SOURCE[0]}")
 
 if grep -q -i Alma /etc/redhat-release
 then
-    exec python3 $d/clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
+    exec python3 $d/.clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
 else
-    exec python2 $d/clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
+    exec python2 $d/.clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
 fi
 
 
