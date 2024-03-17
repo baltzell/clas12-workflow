@@ -123,7 +123,7 @@ class ChefConfig(collections.OrderedDict):
     for x in ['reconYaml','trainYaml']:
       if self[x] is None:
         continue
-      elif x is 'trainYaml' and self[x] in STOCK_TRAIN_YAMLS:
+      elif x=='trainYaml' and self[x] in STOCK_TRAIN_YAMLS:
         _LOGGER.info('Using stock train yaml: '+self[x])
         self[x] = STOCK_TRAIN_YAMLS[self[x]]
       else:
@@ -346,7 +346,7 @@ class ChefConfig(collections.OrderedDict):
           self[xx]=None
         elif not self[xx].startswith('/'):
           self.cli.error('"'+xx+'" must be an absolute path, not '+self[xx])
-        elif xx is not 'logDir':
+        elif xx != 'logDir':
           if '/'+self[xx].strip('/').split('/').pop(0) not in _VALIDREMOTES:
             self.cli.error('"'+xx+'" must start with one of: '+','.join(_VALIDREMOTES))
 
