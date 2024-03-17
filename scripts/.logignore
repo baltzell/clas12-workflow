@@ -6,3 +6,4 @@
 ^FROM schema_versions
 ^FROM `schemaVersions`
 ^WHERE condition
+^WHERE schema_versions
