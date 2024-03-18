@@ -198,7 +198,6 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train job', type=int, default=None)
 
-#    if getpass.getuser().find('clas12-')<0:
     cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
     cli.add_argument('--denoise', help='enable DC denoising', default=False, action='store_true')
@@ -310,6 +309,11 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.warning('Some of your --inputs start with /cache, which is almost never a good idea.')
           _LOGGER.warning('Are you sure you REALLY want to do that, rather than /mss?')
           break
+
+    # prevent tiny files:
+    if self['nomerge']:
+      if self['model'].find('dec')>=0 and self['model'].find('decmrg')<0:
+        self.cli.error('--nomerge is incompatible with "dec" model, use "decmrg" instead.')
 
     # print ignoring decoding-specific parameters:
     if self['model'].find('dec')<0:
