@@ -2,6 +2,8 @@ import os,sys,json,getpass,logging,collections
 
 from SwifStatus import SWIF
 
+CONSTRAINTS=['general','el9','el7','farm23','farm19','farm18','farm16','farm14','farm13','amd','xeon']
+
 class SwifJob:
 
   __JSONFORMAT={'indent':2,'separators':(',',': ')}

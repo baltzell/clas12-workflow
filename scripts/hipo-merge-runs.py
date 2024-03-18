@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os,sys,argparse,subprocess,logging,traceback,datetime
 
 import ChefUtil

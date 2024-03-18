@@ -1,4 +1,5 @@
 import os,re,sys,stat,glob,json,copy,logging,getpass,argparse,traceback,collections
+import SwifJob
 import ChefUtil
 import CoatjavaVersion
 import RunFileUtil
@@ -14,7 +15,7 @@ _VALIDREMOTES=['/mss','/volatile','/cache']
 CHOICES={
 'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
-'node'    : ['general','centos77','farm19','farm18','farm16','farm14','farm13','amd','xeon'],
+'node'    : SwifJob.CONSTRAINTS,
 'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
 }
 
@@ -123,7 +124,7 @@ class ChefConfig(collections.OrderedDict):
     for x in ['reconYaml','trainYaml']:
       if self[x] is None:
         continue
-      elif x is 'trainYaml' and self[x] in STOCK_TRAIN_YAMLS:
+      elif x=='trainYaml' and self[x] in STOCK_TRAIN_YAMLS:
         _LOGGER.info('Using stock train yaml: '+self[x])
         self[x] = STOCK_TRAIN_YAMLS[self[x]]
       else:
@@ -216,6 +217,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--graalvm', help='use GraalVM instead of JVM', default=False, action='store_true')
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
+    cli.add_argument('--el9', help='include el9 nodes', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
     cli.add_argument('--debug', help='only process a few hundred events per file', default=False, action='store_true')
     cli.add_argument('--physics', help='do physics instead of detector timelines', default=False, action='store_true')
@@ -345,7 +347,7 @@ class ChefConfig(collections.OrderedDict):
           self[xx]=None
         elif not self[xx].startswith('/'):
           self.cli.error('"'+xx+'" must be an absolute path, not '+self[xx])
-        elif xx is not 'logDir':
+        elif xx != 'logDir':
           if '/'+self[xx].strip('/').split('/').pop(0) not in _VALIDREMOTES:
             self.cli.error('"'+xx+'" must start with one of: '+','.join(_VALIDREMOTES))
 

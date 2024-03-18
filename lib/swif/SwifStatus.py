@@ -5,10 +5,7 @@ SWIF='/site/bin/swif2'
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
-# keeping this just for sorting the darned dictionary for printing, until can
-# figure out how to make json.loads preserve sorting without manipulating structure,
-# key/value to 2-long tuples, apparently json.loads as of python 3.7 preserves order
-# by default, presumably without manipulating structure..
+# just for documentation, may be wrong/incomplete:
 SWIF_JSON_KEYS=[
 'workflow_name',
 'workflow_user',
@@ -64,12 +61,12 @@ def getWorkflowNames(archived=False):
   if archived:
     cmd.append('-archived')
   cmd.extend(['-display','json'])
-  for x in json.loads(subprocess.check_output(cmd).decode('UTF-8')):
+  for x in json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict):
     if x.get('workflow_name') is not None:
       yield x.get('workflow_name')
 
 def deleteWorkflow(name):
-  print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]))
+  print(subprocess.check_output([SWIF,'cancel','-delete','-workflow',name]).decode('UTF-8'))
 
 class Stats(collections.OrderedDict):
   ZERO={'jobs':0,'succeeded':0}
@@ -112,9 +109,7 @@ class SwifStatus():
     if self.__status is None:
       if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-display','json','-workflow',self.name]
-        # if we hook to OrderedDict here, the order is preserved, but key/values get converted to tuple.
-        # python3 apparently preserves ordering
-        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
+        self.__status=json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
       elif os.path.isfile(self.source):
         with open(self.source,'rb') as f:
           self.__status=json.loads(f.read().decode('UTF-8'))
@@ -133,14 +128,13 @@ class SwifStatus():
     if self.__details is None:
       if self.source is None:
         cmd=[SWIF,'status','-user',self.user,'-jobs','-display','json','-workflow',self.name]
+        self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
         self.__details=json.loads(subprocess.check_output(cmd).decode('UTF-8'))
       elif os.path.isfile(self.source):
         with open(self.source,'rb') as f:
-          self.__details=json.loads(f.read().decode('UTF-8'))
-        # with python3, that can become:
-        #json.load(open(self.source,encoding='UTF-8'))
+          self.__details=json.loads(f.read().decode('UTF-8'),object_pairs_hook=collections.OrderedDict)
       elif isinstance(self.source,str):
-        self.__details=json.loads(self.source)
+        self.__details=json.loads(self.source,object_pairs_hook=collections.OrderedDict)
       elif isinstance(self.source,list) or isinstance(self.source,dict):
         self.__details=self.source
       else:
@@ -202,13 +196,7 @@ class SwifStatus():
     # but we recreate it here just to avoid running swif again ...
     row=[]
     for status in self.getStatus():
-      # wanted to do this via pair/hook and OrderedDict in json.loads just
-      # to preserve ordering from SWIF, but that converted stuff to tuples,
-      # so here we sort manually, grr ....
-      #
-      # FIXME:  sounds like this syntax changes in python3:
-      for k,v in sorted(status.items(), key=lambda (i,j): SWIF_JSON_KEYS.index(i)):
-      #for k,v in sorted(status.items(), key=lambda (i): SWIF_JSON_KEYS.index(i[0])):
+      for k,v in status.items():
         if k.endswith('_ts'):
           v = datetime.datetime.fromtimestamp(int(v)/1000).strftime('%Y/%m/%d %H:%M:%S')
         row.append('%-30s = %s'%(k,v))
@@ -340,7 +328,7 @@ class SwifStatus():
       cmd=[SWIF,'abandon-jobs','-workflow',self.name,'-names']
       cmd.extend(files)
       ret+=' '.join(cmd)
-      ret+='\n'+subprocess.check_output(cmd)
+      ret+='\n'+subprocess.check_output(cmd).decode('UTF-8')
     else:
       ret+='No files found for run numbers:  '+','.join(runs)
     return ret
@@ -530,14 +518,14 @@ class SwifStatus():
           continue
       cmd = [SWIF,'retry-jobs','-workflow',self.name,'-problems',problem]
       yield ' '.join(cmd)
-      yield subprocess.check_output(cmd)
+      yield subprocess.check_output(cmd).decode('UTF-8')
 
   def resumeJobs(self, problems=['SITE_REAP_FAIL','SWIF_INPUT_FAIL','SWIF_OUTPUT_FAIL','SWIF_MISSING_OUTPUT']):
     for problem in problems:
       for job in self.getPersistemtProblems(problem):
         cmd = ['swif2','resume-jobs',self.name,'-problem',problem]
         yield ' '.join(cmd)
-        yield subprocess.check_output(cmd)
+        yield subprocess.check_output(cmd).decode('UTF-8')
         break
 
   def refreshInputs(self, problem=['SLURM_FAILED']):
@@ -560,7 +548,7 @@ class SwifStatus():
         cmd.extend(args)
         cmd.append(job.get('job_id'))
         yield ' '.join(cmd)
-        yield subprocess.check_output(cmd)
+        yield subprocess.check_output(cmd).decode('UTF-8')
 
   def abandonProblems(self,types):
     for problem in self.getCurrentProblems():
@@ -568,7 +556,7 @@ class SwifStatus():
         continue
       retryCmd=[SWIF,'abandon-jobs','-workflow',self.name,'-problems',problem]
       yield retryCmd
-      yield subprocess.check_output(retryCmd)
+      yield subprocess.check_output(retryCmd).decode('UTF-8')
 
   def modifyJobReqs(self,problems):
     if 'AUGER-TIMEOUT' in problems:
@@ -577,14 +565,14 @@ class SwifStatus():
       modifyCmd.extend(['-problems','AUGER-TIMEOUT'])
       problems.remove('AUGER-TIMEOUT')
       yield ' '.join(modifyCmd)
-      yield subprocess.check_output(modifyCmd)
+      yield subprocess.check_output(modifyCmd).decode('UTF-8')
     if 'AUGER-OVER_RLIMIT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
       modifyCmd.extend(['-ram','add','1gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
       yield ' '.join(modifyCmd)
-      yield subprocess.check_output(modifyCmd)
+      yield subprocess.check_output(modifyCmd).decode('UTF-8')
 
   def exists(self,path,tape=False):
     ret = os.path.exists(path)
