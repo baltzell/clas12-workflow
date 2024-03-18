@@ -253,7 +253,6 @@ class TrainMrgJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.addEnv('COATJAVA',cfg['coatjava'])
-    # FIXME: use `module load`, but need to know what version or wait until stable
     lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
     self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
     self.setRam('1000MB')

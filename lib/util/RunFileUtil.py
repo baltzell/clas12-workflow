@@ -38,6 +38,8 @@ class RunFile:
     if not rf is None:
       self.fileNumber=rf['file']
       self.runNumber=rf['run']
+  def __hash__(self):
+    return int(self.fileNumber*1e9 + self.runNumber)
   def __eq__(self,other):
     if not type(other) is type(self): raise TypeError('')
     if self.runNumber != other.runNumber: return False
@@ -73,10 +75,10 @@ class TapeRunFile(RunFile):
     if self.stub < other.stub: return True
     return False
 
-class RunFileGroup(list):
+class RunFileGroup(set):
 
   def __init__(self):
-    list.__init__(self)
+    set.__init__(self)
     self.runNumber=None
 
   def add(self,rf):
@@ -86,29 +88,20 @@ class RunFileGroup(list):
       return
     elif self.runNumber is None:
       self.runNumber = rf.runNumber
-      self.append(rf)
     elif self.runNumber != rf.runNumber:
       _LOGGER.critical('Run number mismatch: '+str(self.runNumber)+'/'+str(rf.runNumber))
-      sys.exit()
-    elif rf in self:
+      sys.exit(13)
+    if rf in self:
       _LOGGER.critical('Found duplicate run/file numbers: '+str(rf))
-      sys.exit()
-    else:
-      inserted=False
-      for ii in range(len(self)):
-        if rf < self[ii]:
-          self.insert(ii,rf)
-          inserted=True
-          break
-      if not inserted:
-        self.append(rf)
+      sys.exit(14)
+    set.add(self, rf)
 
   def addFile(self,fileName):
     self.add(RunFile(fileName))
 
   def __str__(self):
     xx=str(self.runNumber)+'('
-    xx += ','.join([str(yy.fileNumber) for yy in self])
+    xx += ','.join([str(yy.fileNumber) for yy in sorted(self)])
     xx+=')'
     return xx
 
@@ -197,7 +190,7 @@ class RunFileGroups(collections.OrderedDict):
         groups.append(phaseList)
       phaseList=[]
       # loop over the files in this run:
-      for rf in rfg:
+      for rf in sorted(rfg):
         phaseList.append(rf.fileName)
         # make a new group if we're over the size limit:
         if self.groupSize>0 and len(phaseList)>=self.groupSize:
@@ -211,7 +204,7 @@ class RunFileGroups(collections.OrderedDict):
   def getFlatList(self):
     flatList=[]
     for run,rfg in list(self.items()):
-      for rf in rfg:
+      for rf in sorted(rfg):
         flatList.append(rf.fileName)
     return flatList
 
