@@ -7,8 +7,8 @@ setup=/group/clas12/packages/setup.sh
 if [ -e $setup ]
 then
     source $setup
-    module purge
-    module load clas12
+    module -s purge
+    module -s load clas12
 else
     echo "WARNING:  Cannot find CLAS12 modules setup file $setup"
 fi
