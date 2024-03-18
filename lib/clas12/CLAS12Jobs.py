@@ -205,7 +205,7 @@ class TrainJob(CLAS12Job):
         _LOGGER.critical('Non-HIPO file detected for a train job: '+x)
         sys.exit(99)
       CLAS12Job.addInputData(self,x)
-    if self.cfg['workDir'] is None:
+    if self.cfg['workDir'] is None or not self.cfg['nomerge']:
       outDir=self.cfg['outDir']
     else:
       outDir=self.cfg['workDir']

@@ -4,6 +4,7 @@
   "node": "general",
   "model": null,
   "reconYaml": null,
+  "nomerge": null,
   "project": "clas12",
   "trainYaml": null,
   "coatjava": null,

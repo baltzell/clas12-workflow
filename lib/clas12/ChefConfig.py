@@ -202,7 +202,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
     cli.add_argument('--helflip',  help='flip offline helicity (ONLY for data decoded prior to 6.5.11)', action='store_true', default=None)
     cli.add_argument('--noheldel', help='disable delayed-helicity correction', action='store_true', default=None)
-
+    cli.add_argument('--nomerge',  help='disable train merging', action='store_true', default=None)
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
@@ -393,13 +393,13 @@ class ChefConfig(collections.OrderedDict):
       _LOGGER.info('Ignoring --physics since not a qtl workflow')
 
     # no temporary files on /cache or mss
-    if self['workDir'] is not None:
+    if self['workDir'] is None:
+      if self['model'].find('ana')>=0 and not self['nomerge']:
+        if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
+          self.cli.error('--workDir is required for trains if --outDir is on /cache or /mss')
+    else:
       if self['workDir'].find('/cache')==0 or self['workDir'].find('/mss')==0:
         self.cli.error('--workDir cannot be on /cache or /mss.')
-    if self['model'].find('ana')>=0:
-      if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
-        if self['workDir'] is None:
-          self.cli.error('--workDir is required for trains if --outDir is on /cache or /mss')
 
     # set user-defined regex for input files:
     if self['fileRegex'] != RunFileUtil.getFileRegex():

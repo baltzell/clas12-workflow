@@ -87,9 +87,10 @@ class MinimalDependency(CLAS12Workflow):
 
       if self.cfg['model'].find('ana')>=0:
         xx = self.train(self.phase,xx)
-        xx.extend(self.trainmerge(self.phase,xx))
-        jput_jobs.extend(xx)
-        self.trainclean(self.phase,xx)
+        if not self.cfg['nomerge']:
+          xx.extend(self.trainmerge(self.phase,xx))
+          jput_jobs.extend(xx)
+          self.trainclean(self.phase,xx)
 
       self.jput(self.phase+1,jput_jobs)
 
@@ -134,9 +135,10 @@ class RollingRuns(CLAS12Workflow):
       if len(trainQ)>0:
         xx = trainQ.pop(0)
         trainJobs = self.train(xx.phase,xx.jobs)
-        trainJobs.extend(self.trainmerge(xx.phase,trainJobs))
-        jput_jobs.extend(trainJobs)
-        self.trainclean(xx.phase,trainJobs)
+        if not self.cfg['nomerge']:
+          trainJobs.extend(self.trainmerge(xx.phase,trainJobs))
+          jput_jobs.extend(trainJobs)
+          self.trainclean(xx.phase,trainJobs)
 
       if len(reconQ)>0:
         xx = reconQ.pop(0)
