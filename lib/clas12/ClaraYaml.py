@@ -1,6 +1,5 @@
 import re,sys,yaml,glob,datetime,logging,argparse
 
-import ccdb
 import JarUtil
 
 _CCDBURI = 'mysql://clas12reader@clasdb.jlab.org/clas12'
@@ -192,6 +191,7 @@ class ClaraYaml:
     return True
 
   def checkVariation(self,variation):
+    import ccdb
     if self.ccdb is None:
       self.ccdb = ccdb.AlchemyProvider()
     self.ccdb.connect(self.ccdb_connection)
