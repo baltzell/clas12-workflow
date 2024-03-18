@@ -26,11 +26,7 @@ class CLAS12Job(SwifJob):
     self.addEnv('MALLOC_ARENA_MAX','2')
     self.account=cfg['project']
     if cfg['el9']:
-      import random
-      if random.uniform(0,1) > 0.5:
-        self.os='el9'
-      else:
-        self.os='el7'
+      self.os='"el9|el7"'
     else:
       self.os=cfg['node']
     self.cfg=cfg
