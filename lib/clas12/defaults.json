@@ -20,7 +20,7 @@
   "mergeSize": 5,
   "reconSize": 2,
   "trainSize": 30,
-  "threads": 16,
+  "threads": 32,
   "torus": null,
   "solenoid": null,
   "nopostproc": false,
