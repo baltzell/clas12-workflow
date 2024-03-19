@@ -1,9 +1,11 @@
 import os,re,sys,glob,logging,collections
 
 # The first/second group must match the run/file number:
+# (To accomodate merged files, extra file numbers are allowed at the end)
 __FILEREGEX='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)'
 
-__TAPEORDER=False
+# Avoid partial copies, for data auto-copied to cache on its way to tape:
+__VETO='\.part$'
 
 _LOGGER=logging.getLogger(__name__)
 
@@ -18,8 +20,12 @@ def getFileRegex():
 
 def getRunFileNumber(fileName):
   mm = re.match(__FILEREGEX,fileName)
+  vv = re.match(__VETO,fileName)
   if mm is None:
-    _LOGGER.debug('Failed to find run number in:  '+fileName)
+    _LOGGER.warning('Failed to find run/file number in:  '+fileName)
+    return None
+  if vv is not None:
+    _LOGGER.warning('Vetoing partial file:  '+fileName)
     return None
   runno=int(mm.group(1))
   fileno=int(mm.group(2))
