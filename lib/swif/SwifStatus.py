@@ -568,7 +568,7 @@ class SwifStatus():
       yield subprocess.check_output(modifyCmd).decode('UTF-8')
     if 'AUGER-OVER_RLIMIT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-ram','add','1gb'])
+      modifyCmd.extend(['-ram','add','5gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
       yield ' '.join(modifyCmd)
