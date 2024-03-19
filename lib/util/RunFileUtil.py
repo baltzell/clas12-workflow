@@ -22,7 +22,7 @@ def getRunFileNumber(fileName):
   mm = re.match(__FILEREGEX,fileName)
   vv = re.match(__VETO,fileName)
   if mm is None:
-    _LOGGER.warning('Failed to find run/file number in:  '+fileName)
+    _LOGGER.debug('Failed to match regex for run/file number:  '+fileName)
     return None
   if vv is not None:
     _LOGGER.warning('Vetoing partial file:  '+fileName)
