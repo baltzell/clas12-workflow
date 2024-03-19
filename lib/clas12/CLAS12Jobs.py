@@ -115,7 +115,7 @@ class DecodingJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
-  THRD_MEM_REQ={0:0, 16:16, 20:16, 24:20, 32:28, 36:32, 40:36, 48:44}
+  THRD_MEM_REQ={0:0, 16:20, 20:20, 24:24, 32:32, 36:36, 40:40, 48:48}
   THRD_MEM_LIM={0:0, 16:10, 20:14, 24:18, 32:26, 36:30, 40:34, 48:42}
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
