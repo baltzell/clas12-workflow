@@ -9,6 +9,7 @@ from CLAS12Job import CLAS12Job
 _LOGGER=logging.getLogger(__name__)
 
 _DEBUG=False
+_NDEBUG=3000
 
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
@@ -85,7 +86,7 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
     if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
+      cmd = cmd.replace('bin/decoder','bin/decoder -n $d'%_NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -111,11 +112,11 @@ class DecodingJob(CLAS12Job):
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
     if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
+      cmd = cmd.replace('bin/decoder','bin/decoder -n %d'%_NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
-  THRD_MEM_REQ={0:0, 16:20, 20:20, 24:24, 32:32, 36:36, 40:40, 48:48}
+  THRD_MEM_REQ={0:0, 16:30, 20:30, 24:30, 32:32, 36:36, 40:40, 48:48}
   THRD_MEM_LIM={0:0, 16:10, 20:14, 24:18, 32:26, 36:30, 40:34, 48:42}
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
@@ -161,7 +162,7 @@ class ReconJob(CLAS12Job):
     cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
-      cmd += ' -n 5000'
+      cmd += ' -n %d'%_NDEBUG
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for x in self.outputData:
         x=os.path.basename(x)
