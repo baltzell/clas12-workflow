@@ -6,7 +6,7 @@
   "model": null,
   "debug": false,
   "reconYaml": null,
-  "nomerge": null,
+  "nomerge": false,
   "project": "clas12",
   "trainYaml": null,
   "coatjava": null,
