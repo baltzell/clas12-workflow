@@ -68,9 +68,9 @@ find $inputdir -type f -name '*.evio.0004?' -mmin +150 | grep -v -f $blacklist >
 source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../env.sh
 if [ $DRYRUN -eq 0 ]
 then
-    cmd="clas12-workflow.py --config $config --inputs $filelist --tag $tag --submit"
+    cmd="clas12-workflow --config $config --inputs $filelist --tag $tag --submit"
 else
-    cmd="clas12-workflow.py --config $config --inputs $filelist --tag $tag"
+    cmd="clas12-workflow --config $config --inputs $filelist --tag $tag"
 fi
 echo $cmd >> $logfile
 $cmd >> $logfile 2>&1
