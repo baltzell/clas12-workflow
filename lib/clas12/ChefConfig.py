@@ -299,12 +299,14 @@ class ChefConfig(collections.OrderedDict):
 
     if len(self['inputs'])==0:
       self.cli.error('"inputs" must be specified.')
-    else:
-      for x in self['inputs']:
-        if x.startswith('/cache'):
-          _LOGGER.warning('Some of your --inputs start with /cache, which is almost never a good idea.')
-          _LOGGER.warning('Are you sure you REALLY want to do that, rather than /mss?')
-          break
+
+    for x in self['inputs']:
+      if x.startswith('/cache'):
+        _LOGGER.warning('Some of your --inputs start with /cache, which is almost never a good idea.')
+        _LOGGER.warning('Are you sure you REALLY want to do that, rather than /mss?')
+        break
+      elif x.startswith('/mss') and self['model'].find('qtl')>=0:
+        self.cli.error('--inputs from /mss with --model --qtl is currently not supported.') 
 
     # print ignoring decoding-specific parameters:
     if self['model'].find('dec')<0:
