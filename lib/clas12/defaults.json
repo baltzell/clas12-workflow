@@ -1,8 +1,7 @@
 {
   "runGroup": null,
   "tag": null,
-  "node": "general",
-  "el9": false,
+  "node": "\"el9|el7\"",
   "model": null,
   "debug": false,
   "reconYaml": null,
