@@ -235,20 +235,28 @@ class HistoJob(CLAS12Job):
     self.addTag('mode','his')
     self.addEnv('COATJAVA',cfg['coatjava'])
     self.addEnv('PATH',cfg['groovy']+'/bin:${COATJAVA}/bin:${PATH}')
+    self.auger = None
   def setCmd(self):
-    cmd =  ' ln -s %s .'%(' '.join(self.inputData))
+    cmd = ''
+    if not self.auger:
+      cmd =  'ln -s %s . && '%(' '.join(self.inputData))
     if self.cfg['physics']:
       subdir='physics'
       opts='--focus-physics'
     else:
       subdir='detectors'
       opts='--focus-detectors'
-    cmd += ' && %s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
+    cmd += '%s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir'] + '/hist/%s/'%subdir
     self.addOutputWildcard('./%s/*'%self.getTag('run'),outDir)
-  def addInputData(self,filenames,auger=False):
-    CLAS12Job.addInputData(self, filenames, auger=auger)
+  def addInputData(self,filename):
+    if self.auger is None:
+      self.auger = filename.startswith('/mss')
+    elif self.auger != filename.startswith('/mss'):
+      _LOGGER.critical('NOOOOOOOOOOOOO: '+filename)
+      sys.exit(44)
+    CLAS12Job.addInputData(self, filename, auger=self.auger)
 
 class TrainMrgJob(CLAS12Job):
   def __init__(self,workflow,cfg):
