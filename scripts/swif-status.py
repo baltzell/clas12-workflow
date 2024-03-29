@@ -51,7 +51,7 @@ def processWorkflow(workflow,args):
 
   if args.missing or args.missingTape:
     print('\nMissing outputs in '+workflow+':')
-    print(('\n'.join(status.findMissingOutputs(args.missingTape))))
+    print(('\n'.join(list(status.findMissingOutputs(args.missingTape)))))
     return
 
   if args.stats or args.runStats or args.phaseStats:
