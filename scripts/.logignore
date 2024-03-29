@@ -8,4 +8,4 @@
 ^WHERE condition
 ^WHERE schema_versions
 ^FROM "schemaVersions"
-^LIMIT ? OFFSET ?
+^ LIMIT ? OFFSET ?
