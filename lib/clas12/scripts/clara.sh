@@ -2,8 +2,6 @@
 
 ulimit -u 49152
 
-
-
 export CLARA_USER_DATA=.
 export CLAS12DIR=${CLARA_HOME}/plugins/clas12
 export PATH=${PATH}:$CLAS12DIR/bin
@@ -14,6 +12,7 @@ if [ -z $CCDB_CONNECTION ] || ! [[ $CCDB_CONNECTION = sqlite* ]]; then
 fi
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
+export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=. -Dorg.sqlite.tmpdir=."
 export JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
 
 outprefix=rec_

@@ -12,6 +12,8 @@ unset CLARA_MONITOR_FE
 export CCDB_CONNECTION=mysql://clas12reader@clasdb-farm.jlab.org/clas12
 export RCDB_CONNECTION=mysql://rcdb@clasdb-farm.jlab.org/rcdb
 
+export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=. -Dorg.sqlite.tmpdir=."
+
 nevents=
 logdir=.
 threads=12
