@@ -1,8 +1,11 @@
 #!/bin/bash
 
+source /group/clas12/packages/setup.sh
+module load clas12
+
 d=`/usr/bin/readlink -f $0`
 d=`/usr/bin/dirname $d`/..
-export PYTHONPATH=${d}/lib/swif:${d}/lib/util:${d}/lib/clas12:${d}/lib/ccdb
+export PYTHONPATH=${d}/lib/swif:${d}/lib/util:${d}/lib/clas12:${PYTHONPATH}
 
 USAGE () {
     echo -e "\nUsage:  pass0-auto-submit.sh [-d] TAG WORKDIR INPUTDIR\n"
