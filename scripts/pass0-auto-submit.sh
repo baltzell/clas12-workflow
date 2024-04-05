@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source /group/clas12/packages/setup.sh
-module load clas12
+module load -s clas12
 
 d=`/usr/bin/readlink -f $0`
 d=`/usr/bin/dirname $d`/..
