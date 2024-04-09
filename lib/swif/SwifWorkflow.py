@@ -60,7 +60,7 @@ class SwifWorkflow(RunFileGroups):
       print((subprocess.check_output(cmd)))
 
   def submitJson(self):
-    with tempfile.NamedTemporaryFile() as jsonFile:
+    with tempfile.NamedTemporaryFile(mode='w') as jsonFile:
       jsonFile.write(self.getJson())
       jsonFile.flush()
       print((subprocess.check_output([SWIF,'import','-file',jsonFile.name])))
