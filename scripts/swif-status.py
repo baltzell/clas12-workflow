@@ -219,7 +219,7 @@ if __name__ == '__main__':
 
   # require user input before deleting workflows:
   if args.delete and len(workflows)>0:
-    if 'YES' != raw_input('Really delete these workflows?\n'+'\n'.join(workflows)+'\nIf so, type "YES" and press return ...'):
+    if 'YES' != input('Really delete these workflows?\n'+'\n'.join(workflows)+'\nIf so, type "YES" and press return ...'):
       sys.exit('Aborted')
 
   if args.list:
