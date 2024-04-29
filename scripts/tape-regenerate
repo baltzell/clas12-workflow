@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+file_regex='.*clas[_A-Za-z]*_(\d+)\.evio\.(\d+)[-\d]*\.hipo'
+dec_pattern='/mss/clas12/%s/production/decoded/%s/%.6d'
+dec_version={'rg-a':'6b.2.0','rg-b':'6.5.6','rg-k':'6b.2.0'}
+
+def find_recon(path):
+    import os,glob
+    r = int(os.path.basename(path)[:-5][-6:])
+    d = os.path.dirname(path.strip('/')).split('/')
+    d = '/'+'/'.join(d[:-2])+'/recon/%.6d'%r
+    if not os.path.isdir(d):
+        raise Exception('Could not find recon directory for '+path)
+    if len(glob.glob(d+'/*.hipo'))==0:
+        raise Exception('Could not find recon files for '+path)
+    return d
+
+def find_decoded(path):
+    import os,re
+    m = re.match(file_regex,os.path.basename(path))
+    if m is None:
+        raise Exception('File does not match regex '+path)
+    r,f = m.group(1),m.group(2)
+    d = dec_pattern%(args.rungroup,dec_version[args.rungroup],int(r))
+    if not os.path.isdir(d):
+        raise Exception('Could not find decoded directory for '+path)
+    if not os.path.basename(path).startswith('rec_'):
+        raise Exception('Unknown prefix for '+path)
+    d += '/' + os.path.basename(path)[4:]
+    if not os.path.isfile(d):
+        raise Exception('Could not find decoded file for '+path)
+    return d
+
+import argparse
+cli = argparse.ArgumentParser(description='Find the input files necessary to regenerate files on a tape.')
+cli.add_argument('rungroup',choices=['a','b','k'],help='run group letter')
+cli.add_argument('type',choices=['rec','ana'],help='type of files to recover')
+cli.add_argument('-tape',metavar='#',help='tape number (default=803771)',type=int,default=803771)
+args = cli.parse_args()
+args.rungroup = 'rg-'+args.rungroup
+
+import subprocess
+data = subprocess.check_output(['jasmine','list-files','-tape',str(args.tape)])
+
+corrupt,decoded,recon = set(),set(),set()
+for datum in data.decode('utf-8').split('\n'):
+    path = datum.split('|').pop(0).strip()
+    if args.rungroup not in path:
+        continue
+    if 'decoded' in path:
+        raise Exception('Not ready for decoded file '+path)
+    elif 'train' in path:
+        recon.add(find_recon(path))
+    elif 'recon' in path:
+        decoded.add(find_decoded(path))
+    else:
+        raise Exception('Unknown file type of '+path)
+    corrupt.add(path)
+
+if args.type == 'rec' and len(decoded)>0:
+    print('\n'.join(decoded))
+
+if args.type == 'ana' and len(recon)>0:
+    print('\n'.join(recon))
+
