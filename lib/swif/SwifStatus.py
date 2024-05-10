@@ -470,9 +470,12 @@ class SwifStatus():
     nodes,modes={},{}
     for k,v in data:
       for node in v['counts']['nodes']:
+        nnode = node
+        if nnode is None:
+            nnode = 'None'
         if node not in nodes:
-          nodes[node]=dict(zip(problems,[0]*len(problems)))
-        nodes[node][k]+=v['counts']['nodes'][node]
+          nodes[nnode]=dict(zip(problems,[0]*len(problems)))
+        nodes[nnode][k]+=v['counts']['nodes'][node]
       for mode in v['counts']['modes']:
         if mode not in modes:
           modes[mode]=dict(zip(problems,[0]*len(problems)))
