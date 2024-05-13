@@ -1,61 +1,35 @@
 #!/bin/bash
+export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=. -Dorg.sqlite.tmpdir=."
+usage="postproc.sh [-r] [-p] [-d] -o output input [input ...]]"
 
-BIN=$CLARA_HOME/plugins/clas12/bin
+[ "x$CLARA_HOME" != "x" ] && bin=$CLARA_HOME/plugins/clas12/bin
+[ "x$COATJAVA" != "x" ] && [ "x$bin" != "x" ] && bin=$COATJAVA/bin
 
-recharge=0
-postproc=0
-helflip=0
-output=
-
-while getopts "rpo:" OPTION; do
+while getopts "rpdo:" OPTION; do
     case $OPTION in
-        p)  postproc=1 ;;
-        f)  helflip=1 ;;
         r)  recharge=1 ;;
+        p)  postproc=1 ;;
+        d)  nodelay=1 ;;
         o)  output=$OPTARG ;;
-        ?)  exit 1 ;;
+        ?)  echo $usage && exit 1 ;;
     esac
 done
-
-# input files:
 shift $((OPTIND-1))
 input=$@
 
-# rebuild REC::scaler banks:
-if [ $recharge -eq 1 ]
-then
-    ls -l
-    $BIN/rebuild-scalers -o tmp.hipo $input
-    if [ $? -eq 0 ]
-    then
-        mv -f tmp.hipo $output
-        input=$output
-    else
-        echo ERROR RUNNING rebuild-scalers
-        rm -f tmp.hipo $output
-        exit 105
-    fi
+[ "x$recharge" == "x" ] && [ "x$postproc" == "x" ] && echo $usage && echo ERROR:  at least one of -r/-p is required. && exit 1
+[ "x$output" == "x" ] && echo $usage && echo ERROR:  -o is required. && exit 1
+[ "x$input" == "x" ] && echo $usage && echo ERROR:  input file required. && exit 1
+
+if [ "x$recharge" != "x" ]; then 
+    $bin/rebuild-scalers -o $output $input
+    input=$output
+fi
+if [ "x$postprocess" != "x" ]; then
+    [ "$input" == "$output" ] && mv -f $output x.hipo && input=x.hipo
+    opts='-q 1'
+    [ "x$nodelay" != "x" ] || opts="$opts -d 1"
+    $bin/postprocess $opts -o $output $input
 fi
 
-# copy tag-1 info to REC::Event:
-if [ $postproc -eq 1 ]
-then
-    ls -l
-    opt="-d 1 -q 1"
-    [ $helflip -eq 1 ] && opt="$opt -f 1"
-    $BIN/postprocess $opts -o tmp.hipo $input
-    if [ $? -eq 0 ]
-    then
-        mv -f tmp.hipo $output
-        input=$output
-    else
-        echo ERROR RUNNING postprocess
-        rm -f tmp.hipo $output
-        exit 106
-    fi
-fi
-
-$BIN/hipo-utils -test $output || rm -f $output
-
-ls -l $output
-
+$bin/hipo-utils -test $output || rm -f $output && exit 99
