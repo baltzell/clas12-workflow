@@ -11,7 +11,6 @@ clas12-workflow \
 --outDir /volatile/clas12/users/baltzell/wok-test \
 --reconYaml /home/baltzell/clas12-config/coatjava/10.0.5/rgk_data-cv-calib.yaml \
 --trainYaml calib \
---coatjava 10.0.9 \
---denoise \
---el9
+--coatjava 10.1.0 \
+--denoise
 
