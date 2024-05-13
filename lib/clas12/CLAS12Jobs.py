@@ -164,27 +164,16 @@ class ReconJob(CLAS12Job):
     if _DEBUG:
       cmd += ' -n %d'%_NDEBUG
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
-      for x in self.outputData:
-        x=os.path.basename(x)
-        cmd += ' && set o='+x
-        # postprocessing must run from the same coatjava as clara for bankdefs:
-        if self.cfg['recharge']:
-          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/rebuild-scalers -o rs.hipo $o'
-          cmd += ' && rm -f $o && mv -f rs.hipo $o'
-          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
-          cmd += ' && ls $o )'
-        if not self.cfg['nopostproc']:
-          opts = '-q 1'
-          if not self.cfg['noheldel']:
-            opts += ' -d 1'
-          if self.cfg['helflip']:
-            opts += ' -f 1'
-          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/postprocess %s -o pp.hipo $o'%(opts)
-          cmd += ' && rm -f $o && mv -f pp.hipo $o'
-          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
-          cmd += ' && ls $o )'
+      for i,x in enumerate(self.outputData):
+        x = os.path.basename(x)
+        cmd += ' && set o='+x +' && mv -f $o rec%d.hipo'%i
+        cmd += ' && '+os.path.dirname(os.path.realpath(__file__))+'/scripts/postproc.sh'
+        cmd += ' -o $o'
+        if     self.cfg['recharge']:   cmd += ' -r'
+        if not self.cfg['noheldel']:   cmd += ' -d'
+        if not self.cfg['nopostproc']: cmd += ' -p'
+        cmd += ' rec%d.hipo && ls -l $o'%i
     CLAS12Job.setCmd(self,cmd)
-
 class TrainJob(CLAS12Job):
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
