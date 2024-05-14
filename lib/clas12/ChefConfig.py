@@ -335,7 +335,10 @@ class ChefConfig(collections.OrderedDict):
     # print ignoring work dir:
     if self['workDir'] is not None:
       if self['model'].find('ana')<0:
-        _LOGGER.warning('Ignoring --workDir for non-decoding-merging, trainless workflow.')
+        _LOGGER.warning('Ignoring --workDir for trainless workflow.')
+        self['workDir']=None
+      elif self['nomerge']:
+        _LOGGER.warning('Ignoring --workDir for --nomerge workflow.')
         self['workDir']=None
 
     # cleanup directory definitions:
