@@ -198,7 +198,6 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--mergeSize', metavar='#',help='number of decoded files per merge', type=int, default=None)
     cli.add_argument('--trainSize', metavar='#',help='number of files per train job', type=int, default=None)
 
-#    if getpass.getuser().find('clas12-')<0:
     cli.add_argument('--reconSize', metavar='#',help='number of files per recon job', type=int, default=None)
 
     cli.add_argument('--denoise', help='enable DC denoising', default=False, action='store_true')
@@ -206,7 +205,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--recharge', help='rebuild RUN::scaler during post-processing', action='store_true', default=None)
     cli.add_argument('--helflip',  help='flip offline helicity (ONLY for data decoded prior to 6.5.11)', action='store_true', default=None)
     cli.add_argument('--noheldel', help='disable delayed-helicity correction', action='store_true', default=None)
-
+    cli.add_argument('--nomerge',  help='disable train merging', action='store_true', default=None)
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
@@ -337,8 +336,11 @@ class ChefConfig(collections.OrderedDict):
 
     # print ignoring work dir:
     if self['workDir'] is not None:
-      if self['model'].find('ana')<0 and self['model'].find('mrg')<0:
-        _LOGGER.warning('Ignoring --workDir for non-decoding-merging, trainless workflow.')
+      if self['model'].find('ana')<0:
+        _LOGGER.warning('Ignoring --workDir for trainless workflow.')
+        self['workDir']=None
+      elif self['nomerge']:
+        _LOGGER.warning('Ignoring --workDir for --nomerge workflow.')
         self['workDir']=None
 
     # cleanup directory definitions:
@@ -398,14 +400,15 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('qtl')<0 and self['physics']:
       _LOGGER.info('Ignoring --physics since not a qtl workflow')
 
-    # no temporary files on /cache or mss
-    if self['workDir'] is not None:
+    # a work directory is required for merging trains: 
+    if self['workDir'] is None:
+      if self['model'].find('ana')>=0 and not self['nomerge']:
+        if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
+          self.cli.error('--workDir is required for pre-merged trains if --outDir is on /cache or /mss')
+    # no temporary files on /cache or mss:
+    else:
       if self['workDir'].find('/cache')==0 or self['workDir'].find('/mss')==0:
         self.cli.error('--workDir cannot be on /cache or /mss.')
-    if self['model'].find('ana')>=0:
-      if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
-        if self['workDir'] is None:
-          self.cli.error('--workDir is required for trains if --outDir is on /cache or /mss')
 
     # set user-defined regex for input files:
     if self['fileRegex'] != RunFileUtil.getFileRegex():
