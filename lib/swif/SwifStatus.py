@@ -1,7 +1,7 @@
 import os,sys,glob,json,copy,subprocess,getpass,datetime,collections
 import FileUtil
 
-SWIF='/site/bin/swif2'
+SWIF='/usr/local/bin/swif2'
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
@@ -470,9 +470,12 @@ class SwifStatus():
     nodes,modes={},{}
     for k,v in data:
       for node in v['counts']['nodes']:
+        nnode = node
+        if nnode is None:
+            nnode = 'None'
         if node not in nodes:
-          nodes[node]=dict(zip(problems,[0]*len(problems)))
-        nodes[node][k]+=v['counts']['nodes'][node]
+          nodes[nnode]=dict(zip(problems,[0]*len(problems)))
+        nodes[nnode][k]+=v['counts']['nodes'][node]
       for mode in v['counts']['modes']:
         if mode not in modes:
           modes[mode]=dict(zip(problems,[0]*len(problems)))
@@ -568,7 +571,7 @@ class SwifStatus():
       yield subprocess.check_output(modifyCmd).decode('UTF-8')
     if 'AUGER-OVER_RLIMIT' in problems:
       modifyCmd=[SWIF,'modify-jobs','-workflow',self.name]
-      modifyCmd.extend(['-ram','add','1gb'])
+      modifyCmd.extend(['-ram','add','5gb'])
       modifyCmd.extend(['-problems','AUGER-OVER_RLIMIT'])
       problems.remove('AUGER-OVER_RLIMIT')
       yield ' '.join(modifyCmd)

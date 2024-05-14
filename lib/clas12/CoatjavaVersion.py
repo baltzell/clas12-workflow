@@ -2,7 +2,7 @@ import re,os,sys,glob,logging
 
 _LOGGER=logging.getLogger(__name__)
 
-CLAS12_PACKAGES_DIR='/scigroup/cvmfs/hallb/clas12/soft/linux-64'
+CLAS12_PACKAGES_DIR='/scigroup/cvmfs/hallb/clas12/sw/noarch'
 CLARA_VERSIONS=['5.0.2','4.3.12'] # ordered by preference
 SEARCH_PATHS = ['plugins/clas12/lib/clas','lib/clas','coatjava/lib/clas']
 

@@ -51,7 +51,7 @@ def processWorkflow(workflow,args):
 
   if args.missing or args.missingTape:
     print('\nMissing outputs in '+workflow+':')
-    print(('\n'.join(status.findMissingOutputs(args.missingTape))))
+    print(('\n'.join(list(status.findMissingOutputs(args.missingTape)))))
     return
 
   if args.stats or args.runStats or args.phaseStats:
@@ -219,7 +219,7 @@ if __name__ == '__main__':
 
   # require user input before deleting workflows:
   if args.delete and len(workflows)>0:
-    if 'YES' != raw_input('Really delete these workflows?\n'+'\n'.join(workflows)+'\nIf so, type "YES" and press return ...'):
+    if 'YES' != input('Really delete these workflows?\n'+'\n'.join(workflows)+'\nIf so, type "YES" and press return ...'):
       sys.exit('Aborted')
 
   if args.list:

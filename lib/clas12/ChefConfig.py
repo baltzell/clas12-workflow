@@ -216,7 +216,6 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--graalvm', help='use GraalVM instead of JVM', default=False, action='store_true')
 
     cli.add_argument('--lowpriority',help='run with non-priority fairshare', default=False, action='store_true')
-    cli.add_argument('--el9', help='include el9 nodes', default=False, action='store_true')
     cli.add_argument('--node', metavar='NAME',help='batch farm node type (os/feature)', type=str, default=None, choices=CHOICES['node'])
     cli.add_argument('--debug', help='only process a few hundred events per file', default=False, action='store_true')
     cli.add_argument('--physics', help='do physics instead of detector timelines', default=False, action='store_true')

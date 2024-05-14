@@ -11,7 +11,7 @@ class CLAS12Job(SwifJob):
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
     self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a','his':'h'})
-    self.addEnv('JAVA_HOME','/scigroup/cvmfs/hallb/clas12/soft/linux-64/jdk/21.0.2')
+    self.addEnv('JAVA_HOME','/scigroup/cvmfs/hallb/clas12/soft/linux-64/jdk/17.0.2')
     self.addEnv('PATH','${JAVA_HOME}/bin:${PATH}')
     if cfg['ccdbsqlite'] is None:
       self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
@@ -25,14 +25,7 @@ class CLAS12Job(SwifJob):
     self.addEnv('RCDB_CONNECTION','mysql://rcdb@clasdb-farm.jlab.org/rcdb')
     self.addEnv('MALLOC_ARENA_MAX','2')
     self.account=cfg['project']
-    if cfg['el9']:
-      import random
-      if random.uniform(0,1) > 0.5:
-        self.os='el9'
-      else:
-        self.os='el7'
-    else:
-      self.os=cfg['node']
+    self.os=cfg['node']
     self.cfg=cfg
 
   def setRun(self,run):
