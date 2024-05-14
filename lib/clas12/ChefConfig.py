@@ -309,11 +309,6 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.warning('Are you sure you REALLY want to do that, rather than /mss?')
           break
 
-    # prevent tiny files:
-    if self['nomerge']:
-      if self['model'].find('dec')>=0 and self['model'].find('decmrg')<0:
-        self.cli.error('--nomerge is incompatible with "dec" model, use "decmrg" instead.')
-
     # print ignoring decoding-specific parameters:
     if self['model'].find('dec')<0:
       for x in 'mergeSize','decDir','torus','solenoid':
