@@ -398,11 +398,12 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('qtl')<0 and self['physics']:
       _LOGGER.info('Ignoring --physics since not a qtl workflow')
 
-    # no temporary files on /cache or mss
+    # a work directory is required for merging trains: 
     if self['workDir'] is None:
       if self['model'].find('ana')>=0 and not self['nomerge']:
         if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
-          self.cli.error('--workDir is required for trains if --outDir is on /cache or /mss')
+          self.cli.error('--workDir is required for pre-merged trains if --outDir is on /cache or /mss')
+    # no temporary files on /cache or mss:
     else:
       if self['workDir'].find('/cache')==0 or self['workDir'].find('/mss')==0:
         self.cli.error('--workDir cannot be on /cache or /mss.')
