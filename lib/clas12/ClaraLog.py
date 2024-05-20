@@ -11,7 +11,7 @@ _LOGTAGS=['Number','Threads','TOTAL','Total','Average','events','Start time','sh
 
 def _open(path):
   if path.endswith('.gz'):
-    return gzip.open(path)
+    return gzip.open(path, mode='rt')
   else:
     return open(path,'r')
 
