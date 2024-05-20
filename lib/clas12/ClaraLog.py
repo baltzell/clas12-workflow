@@ -67,13 +67,19 @@ class ClaraLog(JobSpecs):
 
   # Extract the hostname from a /farm_out logfile
   def getClaraHostname(self,logfilename):
-    # first try to get it from the filename:
+    # first try to get it from the log's filename:
     for flavor in JobSpecs._FLAVORS:
       # CLARA-generated names:
       m=re.match('.*/(%s)(\d+)_.*'%(flavor),logfilename)
       if m is not None:
         return m.group(1)+m.group(2)
-    # otherwise find the ip address in its contents:
+    # next try to get it from "env" printout in log file:
+    with _open(logfilename) as f:
+        for x in f.readlines():
+            x = x.strip().split('=')
+            if len(x) == 2 and x[0].strip() == 'SLURMD_NODENAME':
+                return x[1].strip()
+    # otherwise use the special clara printout:
     with _open(logfilename) as f:
       while True:
         line=f.readline()
