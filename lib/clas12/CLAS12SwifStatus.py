@@ -47,12 +47,10 @@ class CLAS12SwifStatus(SwifStatus):
       statusFile.close()
 
   def findMissingOutputs(self,tape=False):
-    ret=[]
-    # remove transient outputs:
     for x in SwifStatus.findMissingOutputs(self,tape=False):
+      # remove transient outputs:
       if re.search('train/\d\d\d\d\d\d/skim\d',x) is None:
-        ret.append(x)
-    return ret
+        yield x
 
   def saveLog(self):
     #mkdir(self.args.logdir+'/logs/')

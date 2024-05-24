@@ -9,6 +9,7 @@ from CLAS12Job import CLAS12Job
 _LOGGER=logging.getLogger(__name__)
 
 _DEBUG=False
+_NDEBUG=3000
 
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
@@ -85,7 +86,7 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
     if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
+      cmd = cmd.replace('bin/decoder','bin/decoder -n $d'%_NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -111,11 +112,11 @@ class DecodingJob(CLAS12Job):
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
     if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n 1000')
+      cmd = cmd.replace('bin/decoder','bin/decoder -n %d'%_NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
-  THRD_MEM_REQ={0:0, 16:16, 20:16, 24:20, 32:28, 36:32, 40:36, 48:44}
+  THRD_MEM_REQ={0:0, 16:22, 20:28, 24:30, 32:32, 36:36, 40:40, 48:48}
   THRD_MEM_LIM={0:0, 16:10, 20:14, 24:18, 32:26, 36:30, 40:34, 48:42}
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
@@ -161,29 +162,18 @@ class ReconJob(CLAS12Job):
     cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
     if _DEBUG:
-      cmd += ' -n 5000'
+      cmd += ' -n %d'%_NDEBUG
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
-      for x in self.outputData:
-        x=os.path.basename(x)
-        cmd += ' && set o='+x
-        # postprocessing must run from the same coatjava as clara for bankdefs:
-        if self.cfg['recharge']:
-          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/rebuild-scalers -o rs.hipo $o'
-          cmd += ' && rm -f $o && mv -f rs.hipo $o'
-          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
-          cmd += ' && ls $o )'
-        if not self.cfg['nopostproc']:
-          opts = '-q 1'
-          if not self.cfg['noheldel']:
-            opts += ' -d 1'
-          if self.cfg['helflip']:
-            opts += ' -f 1'
-          cmd += ' && ( ls -l && $CLARA_HOME/plugins/clas12/bin/postprocess %s -o pp.hipo $o'%(opts)
-          cmd += ' && rm -f $o && mv -f pp.hipo $o'
-          cmd += ' && $COATJAVA/bin/hipo-utils -test $o || rm -f $o'
-          cmd += ' && ls $o )'
+      for i,x in enumerate(self.outputData):
+        x = os.path.basename(x)
+        cmd += ' && set o='+x +' && mv -f $o rec%d.hipo'%i
+        cmd += ' && '+os.path.dirname(os.path.realpath(__file__))+'/scripts/postproc.sh'
+        cmd += ' -o $o'
+        if     self.cfg['recharge']:   cmd += ' -r'
+        if not self.cfg['noheldel']:   cmd += ' -d'
+        if not self.cfg['nopostproc']: cmd += ' -p'
+        cmd += ' rec%d.hipo && ls -l $o'%i
     CLAS12Job.setCmd(self,cmd)
-
 class TrainJob(CLAS12Job):
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
@@ -205,7 +195,7 @@ class TrainJob(CLAS12Job):
         _LOGGER.critical('Non-HIPO file detected for a train job: '+x)
         sys.exit(99)
       CLAS12Job.addInputData(self,x)
-    if self.cfg['workDir'] is None:
+    if self.cfg['workDir'] is None or self.cfg['nomerge']:
       outDir=self.cfg['outDir']
     else:
       outDir=self.cfg['workDir']
@@ -234,20 +224,28 @@ class HistoJob(CLAS12Job):
     self.addTag('mode','his')
     self.addEnv('COATJAVA',cfg['coatjava'])
     self.addEnv('PATH',cfg['groovy']+'/bin:${COATJAVA}/bin:${PATH}')
+    self.auger = None
   def setCmd(self):
-    cmd =  ' ln -s %s .'%(' '.join(self.inputData))
+    cmd = ''
+    if not self.auger:
+      cmd =  'ln -s %s . && '%(' '.join(self.inputData))
     if self.cfg['physics']:
       subdir='physics'
       opts='--focus-physics'
     else:
       subdir='detectors'
       opts='--focus-detectors'
-    cmd += ' && %s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
+    cmd += '%s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir'] + '/hist/%s/'%subdir
     self.addOutputWildcard('./%s/*'%self.getTag('run'),outDir)
-  def addInputData(self,filenames,auger=False):
-    CLAS12Job.addInputData(self, filenames, auger=auger)
+  def addInputData(self,filename):
+    if self.auger is None:
+      self.auger = filename.startswith('/mss')
+    elif self.auger != filename.startswith('/mss'):
+      _LOGGER.critical('NOOOOOOOOOOOOO: '+filename)
+      sys.exit(44)
+    CLAS12Job.addInputData(self, filename, auger=self.auger)
 
 class TrainMrgJob(CLAS12Job):
   def __init__(self,workflow,cfg):

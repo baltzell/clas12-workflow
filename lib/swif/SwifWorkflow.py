@@ -60,12 +60,13 @@ class SwifWorkflow(RunFileGroups):
       print((subprocess.check_output(cmd)))
 
   def submitJson(self):
-    with tempfile.NamedTemporaryFile() as jsonFile:
+    with tempfile.NamedTemporaryFile(mode='w') as jsonFile:
       jsonFile.write(self.getJson())
       jsonFile.flush()
       print((subprocess.check_output([SWIF,'import','-file',jsonFile.name])))
     print((subprocess.check_output([SWIF,'run','-workflow',self.name])))
-    print((subprocess.check_output([SWIF,'status','-workflow',self.name])))
+    # sometimes SWIF's not ready yet, so don't do this:
+    #print((subprocess.check_output([SWIF,'status','-workflow',self.name])))
 
 class SwifPhase():
   def __init__(self,phase,jobs):

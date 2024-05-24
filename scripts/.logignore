@@ -1,0 +1,11 @@
+^INFO.*sqlalchemy
+^WHERE %s
+^ LIMIT %s
+^FROM condition
+^FROM variation
+^FROM schema_versions
+^FROM `schemaVersions`
+^WHERE condition
+^WHERE schema_versions
+^FROM "schemaVersions"
+^ LIMIT ? OFFSET ?
