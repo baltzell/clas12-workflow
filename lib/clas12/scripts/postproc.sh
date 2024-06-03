@@ -18,10 +18,11 @@ input=$@
 [ "x$output" == "x" ] && echo $usage && echo ERROR:  -o is required. && exit 1
 [ "x$input" == "x" ] && echo $usage && echo ERROR:  input file required. && exit 1
 
-set -x -e
+set -x
+set -e
 tmpfile=tmp.hipo
 dbg=
-trap 'rm -f $tmpfile' EXIT
+trap 'rm -f $tmpfile && exit 107' EXIT
 
 if [ "x$recharge" != "x" ]; then
     if [ "x$postproc" != "x" ]; then
