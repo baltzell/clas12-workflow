@@ -1,8 +1,8 @@
 #!/bin/bash
 usage="postproc.sh [-r] [-p] [-d] -o output input [input ...]]"
-export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=. -Dorg.sqlite.tmpdir=."
 [ "x$CLARA_HOME" != "x" ] && bin=$CLARA_HOME/plugins/clas12/bin
 [ "x$COATJAVA" != "x" ] && [ "x$bin" == "x" ] && bin=$COATJAVA/bin
+export PATH=$bin:${PATH}
 while getopts "rpdo:" OPTION; do
     case $OPTION in
         r)  recharge=1 ;;
@@ -21,22 +21,34 @@ input=$@
 set -x
 set -e
 tmpfile=tmp.hipo
-dbg=
-trap 'rm -f $tmpfile && exit 107' EXIT
+cat /etc/redhat-release
+
+function jjava {
+    java -Xmx768m -Xms768m -XX:+UseSerialGC \
+        -Djava.io.tmpdir=. -Dorg.sqlite.tmpdir=. \
+        -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \
+        org.jlab.analysis.postprocess.$1 "${@:2}"
+}
+
+trap '[ "$?" -eq 0 ] || rm -f $output && rm -f $tmpfile' EXIT
 
 if [ "x$recharge" != "x" ]; then
     if [ "x$postproc" != "x" ]; then
-        $dbg $bin/rebuild-scalers -o $tmpfile $input
+        jjava RebuildScalers -o $tmpfile $input || exit 111
     else
-        $dbg $bin/rebuild-scalers -o $output $input
+        jjava RebuildScalers -o $output $input || exit 111
     fi
     input=$tmpfile
 fi
 
 if [ "x$postproc" != "x" ]; then
     opts='-q 1'
-    [ "x$nodelay" != "x" ] || opts="$opts -d 1"
-    $dbg $bin/postprocess $opts -o $output $input
+    [ "x$nodelay" == "x" ] && opts="$opts -d 1"
+    jjava Tag1ToEvent $opts -o $output $input || exit 112
 fi
 
-$dbg $bin/hipo-utils -test $output || rm -f $output
+[ -e $output ] && [ $(stat -L -c%s $output) -gt 100 ] || exit 113
+hipo-utils -test $output || exit 114
+
+exit 0
+
