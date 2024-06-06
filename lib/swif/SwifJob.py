@@ -2,7 +2,7 @@ import os,sys,json,getpass,logging,collections
 
 from SwifStatus import SWIF
 
-CONSTRAINTS=['general','el9','el7','farm23','farm19','farm18','farm16','farm14','farm13','amd','xeon']
+CONSTRAINTS=['el9','el7','farm23','farm19','farm18','farm16']
 
 class SwifJob:
 
@@ -18,7 +18,7 @@ class SwifJob:
     self.account='clas12'
     self.partition='production'
     self.cores=1
-    self.os='general'
+    self.os='el9'
     self.time='6h'
     self.disk='3GB'
     self.ram='1GB'
