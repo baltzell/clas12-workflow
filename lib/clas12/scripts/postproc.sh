@@ -26,7 +26,7 @@ cat /etc/redhat-release
 function jjava {
     java -Xmx768m -Xms768m -XX:+UseSerialGC \
         -Djava.io.tmpdir=. -Dorg.sqlite.tmpdir=. \
-        -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \
+        -cp "$COATJAVA/lib/clas/*:$COATJAVA/lib/services/*:$COATJAVA/lib/utils/*" \
         org.jlab.analysis.postprocess.$1 "${@:2}"
 }
 
