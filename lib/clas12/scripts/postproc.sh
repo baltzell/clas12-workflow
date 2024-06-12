@@ -2,6 +2,8 @@
 usage="postproc.sh [-r] [-p] [-d] -o output input [input ...]]"
 [ "x$CLARA_HOME" != "x" ] && bin=$CLARA_HOME/plugins/clas12/bin
 [ "x$COATJAVA" != "x" ] && [ "x$bin" == "x" ] && bin=$COATJAVA/bin
+[ "x$CLAS12DIR" == "x" ] && export CLAS12DIR=$COATJAVA
+
 export PATH=$bin:${PATH}
 while getopts "rpdo:" OPTION; do
     case $OPTION in
