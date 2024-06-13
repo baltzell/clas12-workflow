@@ -132,9 +132,9 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.critical('Nonexistent user yaml: '+self[x])
           sys.exit(1)
         self[x] = os.path.realpath(os.path.abspath(self[x]))
-        if self[x].startswith('/home') or self[x].startswith('/u/home'):
-          _LOGGER.critical('SWIF no longer allows inputs from /home.')
-          sys.exit(1)
+        #if self[x].startswith('/home') or self[x].startswith('/u/home'):
+        #  _LOGGER.critical('SWIF no longer allows inputs from /home.')
+        #  sys.exit(1)
         # set it to read-only:
         try:
           os.chmod(self[x], stat.S_IRUSR|stat.S_IRGRP|stat.S_IROTH)
