@@ -1,11 +1,7 @@
-# NOTE:  This is a template.  To make it operational:
-# 1) Assign $MAILTO to your personal email address;  it can also be a comma-separated list of email addresses
-# 2) Assign $HOME/.swif-cron.lock to a full file path in the $HOME of the account that will be running this cronjob
-# 3) Assign $SCRIPT to the full path of cron/swif-cron.sh in clas12-workflow
-# 
 MAILTO=bobcat@jlab.org
 #
 WOK=/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-workflow/dev
+#
 SWIF=$WOK/cron/swif-cron.sh
 FARMOUT=$WOK/scripts/farmout-cleanup.sh
 #
@@ -18,7 +14,7 @@ PATH=/bin:/usr/bin
 # This will run every 30 minutes, and do both
 # 1:  swif retries for all workflows
 # 2:  publish wrkflows with tag==pass1v0 to clas12mon
-*/30 * * * * flock -n $HOME/.swif-cron.lock $SWIF --retry --clas12mon pass1v0 || echo "ERROR:  Previous clas12-workflow cronjob still running"
+#*/30 * * * * flock -n $HOME/.swif-cron.lock $SWIF --retry --clas12mon pass1v0 || echo "ERROR:  Previous clas12-workflow cronjob still running"
 #
 # This will run once every hour, on the hour, and do swif retries if necessary:
 #0 *  *  *  * flock -n $HOME/.swif-cron.lock $SWIF || echo "ERROR:  Previous clas12-workflow cronjob still running"
@@ -31,13 +27,13 @@ PATH=/bin:/usr/bin
 #15,45 * * * * flock -n $HOME/.swif-cron.lock $SWIF --quiet --clas12mon v2.2 || echo "ERROR:  Previous clas12-workflow cronjob still running"
 #
 # Daily, delete old /farm_out stuff:
-5  2  * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -d 7 || echo "ERROR:  Previous farm_out cronjob still running"
+#5  2  * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -d 7 || echo "ERROR:  Previous farm_out cronjob still running"
 # Every few hours, gzip old files:
-5 */4 * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -g 1 || echo "ERROR:  Previous farm_out cronjob still running"
+#5 */4 * * * flock -n $HOME/.farmout-cron.lock $FARMOUT -g 1 || echo "ERROR:  Previous farm_out cronjob still running"
 #
 #
 # submit jobs for new files automatically, for an "online" pass0:
-0 * * * * flock -n $HOME/.online-pass0.lock $WOK/scripts/pass0-auto-submit.sh pass0.7 $HOME/online-pass0-workdir /cache/clas12/rg-m/data/ || echo $ERROR
+#0 * * * * flock -n $HOME/.online-pass0.lock $WOK/scripts/pass0-auto-submit.sh pass0.7 $HOME/online-pass0-workdir /cache/clas12/rg-m/data/ || echo $ERROR
 #
 # example of killing jobs that land on problematic nodes:
 #*/20 * * * * scancel -U $USER -w farm1901,farm19010
