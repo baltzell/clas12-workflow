@@ -3,13 +3,11 @@
 # 2) Assign $HOME/.swif-cron.lock to a full file path in the $HOME of the account that will be running this cronjob
 # 3) Assign $SCRIPT to the full path of cron/swif-cron.sh in clas12-workflow
 # 
-MAILTO="bobcat@jlab.org"
+MAILTO=bobcat@jlab.org
 #
-WOK="/group/clas12/packages/clas12-workflow/dev"
-#
-SWIF="/group/clas12/packages/clas12-workflow/dev/cron/swif-cron.csh"
-#
-FARMOUT="/group/clas12/packages/clas12-workflow/dev/cron/farmout-cron.sh"
+WOK=/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-workflow/dev
+SWIF=$WOK/cron/swif-cron.sh
+FARMOUT=$WOK/scripts/farmout-cleanup.sh
 #
 PATH=/bin:/usr/bin
 #
