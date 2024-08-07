@@ -10,7 +10,7 @@ while getopts "rpdo:" OPTION; do
     case $OPTION in
         r)  recharge=1 ;;
         p)  postproc=1 ;;
-        d)  nodelay=1 ;;
+        d)  delay=1 ;;
         o)  output=$OPTARG ;;
         ?)  echo $usage && exit 1 ;;
     esac
@@ -46,7 +46,7 @@ fi
 
 if [ "x$postproc" != "x" ]; then
     opts='-q 1'
-    [ "x$nodelay" == "x" ] && opts="$opts -d 1"
+    [ "x$delay" != "x" ] && opts="$opts -d 1"
     jjava Tag1ToEvent $opts -o $output $input || exit 112
 fi
 
