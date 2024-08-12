@@ -92,7 +92,7 @@ class DecodeAndMergeJob(CLAS12Job):
 class DecodingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
-    self.setRam('3GB')
+    self.setRam('4GB')
     self.addTag('mode','decode')
     self.addTag('coatjava',cfg['coatjava'])
   def addInputData(self,filename):
