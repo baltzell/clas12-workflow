@@ -21,7 +21,8 @@ threads=16
 yaml=clara.yaml
 jobname=recon
 nocheck=0
-while getopts "p:l:t:n:y:c" OPTION; do
+clean=0
+while getopts "p:l:t:n:y:cC" OPTION; do
     case $OPTION in
         p)  outprefix=$OPTARG ;;
         l)  logdir=$OPTARG ;;
@@ -29,9 +30,12 @@ while getopts "p:l:t:n:y:c" OPTION; do
         n)  nevents="-e $OPTARG" ;;
         y)  yaml=$OPTARG ;;
         c)  nocheck=1 ;;
+        C)  clean=1 ;;
         ?)  exit 1 ;;
     esac
 done
+
+[ $clean -eq 1 ] && rm -rf config data log filelist.txt $(hostname)*.log && exit 0
 
 shift $((OPTIND-1))
 [[ $# -ne 0 ]] && jobname=$1
