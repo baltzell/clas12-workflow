@@ -20,7 +20,7 @@ class SwifJob:
     self.cores=1
     self.os='el9'
     self.time='6h'
-    self.disk='3GB'
+    self.disk='4GB'
     self.ram='1GB'
     self.shell='/bin/tcsh'
     self.tags=collections.OrderedDict()
