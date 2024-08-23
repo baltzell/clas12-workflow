@@ -174,6 +174,7 @@ class ReconJob(CLAS12Job):
         if not self.cfg['nopostproc']: cmd += ' -p'
         cmd += ' rec%d.hipo && ls -l $o'%i
     CLAS12Job.setCmd(self,cmd)
+
 class TrainJob(CLAS12Job):
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
@@ -215,7 +216,7 @@ class TrainJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class HistoJob(CLAS12Job):
-  TDIR='/group/clas12/packages/clas12-timeline/dev'
+  TDIR='/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-timeline/dev'
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.setRam('1500MB')
