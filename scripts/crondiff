@@ -5,10 +5,14 @@ cli = argparse.ArgumentParser(description='Compare active crontab to a file.')
 cli.add_argument('file', type=str, help='crontab file to compare')
 args = cli.parse_args()
 
-import subprocess
+import subprocess,sys
+a = subprocess.run(['crontab','-l'], capture_output=True)
+if 0 != a.returncode:
+    sys.exit('Error reading active crontab:  '+a.stderr.decode('utf-8').rstrip())
+
+import difflib
 with open(args.file,'r') as f:
+    a = a.stdout.decode('utf-8').splitlines()
     b = [ x.rstrip() for x in f.readlines() ]
-    a = subprocess.check_output(['crontab','-l']).decode('utf-8').splitlines()
-    import difflib, sys
     sys.exit(len([print(x) for x in difflib.unified_diff(a,b)]))
 
