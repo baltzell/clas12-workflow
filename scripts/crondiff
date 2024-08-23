@@ -6,9 +6,9 @@ cli.add_argument('file', type=str, help='crontab file to compare')
 args = cli.parse_args()
 
 import subprocess
-a = subprocess.check_output(['crontab','-l']).decode('utf-8').splitlines()
-b = subprocess.check_output(['cat',args.file]).decode('utf-8').splitlines()
-
-import sys,difflib
-sys.exit(len([print(x) for x in difflib.unified_diff(a,b)]))
+with open(args.file,'r') as f:
+    b = [ x.rstrip() for x in f.readlines() ]
+    a = subprocess.check_output(['crontab','-l']).decode('utf-8').splitlines()
+    import difflib, sys
+    sys.exit(len([print(x) for x in difflib.unified_diff(a,b)]))
 
