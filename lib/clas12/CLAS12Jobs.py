@@ -224,7 +224,7 @@ class HistoJob(CLAS12Job):
     self.setDisk('1GB')
     self.addTag('mode','his')
     self.addEnv('COATJAVA',cfg['coatjava'])
-    self.addEnv('PATH',cfg['groovy']+'/bin:${COATJAVA}/bin:${PATH}')
+    self.addEnv('PATH','${COATJAVA}/bin:${PATH}')
     self.auger = None
   def setCmd(self):
     cmd = ''
