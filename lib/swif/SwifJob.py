@@ -12,6 +12,8 @@ class SwifJob:
   def __init__(self,workflow):
     self.abbreviations={'jput':'j'}
     self.env=[]
+    self.modulepath=[]
+    self.modules=[]
     self.number=-1
     self.workflow=workflow
     self.phase=0
@@ -247,6 +249,10 @@ class SwifJob:
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'
     cmd+='expr $PWD : ^/scratch/slurm'
+    if len(self.modules)>0:
+        if len(self.modulepath)>0:
+            cmd+=' && module use '+' '.join(self.modulepath)
+            cmd+=' && module load '+' '.join(self.modules)
     for x in self.env:
       if self.shell.endswith('csh'):
         cmd+=' && setenv %s "%s"'%(x['name'],x['value'])
