@@ -1,18 +1,16 @@
 import logging,os,re,json,sys
 
+import SwifJob
 import ChefUtil
 from RunFileUtil import RunFile
-from SwifJob import SwifJob
 
 _LOGGER=logging.getLogger(__name__)
 
-DEBUG=False
-NDEBUG=3000
-
-class CLAS12Job(SwifJob):
+class CLAS12Job(SwifJob.SwifJob):
 
   def __init__(self,workflow,cfg):
-    SwifJob.__init__(self,workflow)
+    SwifJob.SwifJob.__init__(self,workflow)
+    self.debug=cfg['debug']
     self.modulepath.append('/scicomp/cvmfs/hallb/clas12/sw/modulefiles')
     self.modules.append('jdk/17.0.2')
     self.modules.append('groovy/4.0.3')
@@ -98,8 +96,8 @@ class CLAS12Job(SwifJob):
       _LOGGER.warning('Huge time requirement (%s hours)'%str(hr))
       #_LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
       #sys.exit(2)
-    if gb > 120 :
-      if DEBUG:
+    if gb > 120:
+      if self.debug:
         _LOGGER.warning('Truncating huge disk requirement (%s) to 10 GB for --debug.'%str(gb))
         gb = 10
       else:

@@ -1,3 +1,4 @@
+#!/bin/bash
 clas12-workflow \
 --model decrecana \
 --runGroup rgk \
@@ -9,8 +10,9 @@ clas12-workflow \
 --inputs /mss/clas12/rg-k/data/clas_019892 \
 --inputs /mss/clas12/rg-k/data/clas_019893 \
 --outDir /volatile/clas12/users/baltzell/wok-test \
---reconYaml /home/baltzell/clas12-config/coatjava/10.0.5/rgk_data-cv-calib.yaml \
+--reconYaml ./test.yaml \
 --trainYaml calib \
---coatjava 10.1.0 \
---denoise
+--coatjava 11.0.1 \
+--denoise \
+$@
 

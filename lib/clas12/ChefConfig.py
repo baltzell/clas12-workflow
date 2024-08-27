@@ -82,9 +82,6 @@ class ChefConfig(collections.OrderedDict):
       if self['helflip']:
         _LOGGER.info('--helflip is currently not allowed')
         sys.exit(1)
-      if self['debug']:
-        import CLAS12Job
-        CLAS12Job.DEBUG=True
 
   def diff(self,cfg):
     ret = []

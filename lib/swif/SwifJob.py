@@ -8,8 +8,8 @@ class SwifJob:
 
   __JSONFORMAT={'indent':2,'separators':(',',': ')}
 
-  # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
+    self.debug=False
     self.abbreviations={'jput':'j'}
     self.env=[]
     self.modulepath=[]
@@ -37,6 +37,9 @@ class SwifJob:
     self.inputData=[]
     self.outputData=[]
     self.copyInputs=True
+
+  def setDebug(self,debug):
+    self.debug=debug
 
   def __str__(self):
     s = 'Phase %d : %s'%(self.phase,self.getJobName())
@@ -274,6 +277,8 @@ class SwifJob:
     return cmd
 
   def toJson(self):
+    if self.debug:
+        self.partition = 'priority'
     jsonData = collections.OrderedDict()
     jsonData['constraint']=self.os
     jsonData['name']=self.getJobName()
