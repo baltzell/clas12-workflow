@@ -10,7 +10,7 @@ clas12-workflow \
 --inputs /mss/clas12/rg-k/data/clas_019892 \
 --inputs /mss/clas12/rg-k/data/clas_019893 \
 --outDir /volatile/clas12/users/baltzell/wok-test \
---reconYaml ./test.yaml \
+--reconYaml ./yamls/test.yaml \
 --trainYaml calib \
 --coatjava 11.0.1 \
 --denoise \
