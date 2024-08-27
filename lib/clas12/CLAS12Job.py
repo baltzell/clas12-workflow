@@ -1,15 +1,15 @@
 import logging,os,re,json,sys
 
-import SwifJob
 import ChefUtil
 from RunFileUtil import RunFile
+from SwifJob import SwifJob
 
 _LOGGER=logging.getLogger(__name__)
 
-class CLAS12Job(SwifJob.SwifJob):
+class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
-    SwifJob.SwifJob.__init__(self,workflow)
+    SwifJob.__init__(self,workflow)
     self.debug=cfg['debug']
     self.modulepath.append('/scicomp/cvmfs/hallb/clas12/sw/modulefiles')
     self.modules.append('jdk/17.0.2')
