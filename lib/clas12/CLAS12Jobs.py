@@ -215,9 +215,9 @@ class TrainJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class HistoJob(CLAS12Job):
-  TDIR='/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-timeline/dev'
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.modules.append('timeline')
     self.setRam('1500MB')
     self.setTime('2h')
     self.setDisk('1GB')
@@ -235,7 +235,7 @@ class HistoJob(CLAS12Job):
     else:
       subdir='detectors'
       opts='--focus-detectors'
-    cmd += '%s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
+    cmd += 'run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir'] + '/hist/%s/'%subdir
     self.addOutputWildcard('./%s/*'%self.getTag('run'),outDir)
