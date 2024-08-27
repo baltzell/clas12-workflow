@@ -38,15 +38,6 @@ class SwifWorkflow(RunFileGroups):
         jobs.append(job)
     return jobs
 
-  def getShell(self):
-    ret=[]
-    cmd=[SWIF,'create','-workflow',self.name,'-site',self.site]
-    cmd.extend(('-max-concurrent',str(self.maxConcurrent)))
-    ret.append(' '.join(cmd))
-    for job in self.jobs:
-      ret.append(job.getShell())
-    return '\n'.join(ret)
-
   def getJson(self):
     data = collections.OrderedDict()
     data['name'] = self.name
