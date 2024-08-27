@@ -6,6 +6,9 @@ from SwifJob import SwifJob
 
 _LOGGER=logging.getLogger(__name__)
 
+DEBUG=False
+NDEBUG=3000
+
 class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
@@ -95,9 +98,13 @@ class CLAS12Job(SwifJob):
       _LOGGER.warning('Huge time requirement (%s hours)'%str(hr))
       #_LOGGER.critical('Huge time requirement (%s hours), need more threads and/or fewer files.'%str(hr))
       #sys.exit(2)
-    if gb > 120:
-      _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
-      sys.exit(2)
+    if gb > 120 :
+      if DEBUG:
+        _LOGGER.warning('Truncating huge disk requirement (%s) to 10 GB for --debug.'%str(gb))
+        gb = 10
+      else:
+        _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
+        sys.exit(2)
     if hr < 24:
       hr = 24
     if gb < 10:

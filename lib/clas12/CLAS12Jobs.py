@@ -5,11 +5,10 @@ import ChefUtil
 import SwifJob
 from RunFileUtil import RunFile
 from CLAS12Job import CLAS12Job
+from CLAS12Job import DEBUG
+from CLAS12Job import NDEBUG
 
 _LOGGER=logging.getLogger(__name__)
-
-_DEBUG=False
-_NDEBUG=3000
 
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
@@ -85,8 +84,8 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
-    if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n $d'%_NDEBUG)
+    if DEBUG:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n $d'%NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -111,8 +110,8 @@ class DecodingJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
-    if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n %d'%_NDEBUG)
+    if DEBUG:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n %d'%NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
@@ -161,8 +160,8 @@ class ReconJob(CLAS12Job):
       cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh && '
     cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
-    if _DEBUG:
-      cmd += ' -n %d'%_NDEBUG
+    if DEBUG:
+      cmd += ' -n %d'%NDEBUG
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for i,x in enumerate(self.outputData):
         x = os.path.basename(x)
