@@ -38,9 +38,6 @@ class SwifJob:
     self.outputData=[]
     self.copyInputs=True
 
-  def setDebug(self,debug):
-    self.debug=debug
-
   def __str__(self):
     s = 'Phase %d : %s'%(self.phase,self.getJobName())
     for key,val in list(self.tags.items()):
@@ -293,7 +290,10 @@ class SwifJob:
       jsonData['exclusive']=True
       jsonData['ram_bytes']=0
     jsonData['disk_bytes']=self.getBytes(self.disk)
-    jsonData['time_secs']=self.getSeconds(self.time)
+    if self.debug:
+        jsonData['time_secs']=3600
+    else:
+        jsonData['time_secs']=self.getSeconds(self.time)
     jsonData['command']=[self._createCommand()]
     if len(self.tags)>0:
       jsonData['tags']=[]
