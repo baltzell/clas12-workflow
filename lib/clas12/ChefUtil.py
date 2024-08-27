@@ -58,7 +58,7 @@ def getReconFileBytes(schema,decodedfile):
   elif schema=='trig':  s *= 1.3
   elif schema=='dcalign':  s *= 1.3
   else:
-    _LOGGER.warning('Unrecognized schema from YAML ('+schema+'), disk request may be bad.')
+    _LOGGER.warning('Unrecognized schema from YAML ('+str(schema)+'), disk request may be bad.')
     s *= 4.0
   return s
 
