@@ -1,0 +1,22 @@
+name: wok-ci
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cvmfs-contrib/github-action-cvmfs@v3
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - name: install
+        run: |
+          sudo apt-get install tcl-dev
+          wget https://github.com/cea-hpc/modules/releases/download/v5.4.0/modules-5.4.0.tar.gz
+          tar -xzf modules-5.4.0.tar.gz
+          cd modules-5.4.0 && ./configure --prefix=$PWD/../modules && make && make install
+      - name: test
+        run: |
+          . ./modules/init/bash
+          module use /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/modulefiles
+          module avail
+          source ./env.sh
