@@ -1,0 +1,16 @@
+#!/bin/bash
+
+d=$(dirname -- "${BASH_SOURCE[0]}")
+
+# clas12-workflow accepts certain arguments as globs,
+# so make sure they don't get expanded by this shell wrapper:
+set -f
+
+if grep -q -i Alma /etc/redhat-release
+then
+    exec python3 $d/.clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
+else
+    exec python2 $d/.clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
+fi
+
+
