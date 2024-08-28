@@ -22,3 +22,4 @@ jobs:
           source ./env.sh
           which clas12-workflow
           clas12-workflow -h
+          python3 -m compileall ./lib
