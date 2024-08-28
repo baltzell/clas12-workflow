@@ -52,6 +52,7 @@ def getReconFileBytes(schema,decodedfile):
   if decodedfile is not None and os.path.isfile(decodedfile):
     s = getFileBytes(decodedfile)
   if   schema=='dst':   s *= 0.5
+  elif schema=='dsthb': s *= 0.5
   elif schema=='calib': s *= 1.3
   elif schema=='mon':   s *= 1.6
   elif schema=='full':  s *= 1.6
