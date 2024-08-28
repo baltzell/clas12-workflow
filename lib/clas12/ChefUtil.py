@@ -52,11 +52,12 @@ def getReconFileBytes(schema,decodedfile):
   if decodedfile is not None and os.path.isfile(decodedfile):
     s = getFileBytes(decodedfile)
   if   schema=='dst':   s *= 0.5
-  elif schema=='calib': s *= 1.3
-  elif schema=='mon':   s *= 1.6
-  elif schema=='full':  s *= 1.6
-  elif schema=='trig':  s *= 1.3
-  elif schema=='dcalign':  s *= 1.3
+  elif schema=='dsthb': s *= 1.0
+  elif schema=='trig':  s *= 1.0
+  elif schema=='calib': s *= 1.5
+  elif schema=='mon':   s *= 1.7
+  elif schema=='full':  s *= 2.0
+  elif schema=='dcalign':  s *= 1.0
   else:
     _LOGGER.warning('Unrecognized schema from YAML ('+str(schema)+'), disk request may be bad.')
     s *= 4.0
