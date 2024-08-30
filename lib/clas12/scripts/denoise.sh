@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# environment should be set externally, e.g.:
 # module load denoise/4.0.1
 
 exe=$(which denoise2.exe)
