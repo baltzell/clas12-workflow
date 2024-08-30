@@ -120,6 +120,8 @@ class ReconJob(CLAS12Job):
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    if self.cfg['denoise']:
+        self.modules.append('denoise/4.0.1')
     self.addEnv('CLARA_HOME',cfg['clara'])
     # $COATJAVA has to be set for postprocessing to find bankdefs:
     if not cfg['nopostproc']:
