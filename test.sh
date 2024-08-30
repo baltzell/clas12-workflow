@@ -1,14 +1,13 @@
 #!/bin/bash
 clas12-workflow \
---model decrecqtlana \
---runGroup rgk \
+--model recqtlana \
+--runGroup rgc \
 --tag test \
 --forties \
 --debug \
---runs 19891-19893 \
---inputs /mss/clas12/rg-k/data/clas_019891 \
---inputs /mss/clas12/rg-k/data/clas_019892 \
---inputs /mss/clas12/rg-k/data/clas_019893 \
+--runs 016471,016472 \
+--inputs /cache/clas12/rg-c/production/decoded/10.0.9/016471 \
+--inputs /cache/clas12/rg-c/production/decoded/10.0.9/016472 \
 --outDir /volatile/clas12/users/baltzell/wok-test \
 --reconYaml ./yamls/test.yaml \
 --trainYaml calib \
