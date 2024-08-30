@@ -1,5 +1,5 @@
 
-module load ccdb rcdb
+module load ccdb rcdb coatjava
 
 set sourced=($_)
 set d=`/usr/bin/readlink -f $sourced[2]`
