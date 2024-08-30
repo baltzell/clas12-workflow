@@ -13,7 +13,7 @@ _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':False}
 _VALIDREMOTES=['/mss','/volatile','/cache']
 
 CHOICES={
-'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana'],
+'model'   : ['dec','decmrg','rec','ana','decrec','decmrgrec','recana','decrecana','decmrgrecana','qtl','decrecqtl','recqtl','decrecqtlana','recqtlana'],
 'runGroup': ['era','rga','rgb','rgc','rgd','rge','rgf','rgk','rgm','rgl','test'],
 'node'    : SwifJob.CONSTRAINTS,
 'threads' : list(CLAS12Jobs.ReconJob.THRD_MEM_REQ.keys()),
