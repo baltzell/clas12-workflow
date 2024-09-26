@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# environment should be set externally, e.g.:
-# module load denoise/4.0.1
+# FIXMI:  environment should be set externally, e.g.:
+module use /scigroup/cvmfs/hallb/clas12/sw/modulefiles
+module load hipo/4.0.1 denoise/4.0.1
 
 exe=$(which denoise2.exe)
 
