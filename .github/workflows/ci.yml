@@ -20,3 +20,6 @@ jobs:
           module use /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/modulefiles
           module avail
           source ./env.sh
+          which clas12-workflow
+          clas12-workflow -h
+          python3 -m compileall ./lib

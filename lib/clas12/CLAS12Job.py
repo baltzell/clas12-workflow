@@ -10,9 +10,11 @@ class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
+    self.debug=cfg['debug']
+    self.modulepath.append('/scicomp/cvmfs/hallb/clas12/sw/modulefiles')
+    self.modules.append('jdk/17.0.2')
+    self.modules.append('groovy/4.0.3')
     self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a','his':'h'})
-    self.addEnv('JAVA_HOME','/scigroup/cvmfs/hallb/clas12/soft/linux-64/jdk/17.0.2')
-    self.addEnv('PATH','${JAVA_HOME}/bin:${PATH}')
     if cfg['ccdbsqlite'] is None:
       self.addEnv('CCDB_CONNECTION','mysql://clas12reader@clasdb-farm.jlab.org/clas12')
     elif cfg['ccdbsqlite'].startswith('/cvmfs'):
@@ -95,8 +97,12 @@ class CLAS12Job(SwifJob):
     if hr > 24:
       _LOGGER.warning('FIXME by 10/2024:  Time requirement greater than 24 hours.')
     if gb > 120:
-      _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
-      sys.exit(2)
+      if self.debug:
+        _LOGGER.warning('Truncating huge disk requirement (%s) to 10 GB for --debug.'%str(gb))
+        gb = 10
+      else:
+        _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
+        sys.exit(2)
     if hr < 24:
       hr = 24
     if gb < 10:
