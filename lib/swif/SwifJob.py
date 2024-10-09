@@ -19,7 +19,7 @@ class SwifJob:
     self.partition='production'
     self.cores=1
     self.os='el9'
-    self.time='6h'
+    self.time='24h'
     self.disk='4GB'
     self.ram='1GB'
     self.shell='/bin/tcsh'
