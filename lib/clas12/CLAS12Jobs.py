@@ -48,17 +48,13 @@ class MergingJob(CLAS12Job):
 class DecodeAndMergeJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
-    self.setTime('6h')
+    self.setTime('24h')
     self.setRam('4GB')
     self.addTag('mode','decmrg')
     self.addTag('coatjava',cfg['coatjava'])
   def addInputData(self,eviofiles):
     # FIXME:  this assume 2 GB EVIO file
     self.setDisk('%.0fGB'%(int(ChefUtil.DEFAULT_EVIO_BYTES*1.4)/1e9*len(eviofiles)+1))
-    hours = len(eviofiles)+2
-    if hours < 12:
-      hours = 12
-    self.setHours(hours)
     decodedfiles=[]
     for eviofile in eviofiles:
       CLAS12Job.addInputData(self,eviofile)
