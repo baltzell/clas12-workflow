@@ -14,6 +14,7 @@ _NDEBUG=3000
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
     SwifJob.JputJob.__init__(self,workflow)
+    self.setTime('1h')
     self.project=cfg['project']
     self.os=cfg['node']
     self.cfg=cfg
@@ -21,8 +22,8 @@ class JputJob(SwifJob.JputJob):
 class MergingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.setTime('1h')
     self.setRam('1GB')
-    self.setTime(ChefUtil.getMergeTimeReq(cfg['mergeSize']))
     self.setDisk(ChefUtil.getMergeDiskReq(cfg['mergeSize']))
     self.addTag('coatjava',cfg['coatjava'])
     self.addTag('mode','merge')
@@ -47,6 +48,7 @@ class MergingJob(CLAS12Job):
 class DecodeAndMergeJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.setTime('6h')
     self.setRam('4GB')
     self.addTag('mode','decmrg')
     self.addTag('coatjava',cfg['coatjava'])
@@ -92,6 +94,7 @@ class DecodeAndMergeJob(CLAS12Job):
 class DecodingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.setTime('6h')
     self.setRam('4GB')
     self.addTag('mode','decode')
     self.addTag('coatjava',cfg['coatjava'])
@@ -183,9 +186,8 @@ class TrainJob(CLAS12Job):
     self.addEnv('JAVA_OPTS','-Xmx8g -Xms8g')
     self.setRam('10GB')
     self.setCores(12)
-    self.addTag('mode','ana')
-    # TODO: choose time based on #events:
     self.setTime('24h')
+    self.addTag('mode','ana')
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     TrainJob.HOURS_INC = 0.5
@@ -279,7 +281,7 @@ class TrainCleanupJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.setRam('500MB')
-    self.setTime('2h')
+    self.setTime('1h')
     self.addTag('mode','anaclean')
   def setCmd(self):
     if self.cfg['workDir'] is None:
