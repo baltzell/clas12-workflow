@@ -335,7 +335,7 @@ import getpass
 import argparse
 
 cli = argparse.ArgumentParser()
-cli.add_argument('-u',help='username',default=getpass.getuser())
+cli.add_argument('-u',help='username (requires ssh key)',default=getpass.getuser())
 cli.add_argument('-a',help='include archived workflows',default=False,action='store_true')
 args = cli.parse_args(sys.argv[1:])
 
