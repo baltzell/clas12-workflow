@@ -87,20 +87,18 @@ class CLAS12Job(SwifJob):
     if auger: self.addOutput(basename,directory+'/'+basename)
 
   def setRequests(self,diskbytes,hours):
-    gb = int((diskbytes/1e9)+1)
-    hr = int(hours+1)
-    if hr > 72:
-      hr = 72
-      _LOGGER.warning('Huge time requirement (%s hours)'%str(hr))
-    if hr > 24:
-      _LOGGER.warning('FIXME by 10/2024:  Time requirement greater than 24 hours.')
-    if gb > 120:
-      _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
-      sys.exit(2)
-    if hr < 24:
-      hr = 24
-    if gb < 10:
-      gb = 10
-    self.setTime( '%dh'  % hr)
-    self.setDisk( '%dGB' % gb)
+    if diskbytes is not None:
+      gb = int((diskbytes/1e9)+1)
+      if gb > 120:
+        _LOGGER.critical('Huge disk requirement (%s GB), need smaller --trainSize.'%str(gb))
+        sys.exit(2)
+      if gb < 10:
+        gb = 10
+      self.setDisk( '%dGB' % gb)
+    if hours is not None:
+      hr = int(hours)
+      if hr > 24:
+        _LOGGER.critical('Time requirement greater than 24 hours.')
+        sys.exit(2)
+      self.setTime( '%dh'  % hr)
 
