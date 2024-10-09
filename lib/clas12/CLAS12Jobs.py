@@ -153,7 +153,7 @@ class ReconJob(CLAS12Job):
       self.setRequestIncrements(filename)
     # and now update the resource requests when every file is added:
     self.nfiles += 1
-    self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
+    self.setRequests(ReconJob.BYTES_INC*self.nfiles, None)
   def setCmd(self):
     cmd = ''
     if self.cfg['denoise']:
@@ -206,7 +206,7 @@ class TrainJob(CLAS12Job):
     if TrainJob.HOURS_INC is None or TrainJob.BYTES_INC is None:
       self.setRequestIncrements(filenames[0])
     self.nfiles += len(filenames)
-    self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
+    self.setRequests(TrainJob.BYTES_INC*self.nfiles, None)
   def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
