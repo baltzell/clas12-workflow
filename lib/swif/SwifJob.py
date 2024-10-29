@@ -8,7 +8,6 @@ class SwifJob:
 
   __JSONFORMAT={'indent':2,'separators':(',',': ')}
 
-  # defaults are for decoding a 2 GB evio file
   def __init__(self,workflow):
     self.abbreviations={'jput':'j'}
     self.env=[]
