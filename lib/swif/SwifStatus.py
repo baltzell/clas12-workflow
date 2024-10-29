@@ -1,7 +1,7 @@
 import os,sys,glob,json,copy,subprocess,getpass,datetime,collections
 import FileUtil
 
-SWIF='/usr/local/bin/swif2'
+SWIF='/usr/bin/swif2'
 
 _JSONFORMAT={'indent':2,'separators':(',',': '),'sort_keys':True}
 
