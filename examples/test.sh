@@ -1,5 +1,5 @@
 clas12-workflow \
---model decrecana \
+--model decrecqtlana \
 --runGroup rgk \
 --tag test \
 --forties \
