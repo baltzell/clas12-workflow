@@ -1,0 +1,3 @@
+/cache/clas12/rg-a/production/recon/fall2018/torus-1/pass2/main/train
+/cache/clas12/rg-a/production/recon/fall2018/torus+1/pass2/train
+/cache/clas12/rg-a/production/recon/spring2019/torus-1/pass2/dst/train
