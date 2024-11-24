@@ -29,7 +29,8 @@ def mkdir(path,tag=None):
         sys.exit(1)
     else:
       try:
-        os.makedirs(path)
+        if not path.startswith('/cache'):
+          os.makedirs(path)
       except:
         _LOGGER.critical('Cannot make directory: '+path)
         sys.exit(1)
