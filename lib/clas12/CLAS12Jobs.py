@@ -230,7 +230,7 @@ class TrainMrgJob(CLAS12Job):
     trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values())
     if outDir.startswith('/cache') or outDir.startswith('/mss'):
       for train in trains:
-        self.addOutputWildcard(f'./train/{train}/*.hipo',outDir+'/'+train,auger=True)
+        self.addOutputWildcard(f'./train/{train}/*.hipo',outDir[:-6],auger=True)
       outDir = './train'
     else:
       for train in trains:
