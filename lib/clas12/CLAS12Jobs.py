@@ -227,15 +227,15 @@ class TrainMrgJob(CLAS12Job):
     if inDir is None:
       inDir = self.cfg['trainDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
-    trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
+    trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values())
     if outDir.startswith('/cache') or outDir.startswith('/mss'):
       for train in trains:
         self.addOutputWildcard(f'./train/{train}/*.hipo',outDir+'/'+train,auger=True)
       outDir = './train'
     else:
+      for train in trains:
+        ChefUtil.mkdir(outDir+'/'+train)
       self.addOutputData(outDir,outDir,auger=False)
-    for train in trains:
-      ChefUtil.mkdir(outDir+'/'+train)
     cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
     cmd+=' -o '+outDir
