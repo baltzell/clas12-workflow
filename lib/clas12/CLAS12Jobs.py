@@ -194,10 +194,9 @@ class TrainJob(CLAS12Job):
         _LOGGER.critical('Non-HIPO file detected for a train job: '+x)
         sys.exit(99)
       CLAS12Job.addInputData(self,x)
-    if self.cfg['workDir'] is None or self.cfg['nomerge']:
+    outDir = self.cfg['workDir']
+    if outDir is None or self.cfg['nomerge']:
       outDir=self.cfg['outDir']
-    else:
-      outDir=self.cfg['workDir']
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
@@ -257,15 +256,19 @@ class TrainMrgJob(CLAS12Job):
     self.addTag('mode','anamrg')
     self.setTime('24h')
   def setCmd(self):
-    # FIXME: write outputs to local disk and use Auger staging
-    if self.cfg['workDir'] is None:
+    inDir = self.cfg['workDir']
+    if inDir is None or self.cfg['nomerge']:
       inDir = self.cfg['outDir']
-    else:
-      inDir = self.cfg['workDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
-    self.addOutputData(outDir,outDir,auger=False)
-    for trainName in list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
-      ChefUtil.mkdir(outDir+'/'+trainName)
+    trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
+    if outDir.startswith('/cache'):
+      for train in trains:
+        self.addOutputWildcard(f'./train/{train}/*.hipo',outDir,auger=True)
+      outDir = './train'
+    else:
+      self.addOutputData(outDir,outDir,auger=False)
+    for train in trains:
+      ChefUtil.mkdir(outDir+'/'+train)
     cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
     cmd+=' -o '+outDir
