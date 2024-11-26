@@ -196,7 +196,7 @@ class TrainJob(CLAS12Job):
       CLAS12Job.addInputData(self,x)
     outDir = self.cfg['workDir']
     if outDir is None or self.cfg['nomerge']:
-      outDir=self.cfg['outDir']
+      outDir = self.cfg['trainDir']
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
@@ -210,6 +210,50 @@ class TrainJob(CLAS12Job):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
     cmd += ' && ls -lhtr'
+    CLAS12Job.setCmd(self,cmd)
+
+class TrainMrgJob(CLAS12Job):
+  def __init__(self,workflow,cfg):
+    CLAS12Job.__init__(self,workflow,cfg)
+    self.addEnv('COATJAVA',cfg['coatjava'])
+    # FIXME: use `module load`, but need to know what version or wait until stable
+    lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
+    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
+    self.setRam('1600MB')
+    self.addTag('mode','anamrg')
+    self.setTime('24h')
+  def setCmd(self):
+    inDir = self.cfg['workDir']
+    if inDir is None:
+      inDir = self.cfg['trainDir']
+    outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
+    trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
+    if outDir.startswith('/cache') or outDir.startswith('/mss'):
+      for train in trains:
+        self.addOutputWildcard(f'./train/{train}/*.hipo',outDir+'/'+train,auger=True)
+      outDir = './train'
+    else:
+      self.addOutputData(outDir,outDir,auger=False)
+    for train in trains:
+      ChefUtil.mkdir(outDir+'/'+train)
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
+    cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
+    cmd+=' -o '+outDir
+    cmd+=' -y '+self.cfg['trainYaml']
+    cmd+=' && ls -ltR %s && ls -lt %s'%(inDir,outDir)
+    CLAS12Job.setCmd(self,cmd)
+
+class TrainCleanupJob(CLAS12Job):
+  def __init__(self,workflow,cfg):
+    CLAS12Job.__init__(self,workflow,cfg)
+    self.setRam('500MB')
+    self.setTime('1h')
+    self.addTag('mode','anaclean')
+  def setCmd(self):
+    delDir = self.cfg['workDir']
+    if delDir is None or self.cfg['nomerge']:
+      delDir = self.cfg['outDir']
+    cmd='rm -rf %s/%s/train/%.6d'%(delDir,self.cfg['schema'],int(self.getTag('run')))
     CLAS12Job.setCmd(self,cmd)
 
 class HistoJob(CLAS12Job):
@@ -244,51 +288,6 @@ class HistoJob(CLAS12Job):
       _LOGGER.critical('NOOOOOOOOOOOOO: '+filename)
       sys.exit(44)
     CLAS12Job.addInputData(self, filename, auger=self.auger)
-
-class TrainMrgJob(CLAS12Job):
-  def __init__(self,workflow,cfg):
-    CLAS12Job.__init__(self,workflow,cfg)
-    self.addEnv('COATJAVA',cfg['coatjava'])
-    # FIXME: use `module load`, but need to know what version or wait until stable
-    lib=os.path.dirname(os.path.realpath(__file__)).rstrip('clas12')
-    self.addEnv('PYTHONPATH',lib+'/util:'+lib+'/clas12:'+lib+'/ccdb')
-    self.setRam('1600MB')
-    self.addTag('mode','anamrg')
-    self.setTime('24h')
-  def setCmd(self):
-    inDir = self.cfg['workDir']
-    if inDir is None or self.cfg['nomerge']:
-      inDir = self.cfg['outDir']
-    outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
-    trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values()):
-    if outDir.startswith('/cache'):
-      for train in trains:
-        self.addOutputWildcard(f'./train/{train}/*.hipo',outDir,auger=True)
-      outDir = './train'
-    else:
-      self.addOutputData(outDir,outDir,auger=False)
-    for train in trains:
-      ChefUtil.mkdir(outDir+'/'+train)
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
-    cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
-    cmd+=' -o '+outDir
-    cmd+=' -y '+self.cfg['trainYaml']
-    cmd+=' && ls -ltR %s && ls -lt %s'%(inDir,outDir)
-    CLAS12Job.setCmd(self,cmd)
-
-class TrainCleanupJob(CLAS12Job):
-  def __init__(self,workflow,cfg):
-    CLAS12Job.__init__(self,workflow,cfg)
-    self.setRam('500MB')
-    self.setTime('1h')
-    self.addTag('mode','anaclean')
-  def setCmd(self):
-    if self.cfg['workDir'] is None:
-      delDir = self.cfg['outDir']
-    else:
-      delDir = self.cfg['workDir']
-    cmd='rm -rf %s/%s/train/%.6d'%(delDir,self.cfg['schema'],int(self.getTag('run')))
-    CLAS12Job.setCmd(self,cmd)
 
 
 if __name__ == '__main__':
