@@ -59,12 +59,12 @@ class SwifJob:
 
   def addTag(self,key,val):
     if key in self.tags:
-      if isinstance(self.tags[key],set):
-        self.tags[key].add(val)
+      if isinstance(self.tags[key],list):
+        self.tags[key].append(val)
       elif self.tags[key]!=val:
-        s=set()
-        s.add(self.tags[key])
-        s.add(val)
+        s=[]
+        s.append(self.tags[key])
+        s.append(val)
         self.tags[key]=s
     else:
       self.tags[key]=val
@@ -168,7 +168,7 @@ class SwifJob:
       ret.add(os.path.dirname(o))
     for o in self.outputData:
       ret.add(os.path.dirname(o))
-    return ret
+    return list(ret)
 
   def makeOutputDirs(self):
     for x in self.getOutputDirs():
@@ -247,13 +247,14 @@ class SwifJob:
         cmd+=' && export %s="%s"'%(x['name'],x['value'])
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
-    d=[]
+    dirs=[]
     for o in self.outputs:
       if not o['remote'].startswith('mss:'):
-        if os.path.dirname(o['remote'].replace('file:/','/',1)) not in d:
-          d.append(os.path.dirname(o['remote'].replace('file:/','/',1)))
-    if len(d)>0:
-      cmd+=' && mkdir -p %s '%(' '.join(d))
+        d = os.path.dirname(o['remote'].replace('file:/','/',1))
+        if d not in dirs and not d.startswith('/cache'):
+          dirs.append(d)
+    if len(dirs)>0:
+      cmd+=' && mkdir -p %s '%(' '.join(dirs))
     cmd+=' && ( '+self.cmd+' )'
     #cmd+=self._getJputOutputsCmd()
     if len(cmd)>(1e4-1):
