@@ -59,13 +59,10 @@ class SwifJob:
 
   def addTag(self,key,val):
     if key in self.tags:
-      if isinstance(self.tags[key],list):
-        self.tags[key].append(val)
+      if isinstance(self.tags[key],set):
+        self.tags[key].add(val)
       elif self.tags[key]!=val:
-        s=[]
-        s.append(self.tags[key])
-        s.append(val)
-        self.tags[key]=s
+        self.tags[key]={self.tags[key],val}
     else:
       self.tags[key]=val
 
@@ -281,7 +278,10 @@ class SwifJob:
     if len(self.tags)>0:
       jsonData['tags']=[]
       for k,v in list(self.tags.items()):
-        jsonData['tags'].append({'name':k,'value':v})
+        if isinstance(v,set):
+          for w in v: jsonData['tags'].append({'name':k,'value':w})
+        else:
+          jsonData['tags'].append({'name':k,'value':v})
     if len(self.antecedents)>0:
       jsonData['antecedents']=self.antecedents
     if len(self.conditions)>0:
