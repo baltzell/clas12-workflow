@@ -19,4 +19,4 @@ for f in glob.glob(os.path.dirname(os.path.realpath(__file__))+'/../pins/*.txt')
     print('<li>%s:  %.1f TB</li>' % (k.upper(),sizes[k]/1e12))
 print('<li>TOTAL: %.1f TB</li>' % (sum(sizes.values())/1e12))
 print('</ul>')
-#rm -f ./pins/README.html && ./scripts/pin.py >& ./pins/README.html && rsync -avz --delete ./pins clas12@ifarm:/group/clas/www/clasweb/html/clas12offline/disk/cache
+#print('rm -f ./pins/README.html && ./scripts/pin.py >& ./pins/README.html && rsync -avz --delete ./pins clas12@ifarm:/group/clas/www/clasweb/html/clas12offline/disk/cache')
