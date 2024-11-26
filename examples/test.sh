@@ -8,7 +8,7 @@ clas12-workflow \
 --inputs /mss/clas12/rg-k/data/clas_019891 \
 --inputs /mss/clas12/rg-k/data/clas_019892 \
 --inputs /mss/clas12/rg-k/data/clas_019893 \
---outDir /volatile/clas12/users/baltzell/wok-test \
+--outDir /cache/hallb/scratch/users/baltzell/roc-test \
 --reconYaml ~/clas12-default.yaml \
 --trainYaml calib \
 --coatjava 10.1.0 \
