@@ -14,6 +14,8 @@ DEFAULT_EVENTS=5*7e4      # events in a file
 
 _DIRSMADE=[]
 def mkdir(path,tag=None):
+  if path.startswith('/mss') or path.startswith('/cache'):
+    return
   if path not in _DIRSMADE:
     if path.startswith('/mss/'):
       path=path.replace('/mss/','/cache/',1)
