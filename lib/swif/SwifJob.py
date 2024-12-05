@@ -21,7 +21,7 @@ class SwifJob:
     self.partition='production'
     self.cores=1
     self.os='el9'
-    self.time='6h'
+    self.time='24h'
     self.disk='4GB'
     self.ram='1GB'
     self.shell='/bin/tcsh'
@@ -89,12 +89,6 @@ class SwifJob:
 
   def setTime(self,time):
     self.time=time
-
-  def setHours(self,hours):
-    if hours > 72:
-      self.time = '72h'
-    else:
-      self.time = '%.0fh'%hours
 
   def setCmd(self,cmd):
     self.cmd=cmd

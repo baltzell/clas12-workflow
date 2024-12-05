@@ -1,0 +1,3 @@
+/cache/clas12/rg-f/production/recon/summer2020/torus-1_solenoid-0.745/pass1v1/
+/cache/clas12/rg-f/production/recon/summer2020/torus+0.5_solenoid-0.745/pass1v1/dst/recon/
+/cache/clas12/rg-f/production/recon/summer2020/torus-0.5_solenoid-0.745/pass1v1/dst/recon/

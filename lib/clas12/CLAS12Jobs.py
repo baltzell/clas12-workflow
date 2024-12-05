@@ -13,6 +13,7 @@ NDEBUG=3000
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
     SwifJob.JputJob.__init__(self,workflow)
+    self.setTime('1h')
     self.project=cfg['project']
     self.os=cfg['node']
     self.cfg=cfg
@@ -20,8 +21,8 @@ class JputJob(SwifJob.JputJob):
 class MergingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.setTime('1h')
     self.setRam('1GB')
-    self.setTime(ChefUtil.getMergeTimeReq(cfg['mergeSize']))
     self.setDisk(ChefUtil.getMergeDiskReq(cfg['mergeSize']))
     self.addTag('coatjava',cfg['coatjava'])
     self.addTag('mode','merge')
@@ -46,16 +47,13 @@ class MergingJob(CLAS12Job):
 class DecodeAndMergeJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.setTime('24h')
     self.setRam('4GB')
     self.addTag('mode','decmrg')
     self.addTag('coatjava',cfg['coatjava'])
   def addInputData(self,eviofiles):
     # FIXME:  this assume 2 GB EVIO file
     self.setDisk('%.0fGB'%(int(ChefUtil.DEFAULT_EVIO_BYTES*1.4)/1e9*len(eviofiles)+1))
-    hours = len(eviofiles)+2
-    if hours < 12:
-      hours = 12
-    self.setHours(hours)
     decodedfiles=[]
     for eviofile in eviofiles:
       CLAS12Job.addInputData(self,eviofile)
@@ -91,6 +89,7 @@ class DecodeAndMergeJob(CLAS12Job):
 class DecodingJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.setTime('6h')
     self.setRam('4GB')
     self.addTag('mode','decode')
     self.addTag('coatjava',cfg['coatjava'])
@@ -156,7 +155,7 @@ class ReconJob(CLAS12Job):
       self.setRequestIncrements(filename)
     # and now update the resource requests when every file is added:
     self.nfiles += 1
-    self.setRequests(ReconJob.BYTES_INC*self.nfiles,ReconJob.HOURS_INC*self.nfiles)
+    self.setRequests(ReconJob.BYTES_INC*self.nfiles, None)
   def setCmd(self):
     cmd = ''
     if self.cfg['denoise']:
@@ -185,9 +184,8 @@ class TrainJob(CLAS12Job):
     self.addEnv('JAVA_OPTS','-Xmx8g -Xms8g')
     self.setRam('10GB')
     self.setCores(12)
-    self.addTag('mode','ana')
-    # TODO: choose time based on #events:
     self.setTime('24h')
+    self.addTag('mode','ana')
     self.nfiles = 0
   def setRequestIncrements(self,filename):
     TrainJob.HOURS_INC = 0.5
@@ -210,7 +208,7 @@ class TrainJob(CLAS12Job):
     if TrainJob.HOURS_INC is None or TrainJob.BYTES_INC is None:
       self.setRequestIncrements(filenames[0])
     self.nfiles += len(filenames)
-    self.setRequests(TrainJob.BYTES_INC*self.nfiles,TrainJob.HOURS_INC*self.nfiles)
+    self.setRequests(TrainJob.BYTES_INC*self.nfiles, None)
   def setCmd(self):
     cmd = os.path.dirname(os.path.realpath(__file__))+'/scripts/train.sh'
     cmd += ' -t 12 -y '+self.cfg['trainYaml']
@@ -281,7 +279,7 @@ class TrainCleanupJob(CLAS12Job):
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
     self.setRam('500MB')
-    self.setTime('2h')
+    self.setTime('1h')
     self.addTag('mode','anaclean')
   def setCmd(self):
     if self.cfg['workDir'] is None:

@@ -1,0 +1,13 @@
+/mss/clas12/rg-c/production/summer22/pass1/2.2gev/C/dst/train/
+/mss/clas12/rg-c/production/summer22/pass1/2.2gev/ET/dst/train/
+/mss/clas12/rg-c/production/summer22/pass1/2.2gev/NH3/dst/train/
+/mss/clas12/rg-c/production/summer22/pass1/10.5gev/C/dst/train/
+/mss/clas12/rg-c/production/summer22/pass1/10.5gev/CH2/dst/
+/mss/clas12/rg-c/production/summer22/pass1/10.5gev/ET/dst/train/
+/mss/clas12/rg-c/production/summer22/pass1/10.5gev/ND3/dst/train/
+/mss/clas12/rg-c/production/summer22/pass1/10.5gev/NH3/dst/train/
+/mss/clas12/rg-c/production/fall22/pass1/C/dst/train/
+/mss/clas12/rg-c/production/fall22/pass1/CH2/dst/train/
+/mss/clas12/rg-c/production/fall22/pass1/ET/dst/train/
+/mss/clas12/rg-c/production/fall22/pass1/ND3/dst/train/
+/mss/clas12/rg-c/production/fall22/pass1/NH3/dst/train/

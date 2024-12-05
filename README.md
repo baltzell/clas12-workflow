@@ -1,4 +1,4 @@
 # clas12-workflow
 
 ## Overview
-Wrapper tools for [JLab's Swif](https://scicomp.jlab.org/docs/swif2) with full implementation of CLAS12 offline workflows.
+Python wrapper for [JLab's Swif](https://scicomp.jlab.org/docs/swif2) and CLAS12 offline workflows.

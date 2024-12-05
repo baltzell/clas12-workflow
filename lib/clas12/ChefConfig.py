@@ -354,6 +354,10 @@ class ChefConfig(collections.OrderedDict):
           if '/'+self[xx].strip('/').split('/').pop(0) not in _VALIDREMOTES:
             self.cli.error('"'+xx+'" must start with one of: '+','.join(_VALIDREMOTES))
 
+    if self['outDir'] is not None:
+      if self['outDir'].startswith('/cache') or self['outDir'].startswith('/mss'):
+        self.cli.error('--outDir on /cache or /mss is currently not supported.')
+
     # for decoding workflows, assign decDir to outDir if it doesn't exist:
     if self['model'].find('dec')>=0:
       if self['decDir'] is None:
