@@ -8,8 +8,8 @@ module list
 exe=$(which denoise2.exe)
 network=$DENOISING_NETWORKS
 
-# denoising requires $PWD/network
-ln -sf $network
+# denoising requires $PWD/network:
+ln -sf $DENOISING_NETWORKS ./network
 
 for x in `find . -maxdepth 1 -xtype f -name '*.hipo' | sed 's;^\./;;'`
 do

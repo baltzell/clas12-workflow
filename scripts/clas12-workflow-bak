@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# clas12-workflow accepts certain arguments as globs,
+# so make sure they don't get expanded by this shell wrapper:
+set -f
+
+.clas12-workflow.py $@ 2>&1 | grep -v -E -f $d/.logignore
+
