@@ -1,19 +1,12 @@
 #!/bin/bash
 
-if grep -q -i Alma /etc/redhat-release
-then
-    source /scigroup/cvmfs/hallb/clas12/soft/setup.sh
-    module load denoising/4.0.1
-    exe=$(which denoise2.exe)
-    network=$DENOISING_NETWORKS
-else
-    g=/apps/gcc/10.2.0
-    export PATH=${g}/bin:${PATH}
-    export LD_LIBRARY_PATH=${g}/lib64:${g}/lib:${PATH}
-    d=/group/clas12/packages/hipo/2.0/extensions/dc
-    exe=$d/denoise2.exe
-    network=$d/network
-fi
+source /etc/profile.d/modules.sh
+module use /scigroup/cvmfs/hallb/clas12/sw/modulefiles
+module load hipo/4.0.1 denoise/4.0.1
+module list
+
+exe=$(which denoise2.exe)
+network=$DENOISING_NETWORKS
 
 # denoising requires $PWD/network
 ln -sf $network
