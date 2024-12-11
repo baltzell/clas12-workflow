@@ -4,7 +4,7 @@ sizes = {}
 print('<p>/cache Pinning for CLAS12<br>')
 print('<p>Paths lists from run group chefs and analysis coordinators are used to calculate disk volume with <a href=\'https://code.jlab.org/hallb/clas12/clas12-workflow/-/blob/main/scripts/pin.py?ref_type=heads\'>this</a>.<p>')
 print('<ul>')
-for f in glob.glob(os.path.dirname(os.path.realpath(__file__))+'/../pins/*.txt'):
+for f in glob.glob(os.path.dirname(os.path.realpath(__file__))+'/*.txt'):
     k = f.split('/').pop().split('.').pop(0)
     sizes[k] = 0
     for path in open(f):
