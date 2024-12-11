@@ -22,7 +22,7 @@ with open(top+'/README.html','w') as o:
     write(f'<p>Paths lists from run group chefs and analysis coordinators are used to calculate disk volume with <a href=\'https://code.jlab.org/hallb/clas12/clas12-workflow/-/blob/main/pins/pin.py\'>this</a>.<p>')
     write('<ul>')
     sizes = {}
-    for f in glob.glob(top+'/*.txt'):
+    for f in sorted(glob.glob(top+'/*.txt')):
         k = f.split('/').pop().split('.').pop(0)
         sizes[k] = sum(list(get_sizes(f)))
         write('<li>%s:  %.1f TB</li>' % (k.upper(),sizes[k]/1e12))
