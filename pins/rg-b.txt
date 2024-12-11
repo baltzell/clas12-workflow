@@ -1,0 +1,4 @@
+/mss/clas12/rg-b/production/recon/fall2019/torus-1/pass2/v1/dst/train
+/mss/clas12/rg-b/production/recon/fall2019/torus+1/pass2/v1/dst/train
+/mss/clas12/rg-b/production/recon/spring2019/torus-1/pass2/v0/dst/train
+/mss/clas12/rg-b/production/recon/spring2020/torus-1/pass2/v1/dst/train/
