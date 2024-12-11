@@ -1,0 +1,14 @@
+/mss/clas12/rg-m/production/pass1/2gev/Ar/dst/recon
+/mss/clas12/rg-m/production/pass1/2gev/C/dst/recon
+/mss/clas12/rg-m/production/pass1/2gev/D/dst/recon
+/mss/clas12/rg-m/production/pass1/2gev/H/dst/recon
+/mss/clas12/rg-m/production/pass1/4gev/Ar/dst/recon
+/mss/clas12/rg-m/production/pass1/4gev/C/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/40Ca/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/48Ca/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/Ar/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/Cx4/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/D/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/H/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/He/dst/recon
+/mss/clas12/rg-m/production/pass1/6gev/Snx4/dst/recon
