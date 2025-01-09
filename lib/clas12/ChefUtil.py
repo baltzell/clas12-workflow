@@ -128,6 +128,10 @@ def getFileList(fileOrDir):
   return fileList
 
 def countHipoEvents(filename):
+  import shutil
+  if not shutil.which('hipo-utils'):
+    _LOGGER.critical('Cannot find hipo-utils in $PATH.')
+    sys.exit(1)
   x=subprocess.check_output(['hipo-utils','-info',filename])
   for line in reversed(x.decode('UTF-8').split('\n')):
     cols=line.strip().split()
@@ -202,12 +206,11 @@ def getRunList(data):
 def hipoIntegrityCheck(filename):
   if not os.path.exists(filename): return 201
   if os.path.getsize(filename)<128: return 202
-  hu='hipo-utils'
-  if os.getenv('COATJAVA') is not None:
-    hu=os.getenv('COATJAVA')+'/bin/hipo-utils'
-  elif os.getenv('CLAS12DIR') is not None:
-    hu=os.getenv('CLAS12DIR')+'/bin/hipo-utils'
-  cmd=[hu,'-test',filename]
+  import shutil
+  if not shutil.which('hipo-utils'):
+    _LOGGER.critical('Cannot find hipo-utils in $PATH.')
+    sys.exit(1)
+  cmd=['hipo-utils','-test',filename]
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
   while True:
     line=p.stdout.readline().rstrip()
