@@ -209,10 +209,13 @@ def getRunList(data):
 def hipoIntegrityCheck(filename):
   if not os.path.exists(filename): return 201
   if os.path.getsize(filename)<128: return 202
+  cmd = 'hipo-utils'
   import shutil
   if not shutil.which('hipo-utils'):
-    _LOGGER.critical('Cannot find hipo-utils in $PATH.')
-    sys.exit(1)
+    import os
+    if os.getenv('COATJAVA') is None:
+      _LOGGER.critical('Cannot find hipo-utils in $PATH or $COATJAVA.')
+      sys.exit(1)
   cmd=['hipo-utils','-test',filename]
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
   while True:
