@@ -3,7 +3,7 @@ MAILTO=bobcat@jlab.org
 WOK=/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-workflow/dev
 #
 SWIF=$WOK/cron/swif-cron.sh
-FARMOUT=$WOK/scripts/farmout-cleanup.sh
+FARMOUT=$WOK/bin/farmout-cleanup.sh
 #
 PATH=/bin:/usr/bin
 #
@@ -33,7 +33,7 @@ PATH=/bin:/usr/bin
 #
 #
 # submit jobs for new files automatically, for an "online" pass0:
-#0 * * * * flock -n $HOME/.online-pass0.lock $WOK/scripts/pass0-auto-submit.sh pass0.7 $HOME/online-pass0-workdir /cache/clas12/rg-m/data/ || echo $ERROR
+#0 * * * * flock -n $HOME/.online-pass0.lock $WOK/bin/pass0-auto-submit.sh pass0.7 $HOME/online-pass0-workdir /cache/clas12/rg-m/data/ || echo $ERROR
 #
 # example of killing jobs that land on problematic nodes:
 #*/20 * * * * scancel -U $USER -w farm1901,farm19010

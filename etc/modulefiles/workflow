@@ -11,5 +11,5 @@ prereq rcdb
 prepend-path PYTHONPATH $d/lib/util
 prepend-path PYTHONPATH $d/lib/swif
 prepend-path PYTHONPATH $d/lib/clas12
-prepend-path PATH $d/scripts
+prepend-path PATH $d/bin
 
