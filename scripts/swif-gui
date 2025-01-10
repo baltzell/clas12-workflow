@@ -275,12 +275,18 @@ def set_status(stat):
 def reload(parent_task=None):
     disable_buttons()
     set_status('Reloading Workflows ...')
-    global tab_summary
-    tab_summary.destroy()
-    tab_summary = ttk.Frame(tab_control)
-    tab_control.add(tab_summary, text='Summary')
+    build_tabs()
     set_status('Retrieving Workflows ....')
     executor.submit(initialize).add_done_callback(load)
+
+def build_tabs(parent_task=None):
+    global tab_control,tab_summary
+    if 'tab_control' in globals():  tab_control.destroy()
+    if 'tab_summary' in globals():  tab_summary.destroy()
+    tab_control = ttk.Notebook(main_frame)
+    tab_summary = ttk.Frame(tab_control)
+    tab_control.add(tab_summary, text='Summary')
+    tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
 
 def load(parent_task=None):
     set_status('Loading Workflows ...')
@@ -360,10 +366,7 @@ main_frame.columnconfigure(0, weight=10)
 main_frame.rowconfigure(0, weight=10)
 main_frame.grid(column=0, row=0, sticky='nesw')
 
-tab_control = ttk.Notebook(main_frame)
-tab_summary = ttk.Frame(tab_control)
-tab_control.add(tab_summary, text='Summary')
-tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
+build_tabs()
 
 status_message = tkinter.StringVar()
 status_message.set('Loading...')
