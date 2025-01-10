@@ -234,7 +234,7 @@ class TrainMrgJob(CLAS12Job):
       for train in trains:
         ChefUtil.mkdir(outDir+'/'+train)
       self.addOutputData(outDir,outDir,auger=False)
-    cmd = os.path.dirname(os.path.realpath(__file__))+'/../../scripts/hipo-merge-trains.py'
+    cmd = os.path.dirname(os.path.realpath(__file__))+'/../../bin/hipo-merge-trains.py'
     cmd+=' -i %s/%s/train/%.6d'%(inDir,self.cfg['schema'],int(self.getTag('run')))
     cmd+=' -o '+outDir
     cmd+=' -y '+self.cfg['trainYaml']
