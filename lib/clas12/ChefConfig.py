@@ -338,11 +338,11 @@ class ChefConfig(collections.OrderedDict):
           _LOGGER.warning('Ignoring --%s option since postprocessing is disabled.')
 
     # print ignoring work dir:
-    if self['workDir'] is not None:
-      if self['model'].find('ana')<0 or self['nomerge']:
-        if self['model'].find('qtl')<0 or not self['outDir'].startswith('/mss'):
-          _LOGGER.warning('Ignoring --workDir.')
-          self['workDir']=None
+#    if self['workDir'] is not None:
+#      if self['model'].find('ana')<0 or self['nomerge']:
+#        if self['model'].find('qtl')<0 or not self['outDir'].startswith('/mss'):
+#          _LOGGER.warning('Ignoring --workDir.')
+#          self['workDir']=None
 
     # cleanup directory definitions:
     for xx in ['decDir','outDir','workDir','logDir','trainDir']:
