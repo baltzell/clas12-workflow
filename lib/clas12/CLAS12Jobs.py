@@ -97,7 +97,7 @@ class DecodingJob(CLAS12Job):
   def addInputData(self,filename):
     CLAS12Job.addInputData(self,filename)
     basename=self.cfg['singlePattern']%(int(self.getTag('run')),int(self.getTag('file')))
-    if self.cfg['workDir'] is None or self.cfg['model'].find('decmrg')<0:
+    if self.cfg['model'].find('decmrg')<0:
       outDir = '%s/%.6d/'%(self.cfg['decDir'],int(self.getTag('run')))
       CLAS12Job.addOutputData(self,basename,outDir)
     else:
@@ -195,8 +195,8 @@ class TrainJob(CLAS12Job):
         sys.exit(99)
       CLAS12Job.addInputData(self,x)
     outDir = self.cfg['workDir']
-    if outDir is None or self.cfg['nomerge']:
-      outDir = self.cfg['trainDir']
+    if self.cfg['nomerge']:
+      outDir = self.cfg['trainDir'] 
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
@@ -224,8 +224,6 @@ class TrainMrgJob(CLAS12Job):
     self.setTime('24h')
   def setCmd(self):
     inDir = self.cfg['workDir']
-    if inDir is None:
-      inDir = self.cfg['trainDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
     trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values())
     if outDir.startswith('/cache') or outDir.startswith('/mss'):
@@ -251,8 +249,6 @@ class TrainCleanupJob(CLAS12Job):
     self.addTag('mode','anaclean')
   def setCmd(self):
     delDir = self.cfg['workDir']
-    if delDir is None or self.cfg['nomerge']:
-      delDir = self.cfg['outDir']
     cmd='rm -rf %s/%s/train/%.6d'%(delDir,self.cfg['schema'],int(self.getTag('run')))
     CLAS12Job.setCmd(self,cmd)
 
@@ -279,7 +275,10 @@ class HistoJob(CLAS12Job):
       opts='--focus-detectors'
     cmd += '%s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
-    outDir = self.cfg['outDir'] + '/hist/%s/'%subdir
+    outDir = self.cfg['outDir']
+    if outDir.startswith('/mss') or outDir.startswith('cache'):
+      outDir = self.cfg['workDir']
+    outDir = outDir + '/hist/%s/'%subdir
     self.addOutputWildcard('./%s/*'%self.getTag('run'),outDir)
   def addInputData(self,filename):
     if self.auger is None:
