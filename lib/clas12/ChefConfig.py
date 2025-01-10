@@ -339,12 +339,10 @@ class ChefConfig(collections.OrderedDict):
 
     # print ignoring work dir:
     if self['workDir'] is not None:
-      if self['model'].find('ana')<0:
-        _LOGGER.warning('Ignoring --workDir for trainless workflow.')
-        self['workDir']=None
-      elif self['nomerge']:
-        _LOGGER.warning('Ignoring --workDir for --nomerge workflow.')
-        self['workDir']=None
+      if self['model'].find('ana')<0 or self['nomerge']:
+        if self['model'].find('qtl')<0 or not self['outDir'].startswith('/mss'):
+          _LOGGER.warning('Ignoring --workDir.')
+          self['workDir']=None
 
     # cleanup directory definitions:
     for xx in ['decDir','outDir','workDir','logDir','trainDir']:
@@ -407,11 +405,14 @@ class ChefConfig(collections.OrderedDict):
     if self['model'].find('qtl')<0 and self['physics']:
       _LOGGER.info('Ignoring --physics since not a qtl workflow')
 
-    # a work directory is required for merging trains: 
     if self['workDir'] is None:
+      # a work directory is required for merging trains: 
       if self['model'].find('ana')>=0 and not self['nomerge']:
         if self['outDir'].find('/cache')==0 or self['outDir'].find('/mss')==0:
           self.cli.error('--workDir is required for pre-merged trains if --outDir is on /cache or /mss')
+      # a work directory is required for timeline jobs, if outDir is on tape: 
+      if self['model'].find('qtl')>=0 and self['outDir'].startswith('/mss'):
+        self.cli.error('--workDir is required for --model qtl when --outDir is on /mss')
     # no temporary files on /cache or mss:
     else:
       if self['workDir'].find('/cache')==0 or self['workDir'].find('/mss')==0:
