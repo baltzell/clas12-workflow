@@ -196,7 +196,7 @@ class TrainJob(CLAS12Job):
       CLAS12Job.addInputData(self,x)
     outDir = self.cfg['workDir']
     if self.cfg['nomerge']:
-      outDir = self.cfg['trainDir'] 
+      outDir = self.cfg['trainDir']
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
       basename=os.path.basename(x)
@@ -276,7 +276,7 @@ class HistoJob(CLAS12Job):
     cmd += '%s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir']
-    if outDir.startswith('/mss') or outDir.startswith('cache'):
+    if outDir.startswith('/mss') or outDir.startswith('/cache'):
       outDir = self.cfg['workDir']
     outDir = outDir + '/hist/%s/'%subdir
     self.addOutputWildcard('./%s/*'%self.getTag('run'),outDir)
