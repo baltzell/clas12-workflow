@@ -207,12 +207,12 @@ def getRunList(data):
   return runs
 
 def hipoIntegrityCheck(filename):
+  import os
   if not os.path.exists(filename): return 201
   if os.path.getsize(filename)<128: return 202
   cmd = 'hipo-utils'
   import shutil
   if not shutil.which('hipo-utils'):
-    import os
     if os.getenv('COATJAVA') is None:
       _LOGGER.critical('Cannot find hipo-utils in $PATH or $COATJAVA.')
       sys.exit(1)
