@@ -7,9 +7,6 @@ from tkinter import ttk
 import tkinter.scrolledtext as scrolledtext
 import tkinter.messagebox as messagebox
 
-import subprocess
-import json
-
 class TabFrame(ttk.Frame):
 
     def __init__(self, name, notebook):
@@ -143,10 +140,12 @@ class Wokflow():
             self._show_problem_logs()
 
     def _import_header(self):
+        import json,subprocess
         self.header = json.loads(subprocess.check_output(self.header_cmd).decode('UTF-8')).pop()
         status_message.set('Idle')
 
     def _import_details(self):
+        import json,subprocess
         self.details = json.loads(subprocess.check_output(self.details_cmd).decode('utf-8')).get('jobs')
         status_message.set('Idle')
 
@@ -207,6 +206,7 @@ class Wokflow():
         return ret
 
     def _show_full_details(self, parent_task=None):
+        import json
         s = ''
         for k,v in self._get_stats().items():
             s += '\n%10s: %d/%d = %.3f%%'%(k,v['success'],v['total'],100*v['success']/v['total'])
@@ -215,6 +215,7 @@ class Wokflow():
         self.button['state'] = 'normal'
 
     def _show_problem_details(self, parent_task=None):
+        import json
         self.tabs['problems'].update(json.dumps(list(self._get_problem_jobs()),indent=2,separators=(',',': ')))
         self.button['state'] = 'normal'
 
@@ -265,6 +266,7 @@ def initialize():
     cmd = swifcmd(['list','-display','json'])
     if args.a:
         cmd = swifcmd(['list','-archived','-display','json'])
+    import json,subprocess
     for w in json.loads(subprocess.check_output(cmd).decode('UTF-8')):
         workflows[w['workflow_name']] = Wokflow(w['workflow_name'], len(workflows)+1)
 
@@ -275,12 +277,18 @@ def set_status(stat):
 def reload(parent_task=None):
     disable_buttons()
     set_status('Reloading Workflows ...')
-    global tab_summary
-    tab_summary.destroy()
-    tab_summary = ttk.Frame(tab_control)
-    tab_control.add(tab_summary, text='Summary')
+    build_tabs()
     set_status('Retrieving Workflows ....')
     executor.submit(initialize).add_done_callback(load)
+
+def build_tabs(parent_task=None):
+    global tab_control,tab_summary
+    if 'tab_control' in globals():  tab_control.destroy()
+    if 'tab_summary' in globals():  tab_summary.destroy()
+    tab_control = ttk.Notebook(main_frame)
+    tab_summary = ttk.Frame(tab_control)
+    tab_control.add(tab_summary, text='Summary')
+    tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
 
 def load(parent_task=None):
     set_status('Loading Workflows ...')
@@ -308,6 +316,7 @@ def enable_buttons():
     root.update()
 
 def run_command(cmd):
+    import subprocess
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
 
 def check(event=None):
@@ -322,6 +331,7 @@ def swifcmd(extend):
     return x
 
 def checkssh(user):
+    import subprocess
     cmd = ['ssh','-o','NumberOfPasswordPrompts 0','-q',user+'@ifarm','true']
     p = subprocess.Popen(cmd)
     p.wait()
@@ -360,10 +370,7 @@ main_frame.columnconfigure(0, weight=10)
 main_frame.rowconfigure(0, weight=10)
 main_frame.grid(column=0, row=0, sticky='nesw')
 
-tab_control = ttk.Notebook(main_frame)
-tab_summary = ttk.Frame(tab_control)
-tab_control.add(tab_summary, text='Summary')
-tab_control.grid(column=0, row=0, sticky='nwes', columnspan=3)
+build_tabs()
 
 status_message = tkinter.StringVar()
 status_message.set('Loading...')

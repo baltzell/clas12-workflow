@@ -65,10 +65,7 @@ class SwifJob:
       if isinstance(self.tags[key],set):
         self.tags[key].add(val)
       elif self.tags[key]!=val:
-        s=set()
-        s.add(self.tags[key])
-        s.add(val)
-        self.tags[key]=s
+        self.tags[key]={self.tags[key],val}
     else:
       self.tags[key]=val
 
@@ -171,7 +168,7 @@ class SwifJob:
       ret.add(os.path.dirname(o))
     for o in self.outputData:
       ret.add(os.path.dirname(o))
-    return ret
+    return list(ret)
 
   def makeOutputDirs(self):
     for x in self.getOutputDirs():
@@ -253,13 +250,14 @@ class SwifJob:
         cmd+=' && export %s="%s"'%(x['name'],x['value'])
     if self.copyInputs:
       cmd+=' && '+self._getCopyInputsCmd()
-    d=[]
+    dirs=[]
     for o in self.outputs:
       if not o['remote'].startswith('mss:'):
-        if os.path.dirname(o['remote'].replace('file:/','/',1)) not in d:
-          d.append(os.path.dirname(o['remote'].replace('file:/','/',1)))
-    if len(d)>0:
-      cmd+=' && mkdir -p %s '%(' '.join(d))
+        d = os.path.dirname(o['remote'].replace('file:/','/',1))
+        if d not in dirs and not d.startswith('/cache'):
+          dirs.append(d)
+    if len(dirs)>0:
+      cmd+=' && mkdir -p %s '%(' '.join(dirs))
     cmd+=' && ( '+self.cmd+' )'
     #cmd+=self._getJputOutputsCmd()
     if len(cmd)>(1e4-1):
@@ -291,7 +289,10 @@ class SwifJob:
     if len(self.tags)>0:
       jsonData['tags']=[]
       for k,v in list(self.tags.items()):
-        jsonData['tags'].append({'name':k,'value':v})
+        if isinstance(v,set):
+          for w in v: jsonData['tags'].append({'name':k,'value':w})
+        else:
+          jsonData['tags'].append({'name':k,'value':v})
     if len(self.antecedents)>0:
       jsonData['antecedents']=self.antecedents
     if len(self.conditions)>0:

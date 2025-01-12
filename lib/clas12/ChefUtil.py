@@ -14,6 +14,8 @@ DEFAULT_EVENTS=5*7e4      # events in a file
 
 _DIRSMADE=[]
 def mkdir(path,tag=None):
+  if path.startswith('/mss') or path.startswith('/cache'):
+    return
   if path not in _DIRSMADE:
     if path.startswith('/mss/'):
       path=path.replace('/mss/','/cache/',1)
@@ -29,7 +31,8 @@ def mkdir(path,tag=None):
         sys.exit(1)
     else:
       try:
-        os.makedirs(path)
+        if not path.startswith('/cache'):
+          os.makedirs(path)
       except:
         _LOGGER.critical('Cannot make directory: '+path)
         sys.exit(1)
@@ -128,6 +131,10 @@ def getFileList(fileOrDir):
   return fileList
 
 def countHipoEvents(filename):
+  import shutil
+  if not shutil.which('hipo-utils'):
+    _LOGGER.critical('Cannot find hipo-utils in $PATH.')
+    sys.exit(1)
   x=subprocess.check_output(['hipo-utils','-info',filename])
   for line in reversed(x.decode('UTF-8').split('\n')):
     cols=line.strip().split()
@@ -200,14 +207,17 @@ def getRunList(data):
   return runs
 
 def hipoIntegrityCheck(filename):
+  import os
   if not os.path.exists(filename): return 201
   if os.path.getsize(filename)<128: return 202
-  hu='hipo-utils'
-  if os.getenv('COATJAVA') is not None:
-    hu=os.getenv('COATJAVA')+'/bin/hipo-utils'
-  elif os.getenv('CLAS12DIR') is not None:
-    hu=os.getenv('CLAS12DIR')+'/bin/hipo-utils'
-  cmd=[hu,'-test',filename]
+  cmd = 'hipo-utils'
+  import shutil
+  if not shutil.which('hipo-utils'):
+    if os.getenv('COATJAVA') is None:
+      _LOGGER.critical('Cannot find hipo-utils in $PATH or $COATJAVA.')
+      sys.exit(1)
+    cmd = os.getenv('COATJAVA')+'/bin/hipo-utils'
+  cmd=[cmd,'-test',filename]
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
   while True:
     line=p.stdout.readline().rstrip()

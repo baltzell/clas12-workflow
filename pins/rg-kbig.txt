@@ -1,0 +1,4 @@
+/cache/clas12/rg-k/production/recon/fall2018/torus+1/6535MeV/pass2/v0/dst/recon
+/cache/clas12/rg-k/production/recon/fall2018/torus+1/7546MeV/pass2/v0/dst/recon
+/cache/clas12/rg-k/production/recon/fall2018/torus+1/6535MeV/pass2/v0/dst/train
+/cache/clas12/rg-k/production/recon/fall2018/torus+1/7546MeV/pass2/v0/dst/train
