@@ -9,8 +9,11 @@ class SwifJob:
   __JSONFORMAT={'indent':2,'separators':(',',': ')}
 
   def __init__(self,workflow):
+    self.debug=False
     self.abbreviations={'jput':'j'}
     self.env=[]
+    self.modulepath=[]
+    self.modules=[]
     self.number=-1
     self.workflow=workflow
     self.phase=0
@@ -237,6 +240,9 @@ class SwifJob:
     cmd+='env | egrep -e SWIF -e SLURM ;'
     cmd+='echo $PWD ; pwd ;'
     cmd+='expr $PWD : ^/scratch/slurm'
+    if len(self.modules)>0 and len(self.modulepath)>0:
+      cmd+=' && module use '+' '.join(self.modulepath)
+      cmd+=' && module load '+' '.join(self.modules)
     for x in self.env:
       if self.shell.endswith('csh'):
         cmd+=' && setenv %s "%s"'%(x['name'],x['value'])
@@ -259,6 +265,8 @@ class SwifJob:
     return cmd
 
   def toJson(self):
+    if self.debug:
+        self.partition = 'priority'
     jsonData = collections.OrderedDict()
     jsonData['constraint']=self.os
     jsonData['name']=self.getJobName()
@@ -273,7 +281,10 @@ class SwifJob:
       jsonData['exclusive']=True
       jsonData['ram_bytes']=0
     jsonData['disk_bytes']=self.getBytes(self.disk)
-    jsonData['time_secs']=self.getSeconds(self.time)
+    if self.debug:
+        jsonData['time_secs']=3600
+    else:
+        jsonData['time_secs']=self.getSeconds(self.time)
     jsonData['command']=[self._createCommand()]
     if len(self.tags)>0:
       jsonData['tags']=[]

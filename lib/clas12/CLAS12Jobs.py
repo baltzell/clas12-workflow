@@ -8,8 +8,7 @@ from CLAS12Job import CLAS12Job
 
 _LOGGER=logging.getLogger(__name__)
 
-_DEBUG=False
-_NDEBUG=3000
+NDEBUG=3000
 
 class JputJob(SwifJob.JputJob):
   def __init__(self,workflow,cfg):
@@ -83,8 +82,8 @@ class DecodeAndMergeJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o && ls $o'
-    if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n $d'%_NDEBUG)
+    if self.debug:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n $d'%NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class DecodingJob(CLAS12Job):
@@ -110,8 +109,8 @@ class DecodingJob(CLAS12Job):
     cmd+=' && ls $o && if (`stat -c%s $o` < 100) rm -f $o'
     cmd+=' && %s/bin/hipo-utils -test $o'%self.cfg['coatjava']
     cmd+=' || rm -f $o ; ls $o'
-    if _DEBUG:
-      cmd = cmd.replace('bin/decoder','bin/decoder -n %d'%_NDEBUG)
+    if self.debug:
+      cmd = cmd.replace('bin/decoder','bin/decoder -n %d'%NDEBUG)
     CLAS12Job.setCmd(self,cmd)
 
 class ReconJob(CLAS12Job):
@@ -120,6 +119,9 @@ class ReconJob(CLAS12Job):
   HOURS_INC,BYTES_INC = None,None
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    if self.cfg['denoise']:
+        self.modules.append('hipo/4.0.1')
+        self.modules.append('denoise/4.0.1')
     self.addEnv('CLARA_HOME',cfg['clara'])
     # $COATJAVA has to be set for postprocessing to find bankdefs:
     if not cfg['nopostproc']:
@@ -160,8 +162,8 @@ class ReconJob(CLAS12Job):
       cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/denoise.sh && '
     cmd += os.path.dirname(os.path.realpath(__file__))+'/scripts/clara.sh'
     cmd += ' -t %s -y %s'%(str(self.getCores()),self.cfg['reconYaml'])
-    if _DEBUG:
-      cmd += ' -n %d'%_NDEBUG
+    if self.debug:
+      cmd += ' -n %d'%NDEBUG
     if not self.cfg['nopostproc'] or self.cfg['recharge']:
       for i,x in enumerate(self.outputData):
         x = os.path.basename(x)
@@ -253,15 +255,15 @@ class TrainCleanupJob(CLAS12Job):
     CLAS12Job.setCmd(self,cmd)
 
 class HistoJob(CLAS12Job):
-  TDIR='/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-timeline/dev'
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
+    self.modules.append('timeline')
     self.setRam('1500MB')
     self.setTime('2h')
     self.setDisk('1GB')
     self.addTag('mode','his')
     self.addEnv('COATJAVA',cfg['coatjava'])
-    self.addEnv('PATH',cfg['groovy']+'/bin:${COATJAVA}/bin:${PATH}')
+    self.addEnv('PATH','${COATJAVA}/bin:${PATH}')
     self.auger = None
   def setCmd(self):
     cmd = ''
@@ -273,7 +275,7 @@ class HistoJob(CLAS12Job):
     else:
       subdir='detectors'
       opts='--focus-detectors'
-    cmd += '%s/bin/run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(HistoJob.TDIR,opts,self.getTag('run'))
+    cmd += 'run-monitoring.sh --swifjob %s && ls -l ./outfiles && mv outfiles %s'%(opts,self.getTag('run'))
     CLAS12Job.setCmd(self,cmd)
     outDir = self.cfg['outDir']
     if outDir.startswith('/mss') or outDir.startswith('/cache'):

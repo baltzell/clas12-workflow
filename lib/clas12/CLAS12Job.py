@@ -10,6 +10,10 @@ class CLAS12Job(SwifJob):
 
   def __init__(self,workflow,cfg):
     SwifJob.__init__(self,workflow)
+    self.debug=cfg['debug']
+    self.modulepath.append('/scicomp/cvmfs/hallb/clas12/sw/modulefiles')
+    self.modules.append('jdk/17.0.2')
+    self.modules.append('groovy/4.0.3')
     self.abbreviations.update({'decode':'d','dec':'d','recon':'r','clean':'c','merge':'m','mrg':'m','ana':'a','his':'h'})
     self.addEnv('JAVA_HOME','/scigroup/cvmfs/hallb/clas12/sw/linux-64/jdk/21.0.2')
     self.addEnv('PATH','${JAVA_HOME}/bin:${PATH}')
