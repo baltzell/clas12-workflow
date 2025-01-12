@@ -216,7 +216,8 @@ def hipoIntegrityCheck(filename):
     if os.getenv('COATJAVA') is None:
       _LOGGER.critical('Cannot find hipo-utils in $PATH or $COATJAVA.')
       sys.exit(1)
-  cmd=['hipo-utils','-test',filename]
+    cmd = os.getenv('COATJAVA')+'/bin/hipo-utils'
+  cmd=[cmd,'-test',filename]
   p=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
   while True:
     line=p.stdout.readline().rstrip()
