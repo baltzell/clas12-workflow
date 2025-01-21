@@ -1,9 +1,15 @@
-<p>/cache Pinning for CLAS12<br>
-<p>Paths lists from run group chefs and analysis coordinators are used to calculate disk volume with <a href='https://code.jlab.org/hallb/clas12/clas12-workflow/-/blob/main/bin/pin.py?ref_type=heads'>this</a>.<p>
-<ul>
-<li>RG-A:  44.2 TB</li>
-<li>RG-F:  23.6 TB</li>
-<li>RG-C:  28.6 TB</li>
-<li>RG-K:  52.7 TB</li>
-<li>TOTAL: 149.1 TB</li>
-</ul>
+<p>/cache Pinning for CLAS12<br><p>Paths lists from run group chefs and analysis coordinators are used to calculate disk volume with <a href='https://code.jlab.org/hallb/clas12/clas12-workflow/-/blob/main/pins/pin.py'>this</a>.<p>
+<table border='1' frame=hvsides rules=none cellpadding='2' width='30%'>
+    <tr valign='top'><td>RG-A</td><td>44.2</td></tr>
+    <tr valign='top'><td>RG-B</td><td>40.5</td></tr>
+    <tr valign='top'><td>RG-C</td><td>35.9</td></tr>
+    <tr valign='top'><td>RG-F</td><td>23.6 (<sup>1</sup>)</td></tr>
+    <tr valign='top'><td>RG-K</td><td>13.6 (<sup>2</sup>52.7)</td></tr>
+    <tr valign='top'><td>RG-M</td><td>27.5 (<sup>3</sup>64.4)</td></tr>
+    <tr valign='top'><td>Total</td><td>185.3 (224.4)</td></tr>
+</table>
+<ol>
+    <li>RG-F does not have trains.</li>
+    <li>RG-K has trains but would also like pin their full DSTs.</li>
+    <li>RG-M does not have trains but provided a reduced run list optimized for energy/target combos.</li>
+</ol>
