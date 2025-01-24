@@ -195,7 +195,7 @@ class TrainJob(CLAS12Job):
         sys.exit(99)
       CLAS12Job.addInputData(self,x)
     outDir = self.cfg['workDir']
-    if self.cfg['nomerge']:
+    if self.cfg['nomerge'] or outDir is None:
       outDir = self.cfg['trainDir']
     outDir='%s/%s/train/%s/'%(outDir,self.cfg['schema'],self.getTag('run'))
     for x in filenames:
