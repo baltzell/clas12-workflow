@@ -224,6 +224,8 @@ class TrainMrgJob(CLAS12Job):
     self.setTime('24h')
   def setCmd(self):
     inDir = self.cfg['workDir']
+    if inDir is None:
+      inDir = self.cfg['trainDir']
     outDir = '%s/%s/train'%(self.cfg['trainDir'],self.cfg['schema'])
     trains = list(ClaraYaml.getTrainNames(self.cfg['trainYaml']).values())
     if outDir.startswith('/cache') or outDir.startswith('/mss'):
