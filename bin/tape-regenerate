@@ -11,9 +11,10 @@ def find_recon(path):
     d = '/'+'/'.join(d[:-2])+'/recon/%.6d'%r
     if not os.path.isdir(d):
         raise Exception('Could not find recon directory for '+path)
-    if len(glob.glob(d+'/*.hipo'))==0:
+    g = glob.glob(d+'/*.hipo')
+    if len(g) == 0:
         raise Exception('Could not find recon files for '+path)
-    return d
+    return g
 
 def find_decoded(path):
     import os,re
@@ -53,20 +54,19 @@ args.r = 'rg-' + args.r
 
 if args.command == 'tape':
     import subprocess
-    print(['jasmine','list-files','-tape',str(args.tape)])
     paths = subprocess.check_output(['jasmine','list-files','-tape',str(args.tape)])
     paths = [ x.split().pop(0) for x in paths.decode('utf-8').split('\n') ]
 else:
     paths = list(parse_paths(args.path))
 
 corrupt,decoded,recon = set(),set(),set()
-for path in paths:
+for path in sorted(paths):
     if args.r not in path:
         continue
     if 'decoded' in path:
         raise Exception('Not ready for decoded file '+path)
     elif 'train' in path:
-        recon.add(find_recon(path))
+        for x in find_recon(path): recon.add(x)
     elif 'recon' in path:
         decoded.add(find_decoded(path))
     else:
@@ -74,8 +74,8 @@ for path in paths:
     corrupt.add(path)
 
 if args.t == 'rec' and len(decoded)>0:
-    print('\n'.join(decoded))
+    print('\n'.join(sorted(decoded)))
 
 if args.t == 'ana' and len(recon)>0:
-    print('\n'.join(recon))
+    print('\n'.join(sorted(recon)))
 
