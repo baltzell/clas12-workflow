@@ -21,7 +21,7 @@ def find_decoded(path):
     if m is None:
         raise Exception('File does not match regex '+path)
     r,f = m.group(1),m.group(2)
-    d = dec_pattern%(args.rungroup,dec_version[args.rungroup],int(r))
+    d = dec_pattern%(args.r,dec_version[args.r],int(r))
     if not os.path.isdir(d):
         raise Exception('Could not find decoded directory for '+path)
     if not os.path.basename(path).startswith('rec_'):
@@ -31,21 +31,37 @@ def find_decoded(path):
         raise Exception('Could not find decoded file for '+path)
     return d
 
+def parse_paths(paths):
+    for p in paths:
+        if p.strip().startswith('/mss'):
+            yield p.strip()
+        else:
+            for line in open(p.strip()):
+                yield line.strip().split().pop(0)
+
 import argparse
 cli = argparse.ArgumentParser(description='Find the input files necessary to regenerate files on a tape.')
-cli.add_argument('rungroup',choices=['a','b','k'],help='run group letter')
-cli.add_argument('type',choices=['rec','ana'],help='type of files to recover')
-cli.add_argument('-tape',metavar='#',help='tape number (default=803771)',type=int,default=803771)
+cli.add_argument('-r',choices=['a','b','k'],help='run group',required=True)
+cli.add_argument('-t',choices=['rec','ana'],help='type of files to recover',required=True)
+subcli = cli.add_subparsers(help='data source',dest='command',required=True)
+tape = subcli.add_parser('tape', help='tape number')
+disk = subcli.add_parser('disk', help='path on disk')
+tape.add_argument('tape',help='tape number',type=int)
+disk.add_argument('path',nargs='+',help='file containing list of /mss file paths')
 args = cli.parse_args()
-args.rungroup = 'rg-'+args.rungroup
+args.r = 'rg-' + args.r
 
-import subprocess
-data = subprocess.check_output(['jasmine','list-files','-tape',str(args.tape)])
+if args.command == 'tape':
+    import subprocess
+    print(['jasmine','list-files','-tape',str(args.tape)])
+    paths = subprocess.check_output(['jasmine','list-files','-tape',str(args.tape)])
+    paths = [ x.split().pop(0) for x in paths.decode('utf-8').split('\n') ]
+else:
+    paths = list(parse_paths(args.path))
 
 corrupt,decoded,recon = set(),set(),set()
-for datum in data.decode('utf-8').split('\n'):
-    path = datum.split('|').pop(0).strip()
-    if args.rungroup not in path:
+for path in paths:
+    if args.r not in path:
         continue
     if 'decoded' in path:
         raise Exception('Not ready for decoded file '+path)
@@ -57,9 +73,9 @@ for datum in data.decode('utf-8').split('\n'):
         raise Exception('Unknown file type of '+path)
     corrupt.add(path)
 
-if args.type == 'rec' and len(decoded)>0:
+if args.t == 'rec' and len(decoded)>0:
     print('\n'.join(decoded))
 
-if args.type == 'ana' and len(recon)>0:
+if args.t == 'ana' and len(recon)>0:
     print('\n'.join(recon))
 
