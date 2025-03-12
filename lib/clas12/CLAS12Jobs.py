@@ -258,7 +258,7 @@ class HistoJob(CLAS12Job):
   TDIR='/scigroup/cvmfs/hallb/clas12/sw/noarch/clas12-timeline/dev'
   def __init__(self,workflow,cfg):
     CLAS12Job.__init__(self,workflow,cfg)
-    self.setRam('1500MB')
+    self.setRam('2000MB')
     self.setTime('2h')
     self.setDisk('1GB')
     self.addTag('mode','his')
