@@ -19,4 +19,4 @@ jobs:
           . ./modules/init/bash
           module use /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/modulefiles
           module avail
-          source ./env.sh
+          source ./etc/env.sh
