@@ -81,7 +81,7 @@ class LogFinder:
 
   def loadFarmoutLogs(self,user):
     self.files[user]={}
-    cachefile='%s/claralogana_farmout_%s.txt'%(os.environ['HOME'],user)
+    cachefile='%s/.claralogana_farmout_%s.txt'%(os.environ['HOME'],user)
     if not os.path.isfile(cachefile) or RECACHE:
       self.cacheFarmoutLogs(user,cachefile)
     print('Loading farmout logs from '+cachefile+' ...')
