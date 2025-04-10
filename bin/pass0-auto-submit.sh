@@ -2,6 +2,7 @@
 
 module use /scigroup/cvmfs/hallb/clas12/sw/modulefiles
 module load -s clas12
+module load -s workflow
 
 d=`/usr/bin/readlink -f $0`
 d=`/usr/bin/dirname $d`/..
