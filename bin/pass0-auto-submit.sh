@@ -2,7 +2,6 @@
 
 module use /scigroup/cvmfs/hallb/clas12/sw/modulefiles
 module load -s clas12
-module load -s workflow
 
 d=`/usr/bin/readlink -f $0`
 d=`/usr/bin/dirname $d`/..
@@ -69,7 +68,7 @@ find $inputdir -type f -name '*.evio.0004?' -mmin +150 | grep -v -f $blacklist >
 ! [ -s $filelist ] && echo NO NEW FILES >> $logfile && exit 0
 
 # submit the jobs:
-source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../env.sh
+source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../etc/env.sh
 if [ $DRYRUN -eq 0 ]
 then
     cmd="clas12-workflow --config $config --inputs $filelist --tag $tag --submit"
