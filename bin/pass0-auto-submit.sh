@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /group/clas12/packages/setup.sh
+module use /scigroup/cvmfs/hallb/clas12/sw/modulefiles
 module load -s clas12
 
 d=`/usr/bin/readlink -f $0`
