@@ -9,6 +9,13 @@ _LOGGER=logging.getLogger(__name__)
 
 class CLAS12Workflow(SwifWorkflow):
 
+  @Override
+  def addRun(self,run):
+    if type(run) is int:
+      c = ChefUtil.getUserComments(run)
+      if c.lower().find('junk')<0:
+        self.addRun(run)
+
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
     self.cfg=cfg
