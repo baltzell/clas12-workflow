@@ -92,6 +92,9 @@ class RcdbManager():
   def getRunStartTime(self,run):
     return self.get(run,'run_start_time')
 
+  def getUserComments(self,run):
+    return self.get(run,'user_comment')
+
   def csvHeader(self):
     return 'run,'+','.join([t.name for t in self.types])
 
