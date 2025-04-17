@@ -210,7 +210,7 @@ class ChefConfig(collections.OrderedDict):
     cli.add_argument('--noheldel', help='disable delayed-helicity correction', action='store_true', default=None)
     cli.add_argument('--nomerge',  help='disable train merging', action='store_true', default=None)
     cli.add_argument('--ccdbsqlite',metavar='PATH',help='path to CCDB sqlite file (default = mysql database)', type=str, default=None)
-    cli.add_argument('--rcdbstrict',help='require good run_start_time in RCDB',action=store_truei,default=None)
+    cli.add_argument('--rcdbstrict',help='require good run_start_time in RCDB',action='store_true',default=None)
 
     cli.add_argument('--torus',    metavar='#.#',help='override RCDB torus scale',   type=float, default=None)
     cli.add_argument('--solenoid', metavar='#.#',help='override RCDB solenoid scale',type=float, default=None)
