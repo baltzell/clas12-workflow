@@ -11,10 +11,13 @@ class CLAS12Workflow(SwifWorkflow):
 
   @Override
   def addRun(self,run):
-    if type(run) is int:
+    if type(run) is not int:
+      return
+    if self.cfg['rcdbstrict']:
       c = ChefUtil.getUserComments(run)
-      if c.lower().find('junk')<0:
-        self.addRun(run)
+      if c.lower().find('junk') >= 0:
+        return
+    self.addRun(run)
 
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
