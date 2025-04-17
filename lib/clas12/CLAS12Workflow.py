@@ -9,16 +9,6 @@ _LOGGER=logging.getLogger(__name__)
 
 class CLAS12Workflow(SwifWorkflow):
 
-  @Override
-  def addRun(self,run):
-    if type(run) is not int:
-      return
-    if self.cfg['rcdbstrict']:
-      c = ChefUtil.getUserComments(run)
-      if c.lower().find('junk') >= 0:
-        return
-    self.addRun(run)
-
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
     self.cfg=cfg
@@ -31,6 +21,18 @@ class CLAS12Workflow(SwifWorkflow):
         self.name+='x%d'%(len(r))
     self.logDir=None
     self._mkdirs()
+    self.ignored=[]
+
+  def addRun(self,run):
+    if type(run) is not int:
+      return
+    if self.cfg['rcdbstrict']:
+      c = ChefUtil.getUserComment(run)
+      if c.lower().find('junk') >= 0:
+        if run not in self.ignored:
+            self.ignored.append(run)
+        return
+    super().addRun(run)
 
   def _mkdirs(self):
     if self.cfg['logDir'] is not None:

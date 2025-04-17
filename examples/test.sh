@@ -4,14 +4,15 @@ clas12-workflow \
 --tag test \
 --debug \
 --forties \
---runs 19891-19893 \
+--runs 19891-19893,19909 \
 --inputs /mss/clas12/rg-k/data/clas_019891 \
 --inputs /mss/clas12/rg-k/data/clas_019892 \
---inputs /mss/clas12/rg-k/data/clas_019893 \
+--inputs /mss/clas12/rg-k/data/clas_019909 \
 --outDir /volatile/clas12/users/baltzell/wok-out \
 --workDir /volatile/clas12/users/baltzell/wok-work \
 --reconYaml ~/clas12-default.yaml \
 --trainYaml calib \
 --coatjava 10.1.0 \
 --denoise \
+--rcdbstrict \
 $@

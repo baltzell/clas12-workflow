@@ -21,6 +21,9 @@ logger.info('Writing workflow to %s/%s.json'%(os.path.realpath('.'),workflow.nam
 with open(workflow.name+'.json','w') as out:
   out.write(workflow.getJson())
 
+if len(workflow.ignored)>0:
+    logger.warning('Ignored runs due to strict RCDB checking: '+'.'.join([str(x) for x in workflow.ignored]))
+
 if cc.get('submit'):
   logger.info('Submitting %s.json with %d jobs ...\n'%(workflow.name,len(workflow.jobs)))
   workflow.submitJson()

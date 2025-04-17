@@ -92,11 +92,11 @@ def getMergeDiskReq(nfiles):
 def getMergeTimeReq(nfiles):
   return str(int(2*nfiles/10)+1)+'h'
 
-def getUserComments(run):
-  global_RCDB
+def getUserComment(run):
+  global _RCDB
   if _RCDB is None:
     _RCDB = RcdbManager()
-  return _RCDB.getUserComment()
+  return _RCDB.getUserComment(run)
 
 def getDecoderOpts(run,cfg=None):
   global _RCDB
