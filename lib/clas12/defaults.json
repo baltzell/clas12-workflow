@@ -40,5 +40,6 @@
   "singlePattern": "clas_%.6d.evio.%.5d.hipo",
   "hattawy": false,
   "groovy": "/scigroup/cvmfs/hallb/clas12/sw/noarch/groovy/4.0.20",
+  "rcdbstrict": false,
   "ignored": {}
 }
