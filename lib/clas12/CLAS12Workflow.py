@@ -9,6 +9,8 @@ _LOGGER=logging.getLogger(__name__)
 
 class CLAS12Workflow(SwifWorkflow):
 
+  ignored = []
+
   def __init__(self,name,cfg):
     SwifWorkflow.__init__(self,name)
     self.cfg=cfg
@@ -29,8 +31,9 @@ class CLAS12Workflow(SwifWorkflow):
     if self.cfg['rcdbstrict']:
       c = ChefUtil.getUserComment(run)
       if c.lower().find('junk') >= 0:
-        if run not in self.ignored:
-            self.ignored.append(run)
+        if run not in CLAS12Workflow.ignored:
+            CLAS12Workflow.ignored.append(run)
+            _LOGGER.warning('Ignoring RCDB "junk" run: '+str(run))
         return
     super().addRun(run)
 
