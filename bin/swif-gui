@@ -76,8 +76,8 @@ class Wokflow():
         self.button.menu = tkinter.Menu(self.button, tearoff=False)
         self.button['menu'] = self.button.menu
         self.button.menu.add_command(label='Full Details', command=self.show_full_details)
+        self.button.menu.add_command(label='Export Workflow', command=self.export_details)
         self.button.menu.add_command(label='Delete Workflow', command=self._delete_workflow)
-#        self.button.menu.add_command(label='Export Workflow', command=self._export_workflow)
         self.button['state'] = 'disabled'
 
     def _disable(self, parent_task=None):
@@ -159,12 +159,6 @@ class Wokflow():
         self.details = json.loads(subprocess.check_output(self.details_cmd).decode('utf-8')).get('jobs')
         status_message.set('Idle')
 
-    def _export_details(self):
-        import json
-        path = filedialog.asksaveasfilename(defaultextension=".txt",filetypes=[("JSON Files", "*.json")])
-        with open(path,'w') as f:
-            f.write(json.dumps(self.details,indent=2,separators=(',',': ')))
-
     def _delete_menu_entry(self, label):
         try:
             self.button.menu.delete(self.button.menu.index(label))
@@ -207,6 +201,21 @@ class Wokflow():
         complete = self.header.get('succeeded') / self.header.get('jobs')
         self.guivars['complete'].set('%.2f%%'%(complete*100))
         self._regenerate_menu()
+        self.button['state'] = 'normal'
+
+    def _export_details(self, parent_task=None):
+        import os,json,time
+        path = f'./{self.name}.json'
+        status_message.set(f'Exporting to {path} ...')
+        for i in range(1,100):
+            try:
+                with open(path,'x') as f:
+                    f.write(json.dumps(self.details,indent=2,separators=(',',': ')))
+                    status_message.set(f'Exported to {path}')
+                    break
+            except:
+                pass
+            path = f'{self.name}-{i}.json'
         self.button['state'] = 'normal'
 
     def _get_stats(self):
