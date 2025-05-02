@@ -30,7 +30,7 @@ class CLAS12Workflow(SwifWorkflow):
       return
     if self.cfg['rcdbstrict']:
       c = ChefUtil.getUserComment(run)
-      if c.lower().find('junk') >= 0:
+      if c is not None and c.lower().find('junk') >= 0:
         if run not in CLAS12Workflow.ignored:
             CLAS12Workflow.ignored.append(run)
             _LOGGER.warning('Ignoring RCDB "junk" run: '+str(run))
